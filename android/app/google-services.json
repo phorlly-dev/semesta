@@ -1,0 +1,47 @@
+{
+    "project_info": {
+        "project_number": "186960173803",
+        "firebase_url": "https://kt78-dcd58-default-rtdb.asia-southeast1.firebasedatabase.app",
+        "project_id": "kt78-dcd58",
+        "storage_bucket": "kt78-dcd58.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:186960173803:android:31b299e2b9b9b16828bcae",
+                "android_client_info": {
+                    "package_name": "com.idnkt78.semesta"
+                }
+            },
+            "oauth_client": [
+                {
+                    "client_id": "186960173803-ofq1v4ud2teoij6sdd5gja47togst295.apps.googleusercontent.com",
+                    "client_type": 3
+                }
+            ],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyDSlyPcgi4jNx55I4ayHZ21wZUhcXs5fQw"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": [
+                        {
+                            "client_id": "186960173803-ofq1v4ud2teoij6sdd5gja47togst295.apps.googleusercontent.com",
+                            "client_type": 3
+                        },
+                        {
+                            "client_id": "186960173803-glshdeqkuo36lma63nl5bedi5e4g9sc9.apps.googleusercontent.com",
+                            "client_type": 2,
+                            "ios_info": {
+                                "bundle_id": "com.idnkt78.footballNews"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}
