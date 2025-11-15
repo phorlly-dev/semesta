@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 
 class NavBar extends StatefulWidget implements PreferredSizeWidget {
-  final dynamic title;
+  final Widget? action, title, leading;
   final void Function(String query)? onSearch;
-  final Widget? action;
+  final PreferredSizeWidget? bottom;
 
-  const NavBar({super.key, required this.title, this.onSearch, this.action});
+  const NavBar({
+    super.key,
+    this.title,
+    this.onSearch,
+    this.action,
+    this.bottom,
+    this.leading,
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -44,6 +51,7 @@ class _NavBarState extends State<NavBar> {
   Widget build(BuildContext context) {
     return AppBar(
       centerTitle: true,
+      animateColor: true,
       automaticallyImplyLeading: !isSearching,
       title: isSearching
           ? TextField(
@@ -56,8 +64,6 @@ class _NavBarState extends State<NavBar> {
               textInputAction: TextInputAction.search,
               onSubmitted: _onSearchSubmitted,
             )
-          : widget.title is String
-          ? Text(widget.title)
           : widget.title,
       leading: isSearching
           ? IconButton(
@@ -65,7 +71,7 @@ class _NavBarState extends State<NavBar> {
               onPressed: _stopSearch,
               tooltip: 'Close search',
             )
-          : null,
+          : widget.leading,
       actions: [
         if (!isSearching && widget.onSearch != null)
           IconButton(
@@ -76,6 +82,7 @@ class _NavBarState extends State<NavBar> {
 
         ?widget.action,
       ],
+      bottom: widget.bottom,
     );
   }
 }

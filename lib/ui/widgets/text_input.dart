@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:semesta/app/utils/format.dart';
 
 class TextInput extends StatelessWidget {
   final String name;
@@ -48,7 +49,7 @@ class TextInput extends StatelessWidget {
         valueTransformer: formedValue,
         maxLines: maxLines,
         decoration: InputDecoration(
-          labelText: label,
+          labelText: label ?? toCapitalize(name),
           prefixIcon: prefixIcon,
           suffixIcon: suffixIcon,
           border: OutlineInputBorder(

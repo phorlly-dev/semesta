@@ -21,3 +21,23 @@ class RouterRefreshStream extends ChangeNotifier {
     super.dispose();
   }
 }
+
+Stream<T> debounceStream<T>(Stream<T> source, Duration delay) {
+  Timer? timer;
+  StreamController<T>? controller;
+
+  controller = StreamController<T>(
+    onListen: () {
+      source.listen(
+        (event) {
+          timer?.cancel();
+          timer = Timer(delay, () => controller!.add(event));
+        },
+        onError: controller!.addError,
+        onDone: controller.close,
+      );
+    },
+  );
+
+  return controller.stream;
+}

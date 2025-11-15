@@ -1,34 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:semesta/ui/widgets/loader.dart';
 
 class CustomImage extends StatelessWidget {
   const CustomImage({
     super.key,
-    required this.imageUrl,
+    required this.image,
     this.height,
     this.width,
-    this.placeholder,
     this.errorWidget,
     this.fit = BoxFit.cover,
     this.borderRadius,
     this.enableFade = true,
   });
 
-  final String imageUrl;
+  final String image;
   final double? height;
   final double? width;
-  final Widget? placeholder;
   final Widget? errorWidget;
   final BoxFit fit;
   final BorderRadius? borderRadius;
   final bool enableFade;
 
   bool get _isNetwork =>
-      imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
+      image.startsWith('http://') || image.startsWith('https://');
 
   @override
   Widget build(BuildContext context) {
-    if (imageUrl.isEmpty) {
+    if (image.isEmpty) {
       return errorWidget ??
           Container(
             height: height,
@@ -41,21 +40,15 @@ class CustomImage extends StatelessWidget {
           );
     }
 
-    final image = _isNetwork
+    final url = _isNetwork
         ? CachedNetworkImage(
-            imageUrl: imageUrl,
+            imageUrl: image,
             height: height,
             width: width,
             fit: fit,
-            placeholder: (ctx, str) =>
-                placeholder ??
-                Center(
-                  child: SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: const CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
+            placeholder: (ctx, str) => Center(
+              child: SizedBox(height: 20, width: 20, child: Loader(bold: 1.6)),
+            ),
             errorWidget: (ctx, str, err) =>
                 errorWidget ??
                 const Icon(Icons.broken_image, color: Colors.grey),
@@ -66,12 +59,12 @@ class CustomImage extends StatelessWidget {
                 ? const Duration(milliseconds: 200)
                 : Duration.zero,
           )
-        : Image.asset(imageUrl, height: height, width: width, fit: fit);
+        : Image.asset(image, height: height, width: width, fit: fit);
 
     // Apply rounded corners (optional)
     return ClipRRect(
-      borderRadius: borderRadius ?? BorderRadius.circular(8),
-      child: image,
+      borderRadius: borderRadius ?? BorderRadius.zero,
+      child: url,
     );
   }
 }

@@ -6,7 +6,9 @@ import 'package:get/get.dart';
 import 'package:semesta/app/configs/app_start.dart';
 import 'package:semesta/app/utils/logger.dart';
 import 'package:semesta/app/configs/handle_error.dart';
+import 'package:semesta/app/utils/share_storage.dart';
 import 'package:semesta/core/controllers/auth_controller.dart';
+import 'package:semesta/core/controllers/user_controller.dart';
 import 'package:semesta/core/services/firebase_service.dart';
 
 class AppConfigure {
@@ -28,9 +30,12 @@ class AppConfigure {
 
         // Register GetX controllers, etc.
         Get.put(AuthController(), permanent: true);
+        Get.put(UserController(), permanent: true);
 
         //ScreenUtil
         await ScreenUtil.ensureScreenSize();
+
+        await ShareStorage.init();
 
         //Run app
         runApp(const AppStart());
@@ -48,8 +53,8 @@ class AppConfigure {
   static void onError() {
     FlutterError.onError = (details) {
       FlutterError.presentError(details);
-      HandleLogger('Caught by FlutterError', error: details.exception);
-      HandleLogger('Info Logged', stack: details.stack, type: LogType.track);
+      HandleLogger.err('Caught by FlutterError', error: details.exception);
+      HandleLogger.track('Info Logged', stack: details.stack);
     };
   }
 }

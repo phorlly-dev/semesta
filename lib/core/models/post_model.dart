@@ -1,6 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:semesta/app/utils/json_helpers.dart';
-import 'package:semesta/core/models/favorite_model.dart';
+import 'package:semesta/core/models/reaction_model.dart';
 import 'package:semesta/core/models/model.dart';
 
 class PostModel extends Model<PostModel> {
@@ -17,11 +16,13 @@ class PostModel extends Model<PostModel> {
   final Map<String, dynamic>? linkPreview; // optional metadata (title, image)
   final String? eventId; // optional
   final String? sharedPostId; // optional
-  final FavoriteModel? favorite;
+  final ReactionModel? reaction;
   final int commentCount;
   final int shareCount;
+  final int viewCount;
 
   const PostModel({
+    this.viewCount = 0,
     this.mentions,
     this.linkPreview,
     this.sharedPostId,
@@ -37,14 +38,15 @@ class PostModel extends Model<PostModel> {
     required this.userId,
     this.images,
     this.videos,
-    this.favorite,
-    required super.id,
+    this.reaction,
+    super.id,
     super.createdAt,
     super.updatedAt,
   });
 
   @override
   PostModel copyWith({
+    String? id,
     String? userId,
     String? content,
     String? type,
@@ -56,34 +58,34 @@ class PostModel extends Model<PostModel> {
     String? feeling,
     String? visibility,
     String? eventId,
-    FavoriteModel? favorite,
+    ReactionModel? reaction,
     Map<String, dynamic>? linkPreview,
     List<String>? mentions,
     int? commentCount,
     int? shareCount,
-  }) {
-    return PostModel(
-      id: id,
-      userId: userId ?? this.userId,
-      content: content ?? this.content,
-      type: type ?? this.type,
-      sharedPostId: sharedPostId ?? this.sharedPostId,
-      images: images ?? this.images,
-      videos: videos ?? this.videos,
-      tags: tags ?? this.tags,
-      location: location ?? this.location,
-      feeling: feeling ?? this.feeling,
-      visibility: visibility ?? this.visibility,
-      eventId: eventId ?? this.eventId,
-      favorite: favorite ?? this.favorite,
-      commentCount: commentCount ?? this.commentCount,
-      shareCount: shareCount ?? this.shareCount,
-      linkPreview: linkPreview ?? linkPreview,
-      mentions: mentions ?? mentions,
-      createdAt: createdAt,
-      updatedAt: Timestamp.now(),
-    );
-  }
+    int? viewCount,
+  }) => PostModel(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    content: content ?? this.content,
+    type: type ?? this.type,
+    sharedPostId: sharedPostId ?? this.sharedPostId,
+    images: images ?? this.images,
+    videos: videos ?? this.videos,
+    tags: tags ?? this.tags,
+    location: location ?? this.location,
+    feeling: feeling ?? this.feeling,
+    visibility: visibility ?? this.visibility,
+    eventId: eventId ?? this.eventId,
+    reaction: reaction ?? this.reaction,
+    commentCount: commentCount ?? this.commentCount,
+    shareCount: shareCount ?? this.shareCount,
+    viewCount: viewCount ?? this.viewCount,
+    linkPreview: linkPreview ?? linkPreview,
+    mentions: mentions ?? mentions,
+    createdAt: createdAt,
+    updatedAt: DateTime.now(),
+  );
 
   @override
   List<Object?> get props => [
@@ -99,55 +101,62 @@ class PostModel extends Model<PostModel> {
     userId,
     images,
     videos,
-    favorite,
+    reaction,
     type,
     mentions,
     linkPreview,
     sharedPostId,
+    viewCount,
   ];
 
-  factory PostModel.fromMap(Map<String, dynamic> map) => PostModel(
-    id: map['id'] ?? '',
-    userId: map['user_id'] ?? '',
-    eventId: map['event_id'],
-    images: List<String>.from(map['images'] ?? []),
-    videos: List<String>.from(map['videos'] ?? []),
-    tags: List<String>.from(map['tags'] ?? []),
-    commentCount: map['comment_count'] ?? 0,
-    shareCount: map['share_count'] ?? 0,
-    content: map['content'],
-    location: map['location'],
-    feeling: map['feeling'],
-    type: map['type'] ?? 'post',
-    favorite: castToMap<FavoriteModel>(map['favorite'], FavoriteModel.fromMap),
-    linkPreview: Map<String, dynamic>.from(map['link_preview'] ?? []),
-    mentions: List<String>.from(map['mentions'] ?? []),
-    sharedPostId: map['shared_post_id'],
-    visibility: map['visibility'] ?? 'public',
-    createdAt: map['created_at'] ?? Timestamp.now(),
-    updatedAt: map['updated_at'] ?? Timestamp.now(),
-  );
+  factory PostModel.fromMap(Map<String, dynamic> json) {
+    final map = Model.convertJsonKeys(json, toCamelCase: true);
+    return PostModel(
+      id: map['id'] ?? '',
+      userId: map['userId'] ?? '',
+      eventId: map['eventId'],
+      images: parseTo(map['images']),
+      videos: parseTo(map['videos']),
+      tags: parseTo(map['tags']),
+      commentCount: map['commentCount'] ?? 0,
+      viewCount: map['viewCount'] ?? 0,
+      shareCount: map['shareCount'] ?? 0,
+      content: map['content'],
+      location: map['location'],
+      feeling: map['feeling'],
+      type: map['type'] ?? 'post',
+      reaction: castToMap<ReactionModel>(
+        map['reaction'],
+        ReactionModel.fromMap,
+      ),
+      linkPreview: parseTo(map['linkPreview'], false),
+      mentions: parseTo(map['mentions']),
+      sharedPostId: map['sharedPostId'],
+      visibility: map['visibility'] ?? 'public',
+      createdAt: Model.createOrUpdate(map),
+      updatedAt: Model.createOrUpdate(map, false),
+    );
+  }
 
   @override
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'user_id': userId,
+    ...general,
+    'userId': userId,
     'content': content,
-    'images': images,
-    'videos': videos,
+    'images': images ?? const [],
+    'videos': videos ?? const [],
     'type': type,
-    'tags': tags,
+    'tags': tags ?? const [],
     'location': location,
-    'link_preview': linkPreview,
-    'mentions': mentions,
-    'shared_post_id': sharedPostId,
+    'linkPreview': linkPreview ?? const [],
+    'mentions': mentions ?? const [],
+    'sharedPostId': sharedPostId,
     'feeling': feeling,
     'visibility': visibility,
-    'event_id': eventId,
-    'favorite': favorite?.toMap(),
-    'comment_count': commentCount,
-    'share_count': shareCount,
-    'created_at': createdAt ?? Timestamp.now(),
-    'updated_at': updatedAt ?? Timestamp.now(),
+    'eventId': eventId,
+    'reaction': reaction?.toMap(),
+    'commentCount': commentCount,
+    'viewCount': viewCount,
+    'shareCount': shareCount,
   };
 }

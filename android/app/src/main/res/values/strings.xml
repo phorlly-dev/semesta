@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="facebook_app_id">1860797161478029</string>
+    <string name="facebook_client_token">566d45dc59dfff49c886a00c1f861f47</string>
+    <string name="fb_login_protocol_scheme">fb1860797161478029</string>
+    <string name="app_name">Semesta</string>
+</resources>

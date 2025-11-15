@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:semesta/app/utils/json_helpers.dart';
 import 'package:semesta/core/models/model.dart';
 
 class ProductModel extends Model<ProductModel> {
@@ -18,7 +18,7 @@ class ProductModel extends Model<ProductModel> {
     this.description,
     this.location,
     required this.images,
-    required super.id,
+    super.id,
     super.createdAt,
     super.updatedAt,
   });
@@ -32,33 +32,32 @@ class ProductModel extends Model<ProductModel> {
     String? description,
     String? location,
     List<String>? images,
-  }) {
-    return ProductModel(
-      id: id,
-      name: name ?? this.name,
-      price: price ?? this.price,
-      userId: userId ?? this.userId,
-      status: status ?? this.status,
-      description: description ?? this.description,
-      location: location ?? this.location,
-      images: images ?? this.images,
-      createdAt: createdAt,
-      updatedAt: Timestamp.now(),
-    );
-  }
+  }) => ProductModel(
+    id: id,
+    name: name ?? this.name,
+    price: price ?? this.price,
+    userId: userId ?? this.userId,
+    status: status ?? this.status,
+    description: description ?? this.description,
+    location: location ?? this.location,
+    images: images ?? this.images,
+    createdAt: createdAt,
+    updatedAt: DateTime.now(),
+  );
 
-  factory ProductModel.fromMap(Map<String, dynamic> map) {
+  factory ProductModel.fromMap(Map<String, dynamic> json) {
+    final map = Model.convertJsonKeys(json, toCamelCase: true);
     return ProductModel(
       id: map['id'],
       name: map['name'],
       price: map['price'],
-      userId: map['user_id'],
+      userId: map['userId'],
       status: map['status'],
       description: map['description'],
       location: map['location'],
-      images: List<String>.from(map['images'] ?? []),
-      createdAt: map['created_at'] ?? Timestamp.now(),
-      updatedAt: map['updated_at'] ?? Timestamp.now(),
+      images: parseTo(map['images']),
+      createdAt: Model.createOrUpdate(map),
+      updatedAt: Model.createOrUpdate(map, false),
     );
   }
 
@@ -76,14 +75,16 @@ class ProductModel extends Model<ProductModel> {
 
   @override
   Map<String, dynamic> toMap() {
-    return {
+    final data = {
+      ...general,
       'name': name,
       'price': price,
-      'user_id': userId,
+      'userId': userId,
       'status': status,
       'description': description,
       'location': location,
       'images': images,
     };
+    return Model.convertJsonKeys(data);
   }
 }

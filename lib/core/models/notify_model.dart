@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:semesta/core/models/model.dart';
 
 class NotifyModel extends Model<NotifyModel> {
@@ -14,7 +13,7 @@ class NotifyModel extends Model<NotifyModel> {
     required this.image,
     required this.type,
     this.seen = false,
-    required super.id,
+    super.id,
     super.createdAt,
     super.updatedAt,
   });
@@ -22,49 +21,52 @@ class NotifyModel extends Model<NotifyModel> {
   @override
   NotifyModel copyWith({
     String? content,
+    String? id,
     List<String>? bold,
     String? image,
     String? time,
     String? type,
     bool? seen,
-  }) {
-    return NotifyModel(
-      id: id,
-      content: content ?? this.content,
-      bold: bold ?? this.bold,
-      image: image ?? this.image,
-      type: type ?? this.type,
-      seen: seen ?? this.seen,
-      createdAt: createdAt,
-      updatedAt: Timestamp.now(),
-    );
-  }
+  }) => NotifyModel(
+    id: id ?? this.id,
+    content: content ?? this.content,
+    bold: bold ?? this.bold,
+    image: image ?? this.image,
+    type: type ?? this.type,
+    seen: seen ?? this.seen,
+    createdAt: createdAt,
+    updatedAt: DateTime.now(),
+  );
 
   @override
   List<Object?> get props => [...super.props, content, bold, image, type, seen];
 
-  factory NotifyModel.fromMap(Map<String, dynamic> map) => NotifyModel(
-    id: map['id'],
-    content: map['content'],
-    bold: map['bold'],
-    image: map['image'],
-    type: map['type'],
-    seen: map['seen'] ?? false,
-    createdAt: map['created_at'] ?? Timestamp.now(),
-    updatedAt: map['updated_at'] ?? Timestamp.now(),
-  );
+  factory NotifyModel.fromMap(Map<String, dynamic> json) {
+    final map = Model.convertJsonKeys(json, toCamelCase: true);
+    return NotifyModel(
+      id: map['id'],
+      content: map['content'],
+      bold: map['bold'],
+      image: map['image'],
+      type: map['type'],
+      seen: map['seen'] ?? false,
+      createdAt: Model.createOrUpdate(map),
+      updatedAt: Model.createOrUpdate(map, false),
+    );
+  }
 
   @override
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'content': content,
-    'bold': bold,
-    'image': image,
-    'type': type,
-    'seen': seen,
-    'created_at': createdAt ?? Timestamp.now(),
-    'updated_at': updatedAt ?? Timestamp.now(),
-  };
+  Map<String, dynamic> toMap() {
+    final data = {
+      ...general,
+      'content': content,
+      'bold': bold,
+      'image': image,
+      'type': type,
+      'seen': seen,
+    };
+    return Model.convertJsonKeys(data);
+  }
 }
 
 /* NOTIFICATIONS TYPES:

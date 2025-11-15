@@ -1,11 +1,11 @@
 import 'package:semesta/app/utils/json_helpers.dart';
+import 'package:semesta/core/models/model.dart';
 part 'education_model.dart';
 part 'social_media_model.dart';
 
 enum AccountType { personal, creator, business, page }
 
 class UserProfileModel {
-  final String? avatar;
   final bool verified;
   final String? cover;
   final int? likes;
@@ -30,7 +30,6 @@ class UserProfileModel {
     this.work,
     this.interests,
     this.relationship,
-    this.avatar,
     this.verified = false,
     this.cover,
     this.likes,
@@ -47,18 +46,18 @@ class UserProfileModel {
     this.address,
   });
 
-  factory UserProfileModel.fromMap(Map<String, dynamic> map) {
+  factory UserProfileModel.fromMap(Map<String, dynamic> json) {
+    final map = Model.convertJsonKeys(json);
     return UserProfileModel(
-      avatar: map['avatar'],
       verified: map['verified'] ?? false,
       cover: map['cover'],
       likes: map['likes'],
       followers: map['followers'],
-      hobbies: List<String>.from(map['hobbies']),
-      topFriends: List<String>.from(map['top_friends']),
+      hobbies: parseTo(map['hobbies']),
+      topFriends: parseTo(map['topFriends']),
       hometown: map['hometown'],
       socialMedia: parseJsonList<SocialMediaModel>(
-        map['social_media'],
+        map['socialMedia'],
         SocialMediaModel.fromMap,
       ),
       bio: map['bio'],
@@ -71,34 +70,36 @@ class UserProfileModel {
         EducationModel.fromMap,
       ),
       guard: map['guard'] ?? false,
-      pageType: map['page_type'],
+      pageType: map['pageType'],
       address: map['address'],
-      interests: List<String>.from(map['interests']),
+      interests: parseTo(map['interests']),
       relationship: map['relationship'],
       website: map['website'],
-      work: List<String>.from(map['work']),
+      work: parseTo(map['work']),
     );
   }
 
-  Map<String, dynamic> toMap() => {
-    'avatar': avatar,
-    'verified': verified,
-    'cover': cover,
-    'likes': likes,
-    'followers': followers,
-    'hobbies': hobbies ?? const [],
-    "top_friends": topFriends ?? const [],
-    'hometown': hometown,
-    'social_media': socialMedia?.map((e) => e.toMap()).toList(),
-    'bio': bio,
-    'type': type.name,
-    'educations': educations?.map((e) => e.toMap()).toList(),
-    "guard": guard,
-    "page_type": pageType,
-    'address': address,
-    'interests': interests ?? const [],
-    'relationship': relationship,
-    'website': website,
-    'work': work ?? const [],
-  };
+  Map<String, dynamic> toMap() {
+    final data = {
+      'verified': verified,
+      'cover': cover,
+      'likes': likes,
+      'followers': followers,
+      'hobbies': hobbies ?? const [],
+      "topFriends": topFriends ?? const [],
+      'hometown': hometown,
+      'socialMedia': socialMedia?.map((e) => e.toMap()).toList(),
+      'bio': bio,
+      'type': type.name,
+      'educations': educations?.map((e) => e.toMap()).toList(),
+      "guard": guard,
+      "pageType": pageType,
+      'address': address,
+      'interests': interests ?? const [],
+      'relationship': relationship,
+      'website': website,
+      'work': work ?? const [],
+    };
+    return Model.convertJsonKeys(data);
+  }
 }

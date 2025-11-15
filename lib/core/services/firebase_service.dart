@@ -14,10 +14,11 @@ class FirebaseService extends FirebaseCollection {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     FirebaseAuth.instanceFor(app: app);
+    await Firebase.initializeApp();
     await FirebaseAppCheck.instance.activate();
     await google.initialize(
       serverClientId:
-          '186960173803-ofq1v4ud2teoij6sdd5gja47togst295.apps.googleusercontent.com',
+          '186960173803-q8c82j37onennb9inhf09tffh8optgq3.apps.googleusercontent.com',
     );
   }
 

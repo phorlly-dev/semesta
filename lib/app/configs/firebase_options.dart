@@ -14,6 +14,8 @@ import 'package:flutter/foundation.dart'
 ///   options: DefaultFirebaseOptions.currentPlatform,
 /// );
 /// ```
+///
+/// pwd: wKKGZ3WKabKtcNwk on https://supabase.com/
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -54,7 +56,8 @@ class DefaultFirebaseOptions {
     appId: '1:186960173803:android:31b299e2b9b9b16828bcae',
     messagingSenderId: '186960173803',
     projectId: 'kt78-dcd58',
-    databaseURL: 'https://kt78-dcd58-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://kt78-dcd58-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'kt78-dcd58.firebasestorage.app',
   );
 
@@ -63,9 +66,11 @@ class DefaultFirebaseOptions {
     appId: '1:186960173803:ios:de5d0bdd5692753c28bcae',
     messagingSenderId: '186960173803',
     projectId: 'kt78-dcd58',
-    databaseURL: 'https://kt78-dcd58-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://kt78-dcd58-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'kt78-dcd58.firebasestorage.app',
-    iosClientId: '186960173803-2mkfgpv0pro5qq1ccs6v7u51ip1n4tlt.apps.googleusercontent.com',
+    iosClientId:
+        '186960173803-2mkfgpv0pro5qq1ccs6v7u51ip1n4tlt.apps.googleusercontent.com',
     iosBundleId: 'com.idnkt78.semesta',
   );
 }

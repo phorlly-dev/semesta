@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/app/routes/router.dart';
-import 'package:semesta/ui/partials/_layout.dart';
+import 'package:semesta/ui/partials/gen/_layout.dart';
 import 'package:semesta/ui/widgets/loading.dart';
 
 class Splash extends StatefulWidget {
@@ -13,8 +13,9 @@ class Splash extends StatefulWidget {
 class _SplashState extends State<Splash> {
   @override
   void initState() {
-    super.initState();
     _initApp();
+
+    super.initState();
   }
 
   Future<void> _initApp() async {

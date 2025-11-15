@@ -1,40 +1,39 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:semesta/app/utils/json_helpers.dart';
 import 'package:semesta/core/models/model.dart';
 import 'package:semesta/core/models/user_profile_model.dart';
 
-enum Gender { male, female, other, preferNotToSay }
+enum Gender { female, male, other }
 
 class UserModel extends Model<UserModel> {
-  final String fullName;
-  final DateTime birthDay;
+  final String? avatar;
+  final String? name;
+  final DateTime? birthday;
   final Gender gender;
-  final String email;
-  final String? password;
+  final String? email;
   final List<String>? friends;
-  final List<String>? sentRequests;
-  final List<String>? receivedRequests;
+  final List<String>? requests;
+  final List<String>? receiveds;
   final UserProfileModel? profile;
   final bool isOnline; // for status indicator
   final DateTime? lastActive; // last seen timestamp
   final String? locale; // e.g. "en_US", "id_ID"
-  final String? fcmToken; // for push notifications
+  final String? token; // for push notifications
 
   const UserModel({
     this.isOnline = false,
     this.lastActive,
     this.locale,
-    this.fcmToken,
+    this.token,
+    this.avatar,
     this.profile,
-    required this.fullName,
-    required this.birthDay,
-    required this.gender,
-    required this.email,
-    this.password,
+    this.name,
+    this.birthday,
+    this.gender = Gender.other,
+    this.email,
     this.friends = const [],
-    this.sentRequests = const [],
-    this.receivedRequests = const [],
-    required super.id,
+    this.receiveds = const [],
+    this.requests = const [],
+    super.id,
     super.createdAt,
     super.updatedAt,
   });
@@ -42,105 +41,103 @@ class UserModel extends Model<UserModel> {
   @override
   List<Object?> get props => [
     ...super.props,
-    fullName,
-    birthDay,
+    name,
+    birthday,
     gender,
     email,
-    password,
     friends,
-    sentRequests,
-    receivedRequests,
+    receiveds,
+    requests,
     profile,
     isOnline,
     lastActive,
     locale,
-    fcmToken,
+    token,
+    avatar,
   ];
 
-  factory UserModel.fromMap(Map<String, dynamic> map) {
+  factory UserModel.fromMap(Map<String, dynamic> json) {
+    final map = Model.convertJsonKeys(json, toCamelCase: true);
     return UserModel(
       id: map['id'],
-      fullName: map['full_name'],
-      birthDay: DateTime.fromMillisecondsSinceEpoch(map['birth_day'] as int),
+      name: map['name'],
+      avatar: map['avatar'],
+      birthday: Model.toDateTime(map['birthday']),
       gender: Gender.values.firstWhere(
         (e) => e.name == map['gender'],
-        orElse: () => Gender.preferNotToSay,
+        orElse: () => Gender.other,
       ),
       email: map['email'],
-      password: map['password'],
-      friends: List<String>.from((map['friends'] ?? [])),
-      sentRequests: List<String>.from((map['sent_requests'] ?? [])),
-      receivedRequests: List<String>.from((map['received_requests'] ?? [])),
+      friends: parseTo(map['friends']),
+      receiveds: parseTo(map['equests']),
+      requests: parseTo(map['receiveds']),
       profile: safeParse<UserProfileModel>(
         map['profile'],
         UserProfileModel.fromMap,
       ),
-      fcmToken: map['fcm_token'],
-      isOnline: map['is_online'],
-      lastActive: map['last_active'],
+      token: map['token'],
+      isOnline: map['isOnline'],
+      lastActive: map['lastActive'],
       locale: map['locale'],
-      createdAt: map['created_at'] ?? Timestamp.now(),
-      updatedAt: map['updated_at'] ?? Timestamp.now(),
+      createdAt: Model.createOrUpdate(map),
+      updatedAt: Model.createOrUpdate(map, false),
     );
   }
 
   @override
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'full_name': fullName,
-      'birth_day': birthDay.millisecondsSinceEpoch,
+    final data = {
+      ...general,
+      'name': name,
+      'avatar': avatar,
+      'birthday': Model.toEpoch(birthday),
       'gender': gender.name,
       'email': email,
-      'password': password,
       'friends': friends ?? const [],
-      'sent_requests': sentRequests ?? const [],
-      'received_requests': receivedRequests ?? const [],
+      'requests': receiveds ?? const [],
+      'receiveds': requests ?? const [],
       'profile': profile?.toMap(),
-      'fcm_token': fcmToken,
-      'is_online': isOnline,
-      'last_active': lastActive,
+      'token': token,
+      'isOnline': isOnline,
+      'lastActive': lastActive,
       'locale': locale,
-      'created_at': createdAt ?? Timestamp.now(),
-      'updated_at': updatedAt ?? Timestamp.now(),
     };
+    return Model.convertJsonKeys(data);
   }
 
   @override
   UserModel copyWith({
-    String? fullName,
-    DateTime? birthDay,
+    String? name,
+    String? avatar,
+    DateTime? birthday,
     Gender? gender,
     String? email,
-    String? password,
     List<String>? friends,
-    List<String>? sentRequests,
-    List<String>? receivedRequests,
+    List<String>? receiveds,
+    List<String>? requests,
     UserProfileModel? profile,
     bool? isOnline,
     DateTime? lastActive,
     String? locale,
-    String? fcmToken,
-  }) {
-    return UserModel(
-      id: id,
-      fullName: fullName ?? this.fullName,
-      birthDay: birthDay ?? this.birthDay,
-      gender: gender ?? this.gender,
-      email: email ?? this.email,
-      password: password ?? this.password,
-      friends: friends ?? this.friends,
-      sentRequests: sentRequests ?? this.sentRequests,
-      receivedRequests: receivedRequests ?? this.receivedRequests,
-      profile: profile ?? this.profile,
-      fcmToken: fcmToken ?? this.fcmToken,
-      isOnline: isOnline ?? this.isOnline,
-      lastActive: lastActive ?? this.lastActive,
-      locale: locale ?? this.locale,
-      createdAt: createdAt,
-      updatedAt: Timestamp.now(),
-    );
-  }
+    String? token,
+  }) => UserModel(
+    id: id,
+    name: name ?? this.name,
+    avatar: avatar ?? this.avatar,
+    birthday: birthday ?? this.birthday,
+    gender: gender ?? this.gender,
+    email: email ?? this.email,
+    friends: friends ?? this.friends,
+    receiveds: receiveds ?? this.receiveds,
+    requests: requests ?? this.requests,
+    profile: profile ?? this.profile,
+    token: token ?? this.token,
+    isOnline: isOnline ?? this.isOnline,
+    lastActive: lastActive ?? this.lastActive,
+    locale: locale ?? this.locale,
+    createdAt: createdAt,
+    updatedAt: DateTime.now(),
+  );
 
   int get friendCount => friends?.length ?? 0;
 }

@@ -31,5 +31,12 @@ List<T> parseJsonList<T>(
       return [];
     }
   }
+
   return [];
+}
+
+dynamic parseTo(data, [bool isList = true]) {
+  return isList
+      ? List<String>.from(data ?? [])
+      : Map<String, dynamic>.from(data ?? []);
 }

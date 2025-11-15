@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:semesta/app/utils/json_helpers.dart';
 import 'package:semesta/core/models/model.dart';
 
 class GroupModel extends Model<GroupModel> {
@@ -12,49 +12,52 @@ class GroupModel extends Model<GroupModel> {
     this.image,
     required this.name,
     required this.members,
-    required super.id,
+    super.id,
     super.createdAt,
     super.updatedAt,
   });
 
   @override
   GroupModel copyWith({
+    String? id,
     String? image,
     String? name,
     List<String>? members,
     bool? privacy,
-  }) {
-    return GroupModel(
-      id: id,
-      image: image ?? this.image,
-      name: name ?? this.name,
-      privacy: privacy ?? this.privacy,
-      members: members ?? this.members,
-      createdAt: createdAt,
-      updatedAt: Timestamp.now(),
-    );
-  }
+  }) => GroupModel(
+    id: id ?? this.id,
+    image: image ?? this.image,
+    name: name ?? this.name,
+    privacy: privacy ?? this.privacy,
+    members: members ?? this.members,
+    createdAt: createdAt,
+    updatedAt: DateTime.now(),
+  );
 
   @override
   List<Object?> get props => [...super.props, image, name, members, privacy];
 
-  factory GroupModel.fromMap(Map<String, dynamic> map) => GroupModel(
-    id: map['id'],
-    image: map['image'] ?? '',
-    name: map['name'],
-    privacy: map['privacy'] ?? true,
-    members: List<String>.from(map['members'] ?? []),
-    createdAt: map['created_at'] ?? Timestamp.now(),
-    updatedAt: map['updated_at'] ?? Timestamp.now(),
-  );
+  factory GroupModel.fromMap(Map<String, dynamic> json) {
+    final map = Model.convertJsonKeys(json, toCamelCase: true);
+    return GroupModel(
+      id: map['id'],
+      image: map['image'] ?? '',
+      name: map['name'],
+      privacy: map['privacy'] ?? true,
+      members: parseTo(map['members']),
+      createdAt: Model.createOrUpdate(map),
+      updatedAt: Model.createOrUpdate(map, false),
+    );
+  }
 
   @override
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'image': image,
-    'privacy': privacy,
-    'members': members,
-    'created_at': createdAt ?? Timestamp.now(),
-    'updated_at': updatedAt ?? Timestamp.now(),
-  };
+  Map<String, dynamic> toMap() {
+    final data = {
+      ...general,
+      'image': image,
+      'privacy': privacy,
+      'members': members,
+    };
+    return Model.convertJsonKeys(data);
+  }
 }

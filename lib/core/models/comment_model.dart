@@ -1,6 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:semesta/app/utils/json_helpers.dart';
-import 'package:semesta/core/models/favorite_model.dart';
+import 'package:semesta/core/models/reaction_model.dart';
 import 'package:semesta/core/models/model.dart';
 
 enum CommentType { text, image, gif, mixed }
@@ -14,7 +13,7 @@ class CommentModel extends Model<CommentModel> {
   final String? gifUrl;
   final List<String>? mentions; // user IDs of mentioned people
   final List<String>? emojis; // store emoji unicode or shortcode
-  final FavoriteModel? favorite;
+  final ReactionModel? reaction;
   final List<String>? replyIds;
 
   const CommentModel({
@@ -26,15 +25,16 @@ class CommentModel extends Model<CommentModel> {
     this.gifUrl,
     this.mentions,
     this.emojis,
-    this.favorite,
+    this.reaction,
     this.replyIds,
-    required super.id,
+    super.id,
     super.createdAt,
     super.updatedAt,
   });
 
   @override
   CommentModel copyWith({
+    String? id,
     String? postId,
     String? userId,
     CommentType? type,
@@ -43,25 +43,23 @@ class CommentModel extends Model<CommentModel> {
     String? gifUrl,
     List<String>? mentions,
     List<String>? emojis,
-    FavoriteModel? favorite,
+    ReactionModel? reaction,
     List<String>? replyIds,
-  }) {
-    return CommentModel(
-      id: id,
-      postId: postId ?? this.postId,
-      userId: userId ?? this.userId,
-      type: type ?? this.type,
-      text: text ?? this.text,
-      imageUrl: imageUrl ?? this.imageUrl,
-      gifUrl: gifUrl ?? this.gifUrl,
-      mentions: mentions ?? this.mentions,
-      emojis: emojis ?? this.emojis,
-      favorite: favorite ?? this.favorite,
-      replyIds: replyIds ?? this.replyIds,
-      createdAt: createdAt,
-      updatedAt: Timestamp.now(),
-    );
-  }
+  }) => CommentModel(
+    id: id ?? this.id,
+    postId: postId ?? this.postId,
+    userId: userId ?? this.userId,
+    type: type ?? this.type,
+    text: text ?? this.text,
+    imageUrl: imageUrl ?? this.imageUrl,
+    gifUrl: gifUrl ?? this.gifUrl,
+    mentions: mentions ?? this.mentions,
+    emojis: emojis ?? this.emojis,
+    reaction: reaction ?? this.reaction,
+    replyIds: replyIds ?? this.replyIds,
+    createdAt: createdAt,
+    updatedAt: DateTime.now(),
+  );
 
   @override
   List<Object?> get props => [
@@ -74,48 +72,50 @@ class CommentModel extends Model<CommentModel> {
     gifUrl,
     mentions,
     emojis,
-    favorite,
+    reaction,
     replyIds,
   ];
 
-  factory CommentModel.fromMap(Map<String, dynamic> map) {
+  factory CommentModel.fromMap(Map<String, dynamic> json) {
+    final map = Model.convertJsonKeys(json, toCamelCase: true);
     return CommentModel(
       id: map['id'] ?? '',
-      postId: map['post_id'] ?? '',
-      userId: map['user_id'] ?? '',
+      postId: map['postId'] ?? '',
+      userId: map['userId'] ?? '',
       text: map['text'],
       type: CommentType.values.firstWhere(
         (e) => e.name == map['type'],
         orElse: () => CommentType.text,
       ),
-      imageUrl: map['image_url'],
-      gifUrl: map['gif_url'],
-      mentions: List<String>.from(map['mentions'] ?? []),
-      emojis: List<String>.from(map['emojis'] ?? []),
-      favorite: safeParse<FavoriteModel>(
-        map['favorite'],
-        FavoriteModel.fromMap,
+      imageUrl: map['imageUrl'],
+      gifUrl: map['gifUrl'],
+      mentions: parseTo(map['mentions']),
+      emojis: parseTo(map['emojis']),
+      reaction: safeParse<ReactionModel>(
+        map['reaction'],
+        ReactionModel.fromMap,
       ),
-      replyIds: List<String>.from(map['reply_ids'] ?? []),
-      createdAt: map['created_at'] ?? Timestamp.now(),
-      updatedAt: map['updated_at'] ?? Timestamp.now(),
+      replyIds: parseTo(map['replyIds']),
+      createdAt: Model.createOrUpdate(map),
+      updatedAt: Model.createOrUpdate(map, false),
     );
   }
 
   @override
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'postId': postId,
-    'userId': userId,
-    'type': type.name,
-    'text': text,
-    'image_url': imageUrl,
-    'gif_url': gifUrl,
-    'mentions': mentions,
-    'emojis': emojis,
-    'favorite': favorite?.toMap(),
-    'reply_ids': replyIds,
-    'created_at': createdAt ?? Timestamp.now(),
-    'updated_at': updatedAt ?? Timestamp.now(),
-  };
+  Map<String, dynamic> toMap() {
+    final data = {
+      ...general,
+      'postId': postId,
+      'userId': userId,
+      'type': type.name,
+      'text': text,
+      'imageUrl': imageUrl,
+      'gifUrl': gifUrl,
+      'mentions': mentions ?? const [],
+      'emojis': emojis,
+      'reaction': reaction?.toMap(),
+      'replyIds': replyIds,
+    };
+    return Model.convertJsonKeys(data);
+  }
 }

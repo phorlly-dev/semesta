@@ -10,7 +10,7 @@ class HandleError {
       callback,
       onError ??
           (error, stack) {
-            HandleLogger(
+            HandleLogger.debug(
               '⚠️ Caught error in guarded zone',
               error: error,
               stack: stack,
