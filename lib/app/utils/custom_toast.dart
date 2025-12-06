@@ -8,7 +8,7 @@ class CustomToast {
     required String message,
     String? title,
     ToastType type = ToastType.success,
-    int autoCloseSeconds = 3,
+    int autoCloseSeconds = 2,
   }) {
     // Map ToastType to toastification’s type
     final toastType = {
@@ -48,21 +48,21 @@ class CustomToast {
   }
 
   // Convenience shortcuts
-  static void success(String msg, {String? title, int duration = 3}) => _show(
+  static void success(String msg, {String? title, int duration = 2}) => _show(
     message: msg,
     title: title,
     type: ToastType.success,
     autoCloseSeconds: duration,
   );
 
-  static void info(String msg, {String? title, int duration = 4}) => _show(
+  static void info(String msg, {String? title, int duration = 2}) => _show(
     message: msg,
     title: title,
     type: ToastType.info,
     autoCloseSeconds: duration,
   );
 
-  static void warning(String msg, {String? title, int duration = 4}) => _show(
+  static void warning(String msg, {String? title, int duration = 2}) => _show(
     message: msg,
     title: title,
     type: ToastType.warning,

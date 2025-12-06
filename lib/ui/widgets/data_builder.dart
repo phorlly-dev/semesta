@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/app/utils/type_def.dart';
 
 class DataBuilder<T> extends StatelessWidget {
   final Future<T>? future;
   final Stream<T>? stream;
   final T? initialData;
-  final Widget Function(BuildContext context, T? data) builder;
-  final Widget Function(BuildContext context)? loading;
-  final Widget Function(BuildContext context, Object error)? error;
+  final BuilderCallback<T?, Widget> builder;
+  final Widget? loading;
+  final ErrorCallback<Widget>? error;
 
   const DataBuilder({
     super.key,
@@ -25,16 +26,15 @@ class DataBuilder<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget connectionBuilder(AsyncSnapshot<T> snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
-        return loading?.call(context) ??
-            const Center(child: CircularProgressIndicator());
+        return loading ?? const Center(child: CircularProgressIndicator());
       }
 
       if (snapshot.hasError) {
-        return error?.call(context, snapshot.error!) ??
+        return error?.call(snapshot.error!) ??
             Center(child: Text(snapshot.error.toString()));
       }
 
-      return builder(context, snapshot.data);
+      return builder(snapshot.data);
     }
 
     if (stream != null) {

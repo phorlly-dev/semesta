@@ -1,18 +1,23 @@
-import 'package:semesta/app/utils/json_helpers.dart';
+import 'package:semesta/app/functions/json_helpers.dart';
+import 'package:semesta/app/utils/type_def.dart';
 import 'package:semesta/core/models/model.dart';
 
 class GroupModel extends Model<GroupModel> {
-  final String? image;
+  final String? logo;
   final String name;
+  final String creatorId;
+  final String? description;
   final bool privacy;
-  final List<String>? members;
+  final AsList members;
 
   const GroupModel({
+    required this.creatorId,
+    this.description,
     this.privacy = true,
-    this.image,
+    this.logo,
     required this.name,
-    required this.members,
-    super.id,
+    this.members = const [],
+    required super.id,
     super.createdAt,
     super.updatedAt,
   });
@@ -20,44 +25,63 @@ class GroupModel extends Model<GroupModel> {
   @override
   GroupModel copyWith({
     String? id,
-    String? image,
+    String? logo,
     String? name,
+    String? creatorId,
+    String? description,
     List<String>? members,
     bool? privacy,
+    DateTime? createdAt,
   }) => GroupModel(
     id: id ?? this.id,
-    image: image ?? this.image,
+    logo: logo ?? this.logo,
+    creatorId: creatorId ?? this.creatorId,
+    description: description ?? this.description,
     name: name ?? this.name,
     privacy: privacy ?? this.privacy,
     members: members ?? this.members,
-    createdAt: createdAt,
+    createdAt: createdAt ?? this.createdAt,
     updatedAt: DateTime.now(),
   );
 
   @override
-  List<Object?> get props => [...super.props, image, name, members, privacy];
+  List<Object?> get props => [
+    ...super.props,
+    logo,
+    name,
+    members,
+    privacy,
+    creatorId,
+    description,
+  ];
 
-  factory GroupModel.fromMap(Map<String, dynamic> json) {
-    final map = Model.convertJsonKeys(json, toCamelCase: true);
+  factory GroupModel.fromMap(AsMap json) {
+    final map = Model.convertJsonKeys(json, true);
     return GroupModel(
       id: map['id'],
-      image: map['image'] ?? '',
+      logo: map['logo'],
       name: map['name'],
+      description: map['description'],
+      creatorId: map['creatorId'],
       privacy: map['privacy'] ?? true,
-      members: parseTo(map['members']),
+      members: parseToList(map['members']),
       createdAt: Model.createOrUpdate(map),
       updatedAt: Model.createOrUpdate(map, false),
     );
   }
 
   @override
-  Map<String, dynamic> toMap() {
+  AsMap toMap() {
     final data = {
       ...general,
-      'image': image,
+      'logo': logo,
       'privacy': privacy,
       'members': members,
+      'description': description,
+      'creatorId': creatorId,
     };
     return Model.convertJsonKeys(data);
   }
+
+  int get membersCount => members.length;
 }

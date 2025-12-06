@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:semesta/ui/widgets/animated.dart';
 import 'package:semesta/ui/widgets/loader.dart';
 
 class CustomImage extends StatelessWidget {
@@ -12,15 +13,19 @@ class CustomImage extends StatelessWidget {
     this.fit = BoxFit.cover,
     this.borderRadius,
     this.enableFade = true,
+    this.spaceX = 0,
+    this.spaceY = 0,
+    this.onTap,
   });
 
   final String image;
-  final double? height;
-  final double? width;
+  final double? height, width;
+  final double spaceX, spaceY;
   final Widget? errorWidget;
   final BoxFit fit;
   final BorderRadius? borderRadius;
   final bool enableFade;
+  final VoidCallback? onTap;
 
   bool get _isNetwork =>
       image.startsWith('http://') || image.startsWith('https://');
@@ -47,7 +52,7 @@ class CustomImage extends StatelessWidget {
             width: width,
             fit: fit,
             placeholder: (ctx, str) => Center(
-              child: SizedBox(height: 20, width: 20, child: Loader(bold: 1.6)),
+              child: SizedBox(height: 24, width: 24, child: Loader(bold: 1.8)),
             ),
             errorWidget: (ctx, str, err) =>
                 errorWidget ??
@@ -62,9 +67,15 @@ class CustomImage extends StatelessWidget {
         : Image.asset(image, height: height, width: width, fit: fit);
 
     // Apply rounded corners (optional)
-    return ClipRRect(
-      borderRadius: borderRadius ?? BorderRadius.zero,
-      child: url,
+    return Animated(
+      onTap: onTap,
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: spaceX, vertical: spaceY),
+        child: ClipRRect(
+          borderRadius: borderRadius ?? BorderRadius.zero,
+          child: url,
+        ),
+      ),
     );
   }
 }

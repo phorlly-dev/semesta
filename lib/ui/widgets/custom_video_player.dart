@@ -1,35 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/ui/widgets/loader.dart';
 import 'package:video_player/video_player.dart';
+import 'package:smooth_video_progress/smooth_video_progress.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class CustomVideoPlayer extends StatefulWidget {
   final String video;
-  const CustomVideoPlayer({super.key, required this.video});
+  final bool showProgress;
+
+  const CustomVideoPlayer({
+    super.key,
+    required this.video,
+    this.showProgress = false,
+  });
 
   @override
   State<CustomVideoPlayer> createState() => _CustomVideoPlayerState();
 }
 
 class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
-  late VideoPlayerController _controller;
+  late final VideoPlayerController _controller;
   bool hasError = false;
+  bool isVisible = false;
+  bool muted = true;
 
   @override
   void initState() {
     super.initState();
-    _controller =
-        VideoPlayerController.networkUrl(
-            Uri.parse(widget.video),
-            videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-          )
-          ..setLooping(true)
-          ..initialize()
-              .then((_) {
-                if (mounted) setState(() {});
-              })
-              .catchError((_) {
-                setState(() => hasError = true);
-              });
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.video))
+      ..setLooping(true)
+      ..initialize()
+          .then((_) {
+            setState(() {});
+          })
+          .catchError((_) {
+            setState(() => hasError = true);
+          });
+  }
+
+  void _handleVisibility(double visibleFraction) {
+    final isMostlyVisible = visibleFraction > 0.5; // 50% on screen
+    if (isMostlyVisible && !_controller.value.isPlaying) {
+      _controller.play();
+    } else if (!isMostlyVisible && _controller.value.isPlaying) {
+      _controller.pause();
+    }
   }
 
   @override
@@ -42,30 +56,79 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       );
     }
 
-    return _controller.value.isInitialized
-        ? Stack(
-            alignment: Alignment.center,
-            children: [
-              VideoPlayer(_controller),
-              IconButton(
-                icon: Icon(
-                  _controller.value.isPlaying
-                      ? Icons.pause_circle_filled
-                      : Icons.play_circle_fill,
-                  size: 60,
-                  color: Colors.white,
+    return VisibilityDetector(
+      key: ValueKey(widget.video),
+      onVisibilityChanged: (info) => _handleVisibility(info.visibleFraction),
+      child: Stack(
+        fit: StackFit.expand,
+        alignment: Alignment.center,
+        children: [
+          // --- Video player ---
+          if (_controller.value.isInitialized)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _controller.value.size.width,
+                  height: _controller.value.size.height,
+                  child: VideoPlayer(_controller),
                 ),
-                onPressed: () {
-                  setState(() {
-                    _controller.value.isPlaying
-                        ? _controller.pause()
-                        : _controller.play();
-                  });
+              ),
+            )
+          else
+            const Center(child: CircularProgressIndicator()),
+
+          // --- Progress Bar (only if preview mode) ---
+          if (widget.showProgress && _controller.value.isInitialized)
+            Positioned(
+              bottom: 8,
+              left: 8,
+              right: 8,
+              child: SmoothVideoProgress(
+                controller: _controller,
+                builder: (context, position, duration, _) {
+                  return SliderTheme(
+                    data: const SliderThemeData(
+                      trackHeight: 2,
+                      thumbShape: RoundSliderThumbShape(enabledThumbRadius: 5),
+                    ),
+                    child: Slider(
+                      value: position.inMilliseconds.toDouble(),
+                      max: duration.inMilliseconds.toDouble(),
+                      activeColor: Colors.white,
+                      inactiveColor: Colors.white24,
+                      onChanged: (value) {
+                        _controller.seekTo(
+                          Duration(milliseconds: value.toInt()),
+                        );
+                      },
+                    ),
+                  );
                 },
               ),
-            ],
-          )
-        : const Loader();
+            ),
+
+          // --- Mute Button ---
+          Positioned(
+            bottom: 8,
+            right: 8,
+            child: IconButton(
+              icon: Icon(
+                muted ? Icons.volume_off : Icons.volume_up,
+                color: Colors.white70,
+              ),
+              onPressed: () {
+                setState(() {
+                  muted = !muted;
+                  _controller.setVolume(muted ? 0 : 1);
+                });
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

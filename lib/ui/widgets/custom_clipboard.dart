@@ -21,11 +21,7 @@ class CustomClipboard extends StatelessWidget {
             type: MessageType.success,
           );
 
-          HandleLogger(
-            'Copied $message to clipboard',
-            type: LogType.info,
-            error: data,
-          );
+          HandleLogger.info('Copied $message to clipboard', message: data);
         }
       },
       child: Row(

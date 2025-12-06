@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:semesta/app/utils/format.dart';
+import 'package:semesta/app/functions/format.dart';
+import 'package:semesta/app/utils/type_def.dart';
 
 class TextInput extends StatelessWidget {
   final String name;
   final String? label, initValue;
   final Widget? prefixIcon, suffixIcon;
-  final String? Function(String?)? validator;
+  final StringCallback<String?>? validator;
   final TextInputType keyboardType;
   final bool readOnly, obscureText, autofocus;
   final int maxLines;
   final double spacing;
   final TextEditingController? controller;
-  final void Function(String? value)? formedValue, onChanged;
+  final ValueChanged<String?>? formedValue, onChanged;
+  final VoidCallback? onCompleted;
+  final FocusNode? focusNode;
 
   const TextInput({
     super.key,
@@ -31,6 +34,8 @@ class TextInput extends StatelessWidget {
     this.autofocus = false,
     this.onChanged,
     this.controller,
+    this.onCompleted,
+    this.focusNode,
   });
 
   @override
@@ -41,12 +46,14 @@ class TextInput extends StatelessWidget {
         autofocus: autofocus,
         name: name,
         controller: controller,
+        onEditingComplete: onCompleted,
         onChanged: onChanged,
         readOnly: readOnly,
         initialValue: initValue,
         obscureText: obscureText,
         keyboardType: keyboardType,
         valueTransformer: formedValue,
+        focusNode: focusNode,
         maxLines: maxLines,
         decoration: InputDecoration(
           labelText: label ?? toCapitalize(name),

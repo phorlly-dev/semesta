@@ -12,7 +12,7 @@ class HandleError {
           (error, stack) {
             HandleLogger.debug(
               '⚠️ Caught error in guarded zone',
-              error: error,
+              message: error,
               stack: stack,
             );
           },

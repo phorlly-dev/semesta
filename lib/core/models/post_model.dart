@@ -1,162 +1,210 @@
-import 'package:semesta/app/utils/json_helpers.dart';
-import 'package:semesta/core/models/reaction_model.dart';
+import 'package:get/get.dart';
+import 'package:semesta/app/functions/json_helpers.dart';
+import 'package:semesta/app/utils/type_def.dart';
+import 'package:semesta/core/models/media_model.dart';
 import 'package:semesta/core/models/model.dart';
+import 'package:semesta/core/models/post_action_model.dart';
+
+enum PostVisibility { everyone, verified, following, mentioned }
+
+enum PostType { post, reply, repost, quote }
 
 class PostModel extends Model<PostModel> {
   final String userId;
-  final String? content;
-  final String type;
-  final List<String>? images;
-  final List<String>? videos;
-  final List<String>? tags; // user IDs of tagged friends
-  final String? location;
-  final String? feeling; // e.g. "😊 Happy", "🎉 Excited", "Sad"
-  final String visibility; // "public", "friends", or "only_me"
-  final List<String>? mentions; // optional, user IDs from text
-  final Map<String, dynamic>? linkPreview; // optional metadata (title, image)
-  final String? eventId; // optional
-  final String? sharedPostId; // optional
-  final ReactionModel? reaction;
-  final int commentCount;
-  final int shareCount;
-  final int viewCount;
+  final String displayName;
+  final String username;
+  final String userAvatar;
+
+  final String content;
+  final String location;
+  final List<MediaModel> media;
+
+  final PostType type;
+  final String parentId;
+  final PostVisibility visibility;
+
+  final int likedCount;
+  final int viewedCount;
+  final int reliedCount;
+  final int repostedCount;
+  final int savedCount;
+  final int sharedCount;
+
+  final bool isEdited;
+  final bool isDeleted;
+  final PostActionModel action;
+
+  final AsList hashtags;
+  final AsList mentions;
 
   const PostModel({
-    this.viewCount = 0,
-    this.mentions,
-    this.linkPreview,
-    this.sharedPostId,
-    this.type = 'post',
-    this.content,
-    this.tags,
-    this.location,
-    this.feeling,
-    this.visibility = 'public',
-    this.eventId,
-    this.commentCount = 0,
-    this.shareCount = 0,
-    required this.userId,
-    this.images,
-    this.videos,
-    this.reaction,
-    super.id,
+    super.id = '',
+    this.userId = '',
+    this.displayName = '',
+    this.username = '',
+    this.userAvatar = '',
+    this.content = '',
+    this.media = const [],
+    this.location = '',
+    this.visibility = PostVisibility.everyone,
+    this.hashtags = const [],
+    this.mentions = const [],
+    this.type = PostType.post,
+    this.parentId = '',
+    this.isEdited = false,
+    this.isDeleted = false,
+    this.likedCount = 0,
+    this.viewedCount = 0,
+    this.reliedCount = 0,
+    this.repostedCount = 0,
+    this.savedCount = 0,
+    this.sharedCount = 0,
     super.createdAt,
     super.updatedAt,
+    this.action = const PostActionModel(),
   });
 
   @override
   PostModel copyWith({
     String? id,
     String? userId,
+    String? displayName,
+    String? username,
+    String? userAvatar,
     String? content,
-    String? type,
-    String? sharedPostId,
-    List<String>? images,
-    List<String>? videos,
-    List<String>? tags,
+    List<MediaModel>? media,
     String? location,
-    String? feeling,
-    String? visibility,
-    String? eventId,
-    ReactionModel? reaction,
-    Map<String, dynamic>? linkPreview,
-    List<String>? mentions,
-    int? commentCount,
-    int? shareCount,
-    int? viewCount,
+    PostVisibility? visibility,
+    int? likedCount,
+    int? viewedCount,
+    int? reliedCount,
+    int? repostedCount,
+    int? savedCount,
+    int? sharedCount,
+    PostType? type,
+    bool? isEdited,
+    bool? isDeleted,
+    String? parentId,
+    PostActionModel? action,
+    AsList? hashtags,
+    AsList? mentions,
+    DateTime? createdAt,
   }) => PostModel(
     id: id ?? this.id,
     userId: userId ?? this.userId,
     content: content ?? this.content,
-    type: type ?? this.type,
-    sharedPostId: sharedPostId ?? this.sharedPostId,
-    images: images ?? this.images,
-    videos: videos ?? this.videos,
-    tags: tags ?? this.tags,
+    parentId: parentId ?? this.parentId,
+    hashtags: hashtags ?? this.hashtags,
+    media: media ?? this.media,
+    isEdited: isEdited ?? this.isEdited,
+    isDeleted: isDeleted ?? this.isDeleted,
     location: location ?? this.location,
-    feeling: feeling ?? this.feeling,
+    userAvatar: userAvatar ?? this.userAvatar,
+    displayName: displayName ?? this.displayName,
+    username: username ?? this.username,
     visibility: visibility ?? this.visibility,
-    eventId: eventId ?? this.eventId,
-    reaction: reaction ?? this.reaction,
-    commentCount: commentCount ?? this.commentCount,
-    shareCount: shareCount ?? this.shareCount,
-    viewCount: viewCount ?? this.viewCount,
-    linkPreview: linkPreview ?? linkPreview,
-    mentions: mentions ?? mentions,
-    createdAt: createdAt,
+    type: type ?? this.type,
+    action: action ?? this.action,
+    likedCount: likedCount ?? this.likedCount,
+    reliedCount: reliedCount ?? this.reliedCount,
+    repostedCount: repostedCount ?? this.repostedCount,
+    savedCount: savedCount ?? this.savedCount,
+    sharedCount: sharedCount ?? this.sharedCount,
+    viewedCount: viewedCount ?? this.viewedCount,
+    mentions: mentions ?? this.mentions,
+    createdAt: createdAt ?? this.createdAt,
     updatedAt: DateTime.now(),
   );
 
   @override
   List<Object?> get props => [
     ...super.props,
-    content,
-    tags,
-    location,
-    feeling,
-    visibility,
-    eventId,
-    commentCount,
-    shareCount,
     userId,
-    images,
-    videos,
-    reaction,
-    type,
+    displayName,
+    username,
+    userAvatar,
+    isDeleted,
+    content,
+    media,
+    location,
+    visibility,
+    isEdited,
+    parentId,
+    hashtags,
     mentions,
-    linkPreview,
-    sharedPostId,
-    viewCount,
+    type,
+    likedCount,
+    viewedCount,
+    reliedCount,
+    repostedCount,
+    savedCount,
+    sharedCount,
   ];
 
-  factory PostModel.fromMap(Map<String, dynamic> json) {
-    final map = Model.convertJsonKeys(json, toCamelCase: true);
+  factory PostModel.fromMap(AsMap json) {
+    final map = Model.convertJsonKeys(json, true);
     return PostModel(
-      id: map['id'] ?? '',
-      userId: map['userId'] ?? '',
-      eventId: map['eventId'],
-      images: parseTo(map['images']),
-      videos: parseTo(map['videos']),
-      tags: parseTo(map['tags']),
-      commentCount: map['commentCount'] ?? 0,
-      viewCount: map['viewCount'] ?? 0,
-      shareCount: map['shareCount'] ?? 0,
+      id: map['id'],
+      userId: map['userId'],
       content: map['content'],
       location: map['location'],
-      feeling: map['feeling'],
-      type: map['type'] ?? 'post',
-      reaction: castToMap<ReactionModel>(
-        map['reaction'],
-        ReactionModel.fromMap,
+      username: map['username'],
+      parentId: map['parentId'],
+      userAvatar: map['userAvatar'],
+      displayName: map['displayName'],
+      isEdited: map['isEdited'] ?? false,
+      isDeleted: map['isDeleted'] ?? false,
+      likedCount: map['likedCount'] ?? 0,
+      reliedCount: map['reliedCount'] ?? 0,
+      repostedCount: map['repostedCount'] ?? 0,
+      savedCount: map['savedCount'] ?? 0,
+      sharedCount: map['sharedCount'] ?? 0,
+      viewedCount: map['viewedCount'] ?? 0,
+      hashtags: parseToList(map['hashtags']),
+      mentions: parseToList(map['mentions']),
+      media: parseJsonList<MediaModel>(map['media'], MediaModel.fromMap),
+      visibility: PostVisibility.values.firstWhere(
+        (e) => e.name == map['visibility'],
+        orElse: () => PostVisibility.everyone,
       ),
-      linkPreview: parseTo(map['linkPreview'], false),
-      mentions: parseTo(map['mentions']),
-      sharedPostId: map['sharedPostId'],
-      visibility: map['visibility'] ?? 'public',
+      type: PostType.values.firstWhere(
+        (e) => e.name == map['type'],
+        orElse: () => PostType.post,
+      ),
       createdAt: Model.createOrUpdate(map),
       updatedAt: Model.createOrUpdate(map, false),
     );
   }
 
   @override
-  Map<String, dynamic> toMap() => {
-    ...general,
-    'userId': userId,
-    'content': content,
-    'images': images ?? const [],
-    'videos': videos ?? const [],
-    'type': type,
-    'tags': tags ?? const [],
-    'location': location,
-    'linkPreview': linkPreview ?? const [],
-    'mentions': mentions ?? const [],
-    'sharedPostId': sharedPostId,
-    'feeling': feeling,
-    'visibility': visibility,
-    'eventId': eventId,
-    'reaction': reaction?.toMap(),
-    'commentCount': commentCount,
-    'viewCount': viewCount,
-    'shareCount': shareCount,
-  };
+  AsMap toMap() {
+    final data = {
+      ...general,
+      'content': content,
+      'userId': userId,
+      'isEdited': isEdited,
+      'isDeleted': isDeleted,
+      'location': location,
+      'displayName': displayName,
+      'username': username,
+      'parentId': parentId,
+      'userAvatar': userAvatar,
+      'hashtags': hashtags.toList(),
+      'mentions': mentions.toList(),
+      'media': media.map((e) => e.toMap()),
+      'type': type.name,
+      'likedCount': likedCount,
+      'reliedCount': reliedCount,
+      'repostedCount': repostedCount,
+      'savedCount': savedCount,
+      'sharedCount': sharedCount,
+      'viewedCount': viewedCount,
+      'visibility': visibility.name,
+    };
+    return Model.convertJsonKeys(data);
+  }
+
+  RxBool isLiked(String uid) => action.likedBy.contains(uid).obs;
+  RxBool isSaved(String uid) => action.savedBy.contains(uid).obs;
+  RxBool isReposted(String uid) => action.repostedBy.contains(uid).obs;
 }

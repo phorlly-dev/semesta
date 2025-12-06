@@ -2,18 +2,20 @@ import 'dart:math';
 
 import 'package:get/get.dart';
 import 'package:semesta/app/utils/logger.dart';
+import 'package:semesta/app/utils/type_def.dart';
 
 abstract class IController<T> extends GetxController {
-  var hasError = ''.obs;
-  var infoMessage = ''.obs;
-  var isLoading = false.obs;
-  var items = <T>[].obs;
-  var item = Rxn<T>(null);
+  final RxString hasError = ''.obs;
+  final RxString infoMessage = ''.obs;
+  final RxBool isLoading = false.obs;
+  final RxList<T> elements = <T>[].obs;
+  final Rxn<T> element = Rxn<T>(null);
 
   /// A reusable async handler for try/catch/finally logic.
   Future<void> handleAsyncOperation({
-    required Future<void> Function() callback,
-    void Function(Object? err)? onError,
+    required FutureCallback<void> callback,
+    ErrorCallback<void>? onError,
+    PropsCallback<bool, void>? onFinal,
   }) async {
     try {
       // 1. Set loading state to true *before* the operation starts.
@@ -29,16 +31,18 @@ abstract class IController<T> extends GetxController {
     } catch (e, stack) {
       if (onError != null) onError(e);
       hasError.value = e.toString();
-      HandleLogger.err('Operation Failed', error: e, stack: stack);
+      HandleLogger.error('Operation Failed on $T', message: e, stack: stack);
     } finally {
       // 5. This now correctly runs *after* the async operation is done.
       isLoading.value = false;
+      onFinal?.call(false);
     }
   }
 
-  final _rand = Random();
+  final rand = Random();
   String getRandomId(List<String> ids) {
     if (ids.isEmpty) return 'unknown';
-    return ids[_rand.nextInt(ids.length)];
+
+    return ids[rand.nextInt(ids.length)];
   }
 }

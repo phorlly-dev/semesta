@@ -2,11 +2,12 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:semesta/app/utils/logger.dart';
 import 'package:path/path.dart' as p;
+import 'package:semesta/core/models/media_model.dart';
 import 'package:semesta/core/services/firebase_service.dart';
 
 class StorageService extends FirebaseService {
   /// Upload a file and return its public download URL
-  Future<String> uploadFile({
+  Future<MediaModel?> uploadFile({
     required String folderName,
     required String fileName,
     required File file,
@@ -20,13 +21,16 @@ class StorageService extends FirebaseService {
       // Get download URL
       final downloadUrl = await uploadTask.ref.getDownloadURL();
 
-      return downloadUrl;
-    } on FirebaseException catch (e, stack) {
-      HandleLogger.err(
-        "Failed to upload ",
-        error: 'Upload failed: ${e.message}',
-        stack: stack,
+      return MediaModel(
+        display: downloadUrl,
+        path: '$folderName/$fileName',
+        type: MediaType.values.firstWhere(
+          (e) => folderName.contains(e.name),
+          orElse: () => MediaType.image,
+        ),
       );
+    } on FirebaseException catch (e, stack) {
+      HandleLogger.error("Failed to upload ", message: e.message, stack: stack);
       rethrow;
     }
   }
@@ -38,9 +42,9 @@ class StorageService extends FirebaseService {
 
       return await ref.getDownloadURL();
     } catch (e, stack) {
-      HandleLogger.err(
+      HandleLogger.error(
         "Failed to download ",
-        error: 'Failed to get download URL: $e',
+        message: 'Failed to get download URL: $e',
         stack: stack,
       );
       rethrow;
@@ -53,9 +57,12 @@ class StorageService extends FirebaseService {
       final ref = storage.ref().child(path);
       await ref.delete();
 
-      HandleLogger.warn("Succeed to delete file", error: 'File deleted: $path');
+      HandleLogger.warn(
+        "Succeed to delete file",
+        message: 'File deleted: $path',
+      );
     } catch (e, st) {
-      HandleLogger.err("Failed to delete file", error: e, stack: st);
+      HandleLogger.error("Failed to delete file", message: e, stack: st);
       rethrow;
     }
   }

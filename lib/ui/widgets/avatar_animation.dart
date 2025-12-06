@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/app/utils/format.dart';
+import 'package:semesta/app/functions/format.dart';
 import 'package:semesta/ui/widgets/animated.dart';
 import 'package:semesta/ui/widgets/custom_image.dart';
 
 class AvatarAnimation extends StatelessWidget {
-  final String? imageUrl;
+  final String imageUrl;
   final double size;
+  final bool isNetwork;
   final VoidCallback? onTap;
 
-  const AvatarAnimation({super.key, this.imageUrl, this.size = 44, this.onTap});
+  const AvatarAnimation({
+    super.key,
+    required this.imageUrl,
+    this.size = 42,
+    this.onTap,
+    this.isNetwork = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -16,11 +23,23 @@ class AvatarAnimation extends StatelessWidget {
       onTap: onTap,
       child: CircleAvatar(
         radius: size / 2,
-        // backgroundImage: NetworkImage(imageUrl ?? setImage('main.png')),
-        child: CustomImage(
-          image: imageUrl ?? setImage('default.png', true),
-          borderRadius: BorderRadius.circular(size / 2),
-        ),
+        backgroundImage: isNetwork
+            ? NetworkImage(
+                imageUrl.isNotEmpty
+                    ? imageUrl
+                    : 'https://i.pravatar.cc/150?img=8',
+              )
+            : null,
+        child: !isNetwork
+            ? CustomImage(
+                image: imageUrl.isNotEmpty
+                    ? imageUrl
+                    : setImage('default.png', true),
+                borderRadius: BorderRadius.circular(size / 2),
+                width: size,
+                height: size,
+              )
+            : null,
       ),
     );
   }

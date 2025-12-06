@@ -82,25 +82,28 @@ class _ExpandableTextState extends State<ExpandableText> {
 
     final displayText = expanded ? widget.text : visibleText;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: RichText(
-        textAlign: TextAlign.start,
-        text: TextSpan(
-          style: TextStyle(color: color, fontSize: 15, height: 1.4),
-          children: [
-            ..._buildSpans(displayText),
-            if (hasOverflow)
-              TextSpan(
-                text: expanded ? '  See less' : '... See more',
-                style: const TextStyle(
-                  color: Colors.blueAccent,
-                  fontWeight: FontWeight.w500,
+    return GestureDetector(
+      onTap: () => setState(() => expanded = !expanded),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: RichText(
+          textAlign: TextAlign.start,
+          text: TextSpan(
+            style: TextStyle(color: color, fontSize: 16, height: 1.4),
+            children: [
+              ..._buildSpans(displayText),
+              if (hasOverflow)
+                TextSpan(
+                  text: !expanded ? '... Read more' : '',
+                  style: const TextStyle(
+                    color: Colors.blueGrey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () => setState(() => expanded = !expanded),
                 ),
-                recognizer: TapGestureRecognizer()
-                  ..onTap = () => setState(() => expanded = !expanded),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -3,12 +3,15 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:semesta/app/utils/logger.dart';
 import 'package:semesta/core/models/user_model.dart';
+import 'package:semesta/core/repositories/generic_repository.dart';
 import 'package:semesta/core/repositories/user_repository.dart';
 import 'package:semesta/core/services/firebase_service.dart';
 
 class AuthRepository extends FirebaseService {
   final _repo = UserRepository();
+  final _func = GenericRepository();
 
   // ---------- SIGN UP ----------
   Future<User?> signUp(
@@ -25,8 +28,11 @@ class AuthRepository extends FirebaseService {
     final firebaseUser = response.user;
     if (firebaseUser == null) return null;
 
-    final avatarUrl = await _repo.uploadProfile(firebaseUser.uid, file);
-    await _repo.createUser(firebaseUser.uid, model.copyWith(avatar: avatarUrl));
+    final avatarUrl = await _func.uploadProfile(firebaseUser.uid, file);
+    await _repo.createUser(
+      model.copyWith(avatar: avatarUrl?.display, id: firebaseUser.uid),
+      avatarUrl?.path,
+    );
 
     return firebaseUser;
   }
@@ -42,15 +48,17 @@ class AuthRepository extends FirebaseService {
     if (firebaseUser == null) return null;
 
     // Ensure Firestore user exists (e.g., for old accounts)
-    final notExist = await _repo.isNotExist(firebaseUser.uid);
-    if (notExist) {
+    final exists = await isExists(firebaseUser.uid);
+    if (!exists) {
       await _repo.createUser(
-        firebaseUser.uid,
         UserModel(
+          id: firebaseUser.uid,
+          username: _func.generateUsername(
+            firebaseUser.displayName ?? _func.fakeName,
+          ),
           email: email,
           name: firebaseUser.displayName ?? '',
           avatar: firebaseUser.photoURL ?? '',
-          token: firebaseUser.refreshToken ?? '',
         ),
       );
     }
@@ -77,15 +85,17 @@ class AuthRepository extends FirebaseService {
       if (firebaseUser == null) return null;
 
       // Ensure Firestore user exists (e.g., for old accounts)
-      final notExist = await _repo.isNotExist(firebaseUser.uid);
-      if (notExist) {
+      final exist = await isExists(firebaseUser.uid);
+      if (!exist) {
         await _repo.createUser(
-          firebaseUser.uid,
           UserModel(
+            id: firebaseUser.uid,
+            username: _func.generateUsername(
+              firebaseUser.displayName ?? _func.fakeName,
+            ),
             email: firebaseUser.email,
             name: firebaseUser.displayName ?? '',
             avatar: firebaseUser.photoURL ?? '',
-            token: firebaseUser.refreshToken ?? '',
           ),
         );
       }
@@ -94,9 +104,9 @@ class AuthRepository extends FirebaseService {
       // proceed
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
-        print('User canceled sign in.');
+        HandleLogger.error('User canceled sign in.');
       } else {
-        print('Sign in failed: $e');
+        HandleLogger.error('Sign in failed: $e');
       }
     }
 
@@ -118,25 +128,29 @@ class AuthRepository extends FirebaseService {
       if (firebaseUser == null) return null;
 
       // Ensure Firestore user exists (e.g., for old accounts)
-      final notExist = await _repo.isNotExist(firebaseUser.uid);
-      if (notExist) {
+      final exist = await isExists(firebaseUser.uid);
+      if (!exist) {
         await _repo.createUser(
-          firebaseUser.uid,
           UserModel(
+            id: firebaseUser.uid,
+            username: _func.generateUsername(
+              firebaseUser.displayName ?? _func.fakeName,
+            ),
             email: firebaseUser.email,
             name: firebaseUser.displayName ?? '',
             avatar: firebaseUser.photoURL ?? '',
-            token: firebaseUser.refreshToken ?? '',
           ),
         );
       }
 
       return firebaseUser;
     } else {
-      print('Facebook login failed: ${result.status}');
+      HandleLogger.error('Facebook login failed: ${result.status}');
       return null;
     }
   }
+
+  Future<bool> isExists(String child) async => _func.isExists(users, child);
 
   // ---------- SIGN OUT ----------
   Future<void> signOut() async {

@@ -69,13 +69,10 @@ android {
 }
 
 dependencies {
-      // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
-
     // When using the BoM, don't specify versions in Firebase dependencies
     implementation("com.google.firebase:firebase-analytics")
   
-    //   implementation("androidx.core:core:1.12.0") // ensure this is updated
+    implementation("androidx.core:core:1.12.0") // ensure this is updated
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 
     //onesignal
@@ -83,6 +80,7 @@ dependencies {
     
     // Import the BoM for the Firebase platform
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
+    implementation("com.google.android.gms:play-services-maps:17.0.0")
 }
 
 flutter {

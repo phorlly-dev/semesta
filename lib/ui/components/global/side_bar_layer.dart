@@ -1,0 +1,230 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:semesta/app/routes/routes.dart';
+import 'package:semesta/app/themes/app_colors.dart';
+import 'package:semesta/app/themes/theme_manager.dart';
+import 'package:semesta/app/functions/format.dart';
+import 'package:semesta/core/controllers/auth_controller.dart';
+import 'package:semesta/ui/widgets/action_count.dart';
+import 'package:semesta/ui/widgets/animated.dart';
+import 'package:semesta/ui/widgets/avatar_animation.dart';
+
+class SideBarLayer extends StatelessWidget {
+  final String name, userId;
+  final String username;
+  final String avatarUrl;
+  final int following;
+  final int followers;
+
+  const SideBarLayer({
+    super.key,
+    required this.name,
+    required this.username,
+    required this.avatarUrl,
+    required this.following,
+    required this.followers,
+    required this.userId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final text = theme.textTheme;
+    final colors = theme.colorScheme;
+    final route = Routes();
+
+    return Drawer(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(16),
+          bottomRight: Radius.circular(16),
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            margin: EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    AvatarAnimation(
+                      imageUrl: avatarUrl,
+                      onTap: () {
+                        context.pushNamed(
+                          route.profile.name,
+                          pathParameters: {'id': userId},
+                        );
+                        context.pop();
+                      },
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.menu_open_rounded),
+                      onPressed: () {},
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+
+                Animated(
+                  onTap: () {
+                    context.pushNamed(
+                      route.profile.name,
+                      pathParameters: {'id': userId},
+                    );
+                    context.pop();
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        toCapitalize(name),
+                        style: text.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '@$username',
+                        style: text.titleSmall?.copyWith(color: colors.outline),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+                Row(
+                  spacing: 12,
+                  children: [
+                    ActionCount(
+                      label: 'following',
+                      value: following,
+                      onTap: () {},
+                    ),
+                    ActionCount(
+                      label: 'followers',
+                      value: followers,
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Menu
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                _buildItem(
+                  Icons.person_outline,
+                  'Profile',
+                  onTap: () {
+                    context.pushNamed(
+                      route.profile.name,
+                      pathParameters: {'id': userId},
+                    );
+                    context.pop();
+                  },
+                ),
+                _buildItem(Icons.chat_outlined, 'Chat', trailing: 'Beta'),
+                _buildItem(
+                  Icons.bookmark_border,
+                  'Bookmarks',
+                  onTap: () {
+                    context.pushNamed(
+                      route.postsSaved.name,
+                      pathParameters: {'id': userId},
+                    );
+                    context.pop();
+                  },
+                ),
+                _buildItem(Icons.list_alt_outlined, 'Lists'),
+                const Divider(height: 30),
+
+                ExpansionTile(
+                  title: const Text(
+                    'Settings & Support',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  childrenPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  children: [
+                    _buildSubItem('Settings'),
+                    _buildSubItem('Help Center'),
+                    _buildSubItem('About App'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Bottom row
+          ListTile(
+            leading: IconButton(
+              tooltip: 'Theme',
+              icon: Icon(
+                Theme.of(context).brightness == Brightness.dark
+                    ? Icons.light_mode
+                    : Icons.dark_mode,
+              ),
+              onPressed: () {
+                context.read<ThemeManager>().toggleTheme(context);
+              },
+              iconSize: 24,
+            ),
+            trailing: IconButton(
+              tooltip: 'Logout',
+              onPressed: () => Get.find<AuthController>().logout(),
+              color: AppColors.lightRed,
+              icon: const Icon(Icons.logout, size: 24),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItem(
+    IconData icon,
+    String title, {
+    String? trailing,
+    VoidCallback? onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, size: 24),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+      trailing: trailing != null
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                trailing,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          : null,
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildSubItem(String title) =>
+      ListTile(title: Text(title), onTap: () {});
+}

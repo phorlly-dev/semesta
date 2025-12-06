@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:semesta/app/utils/format.dart';
+import 'package:semesta/app/functions/format.dart';
 
 class DateTimeInput extends StatelessWidget {
   final InputType type;
@@ -9,7 +9,7 @@ class DateTimeInput extends StatelessWidget {
   final String? lable;
   final String name;
   final IconData? icon;
-  final String? Function(DateTime? value)? validator;
+  final FormFieldValidator<DateTime?>? validator;
   final DatePickerEntryMode initDatePicker;
   final TimePickerEntryMode initTimePicker;
 

@@ -34,9 +34,9 @@ class AuthController extends GetxController {
       _bindAuthStream(); // ensure stream reconnected
     } on FirebaseAuthException catch (err) {
       CustomToast.error(handleError(err));
-      HandleLogger.track('Firebase Auth Exception', error: err);
+      HandleLogger.track('Firebase Auth Exception', message: err);
     } catch (e, s) {
-      HandleLogger.err('Someyhing Wrong', error: e, stack: s);
+      HandleLogger.error('Someyhing Wrong', message: e, stack: s);
     } finally {
       isLoading.value = false;
     }
@@ -59,9 +59,9 @@ class AuthController extends GetxController {
       _bindAuthStream(); // ensure stream reconnected
     } on FirebaseAuthException catch (err) {
       CustomToast.error(handleError(err));
-      HandleLogger.track('Firebase Auth Exception', error: err);
+      HandleLogger.track('Firebase Auth Exception', message: err);
     } catch (e, s) {
-      HandleLogger.err('Someyhing Wrong', error: e, stack: s);
+      HandleLogger.error('Someyhing Wrong', message: e, stack: s);
     } finally {
       isLoading.value = false;
     }
@@ -81,9 +81,9 @@ class AuthController extends GetxController {
       await Future.delayed(const Duration(milliseconds: 300));
       _bindAuthStream();
     } on FirebaseAuthException catch (err) {
-      HandleLogger.track('Firebase Auth Exception', error: err);
+      HandleLogger.track('Firebase Auth Exception', message: err);
     } catch (e, s) {
-      HandleLogger.err('Someyhing Wrong', error: e, stack: s);
+      HandleLogger.error('Someyhing Wrong', message: e, stack: s);
     } finally {
       isLoading.value = false;
     }

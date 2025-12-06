@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
 class Animated extends StatefulWidget {
-  final VoidCallback? onTap;
-  final Widget? child;
-  const Animated({super.key, this.onTap, this.child});
+  final VoidCallback? onTap, onLongPress;
+  final Widget child;
+  const Animated({
+    super.key,
+    this.onTap,
+    required this.child,
+    this.onLongPress,
+  });
 
   @override
   State<Animated> createState() => _AnimatedState();
@@ -15,8 +20,8 @@ class _AnimatedState extends State<Animated> {
 
   void _animateTap() async {
     setState(() {
-      _opacity = 0.7;
-      _scale = 0.92;
+      _opacity = 0.6;
+      _scale = 0.89;
     });
 
     await Future.delayed(const Duration(milliseconds: 120));
@@ -32,7 +37,8 @@ class _AnimatedState extends State<Animated> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _animateTap,
+      onTap: widget.onTap != null ? _animateTap : null,
+      onLongPress: widget.onLongPress,
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 160),
         opacity: _opacity,

@@ -6,10 +6,12 @@ import 'package:get/get.dart';
 import 'package:semesta/app/configs/app_start.dart';
 import 'package:semesta/app/utils/logger.dart';
 import 'package:semesta/app/configs/handle_error.dart';
+import 'package:semesta/app/utils/scroll_helper.dart';
 import 'package:semesta/app/utils/share_storage.dart';
 import 'package:semesta/core/controllers/auth_controller.dart';
 import 'package:semesta/core/controllers/user_controller.dart';
 import 'package:semesta/core/services/firebase_service.dart';
+import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class AppConfigure {
   AppConfigure._();
@@ -22,6 +24,10 @@ class AppConfigure {
         // Must be FIRST inside the zone:
         WidgetsFlutterBinding.ensureInitialized();
 
+        AssetPicker.registerObserve();
+        // Enables logging with the photo_manager.
+        PhotoManager.setLog(true);
+
         //Service
         await FirebaseService().init();
 
@@ -31,6 +37,7 @@ class AppConfigure {
         // Register GetX controllers, etc.
         Get.put(AuthController(), permanent: true);
         Get.put(UserController(), permanent: true);
+        Get.put(ScrollHelper(), permanent: true);
 
         //ScreenUtil
         await ScreenUtil.ensureScreenSize();
@@ -53,7 +60,7 @@ class AppConfigure {
   static void onError() {
     FlutterError.onError = (details) {
       FlutterError.presentError(details);
-      HandleLogger.err('Caught by FlutterError', error: details.exception);
+      HandleLogger.error('Caught by FlutterError', message: details.exception);
       HandleLogger.track('Info Logged', stack: details.stack);
     };
   }

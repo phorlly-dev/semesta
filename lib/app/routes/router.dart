@@ -1,31 +1,37 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
-import 'package:semesta/app/bindings/home_binding.dart';
 import 'package:semesta/app/routes/router_refresh_stream.dart';
 import 'package:semesta/app/routes/routes.dart';
 import 'package:semesta/app/utils/transition_page.dart';
+import 'package:semesta/core/controllers/action_controller.dart';
 import 'package:semesta/core/controllers/auth_controller.dart';
-import 'package:semesta/core/models/story_model.dart';
+import 'package:semesta/core/controllers/post_controller.dart';
+import 'package:semesta/core/models/post_model.dart';
 import 'package:semesta/core/models/user_model.dart';
-import 'package:semesta/ui/pages/ousides/story_detail.dart';
-import 'package:semesta/ui/pages/ousides/auth.dart';
-import 'package:semesta/ui/pages/insides/friends.dart';
-import 'package:semesta/ui/pages/insides/home.dart';
-import 'package:semesta/ui/partials/gen/index.dart';
-import 'package:semesta/ui/pages/insides/marketplace.dart';
-import 'package:semesta/ui/pages/insides/notifications.dart';
-import 'package:semesta/ui/pages/ousides/splash.dart';
-import 'package:semesta/ui/pages/insides/watches.dart';
+import 'package:semesta/ui/pages/create_post_page.dart';
+import 'package:semesta/ui/pages/post_details_page.dart';
+import 'package:semesta/ui/pages/image_preview_page.dart';
+import 'package:semesta/ui/pages/reply_to_post_page.dart';
+import 'package:semesta/ui/pages/repost_post_page.dart';
+import 'package:semesta/ui/pages/profile_view_page.dart';
+import 'package:semesta/ui/pages/avatar_preview_page.dart';
+import 'package:semesta/ui/screens/message_screen.dart';
+import 'package:semesta/ui/pages/auth_page.dart';
+import 'package:semesta/ui/screens/explore_screen.dart';
+import 'package:semesta/ui/screens/home_screen.dart';
+import 'package:semesta/ui/pages/saved_views_page.dart';
+import 'package:semesta/ui/components/global/index.dart';
+import 'package:semesta/ui/screens/notifications_screen.dart';
+import 'package:semesta/ui/pages/splash_page.dart';
+import 'package:semesta/ui/screens/reels_screen.dart';
 
 class AppRouter extends Routes {
   final _auth = Get.find<AuthController>();
   String get uid => _auth.currentUser.value?.uid ?? '';
   static final appReady = ValueNotifier<bool>(false);
   final rootNavKey = GlobalKey<NavigatorState>();
-  final controller = ScrollController();
 
   GoRouter get router => GoRouter(
     debugLogDiagnostics: true,
@@ -65,36 +71,116 @@ class AppRouter extends Routes {
       return null;
     },
     routes: [
-      goRoute(splash, builder: (ctx, sts) => Splash()),
-      goRoute(auth, builder: (ctx, sts) => Auth(controller: _auth)),
+      goRoute(splash, builder: (ctx, sts) => SplashPage()),
+      goRoute(auth, builder: (ctx, sts) => AuthPage(controller: _auth)),
 
       // Shell (tabs)
       StatefulShellRoute.indexedStack(
-        builder: (context, state, shell) =>
-            AppLayout(scroller: controller, child: shell),
+        builder: (context, state, shell) {
+          Get.put(PostController());
+          Get.put(ActionController());
+          return AppLayout(child: shell);
+        },
         branches: [
-          branch(
-            home,
-            child: Home(scroller: controller, userId: uid),
-            initPage: (state) => HomeBinding().dependencies(),
-          ),
-          branch(watches, child: const Watches()),
-          branch(friends, child: const Friends()),
-          branch(notifications, child: const Notifications()),
-          branch(marketplace, child: const Marketplace()),
+          branch(home, child: HomeScreen()),
+          branch(reel, child: const ReelsScreen()),
+          branch(explore, child: const ExploreScreen()),
+          branch(notify, child: const NotificationsScreen()),
+          branch(messsage, child: const MessageScreen()),
         ],
       ),
 
       // ⚡ FULLSCREEN OUTSIDE TAB ROUTES ⚡
       goRoute(
-        storyDetail,
+        profile,
         pageBuilder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>;
-          final story = StoryModel.fromMap(extra['story']);
-          final user = UserModel.fromMap(extra['user']);
+          final userId = state.pathParameters['id'];
+          final postId = state.uri.queryParameters['parent'];
+          if (userId == null) {
+            throw Exception('Invalid user ID in post: $userId');
+          }
 
           return TransitionPage(
-            child: StoryDetail(story: story, user: user),
+            child: ProfileViewPage(userId: userId, postId: postId ?? ''),
+          );
+        },
+      ),
+      goRoute(
+        postsSaved,
+        pageBuilder: (context, state) {
+          final userId = state.pathParameters['id'];
+          if (userId == null) {
+            throw Exception('Invalid user ID in post: $userId');
+          }
+
+          return TransitionPage(child: SavedViewsPage(userId: userId));
+        },
+      ),
+      goRoute(
+        avatarPreview,
+        pageBuilder: (context, state) {
+          final userId = state.pathParameters['id']!;
+          final isOwner = bool.parse(state.uri.queryParameters['self']!);
+
+          return TransitionPage(
+            child: AvatarPreviewPage(userId: userId, isOwner: isOwner),
+            fullscreenDialog: true,
+          );
+        },
+      ),
+      goRoute(
+        createPost,
+        pageBuilder: (context, state) =>
+            TransitionPage(child: CreatePostPage(), fullscreenDialog: true),
+      ),
+      goRoute(
+        replyPost,
+        pageBuilder: (context, state) {
+          final postId = state.pathParameters['id'];
+          if (postId == null) {
+            throw Exception('Invalid post ID: $postId');
+          }
+
+          return TransitionPage(
+            child: ReplyToPostPage(postId: postId),
+            fullscreenDialog: true,
+          );
+        },
+      ),
+      goRoute(
+        repost,
+        pageBuilder: (context, state) {
+          final postId = state.pathParameters['id'];
+          if (postId == null) {
+            throw Exception('Invalid post ID: $postId');
+          }
+
+          return TransitionPage(
+            child: PostRepost(postId: postId),
+            fullscreenDialog: true,
+          );
+        },
+      ),
+      goRoute(
+        imagesPreview,
+        pageBuilder: (context, state) {
+          final postId = state.pathParameters['id']!;
+
+          return TransitionPage(
+            child: ImagePreviewPage(postId: postId),
+            fullscreenDialog: true,
+          );
+        },
+      ),
+      goRoute(
+        postDatails,
+        pageBuilder: (context, state) {
+          final args = state.extra as Map<String, dynamic>;
+          final user = args['user'] as UserModel;
+          final post = args['post'] as PostModel;
+
+          return TransitionPage(
+            child: PostDetailsPage(user: user, post: post),
           );
         },
       ),

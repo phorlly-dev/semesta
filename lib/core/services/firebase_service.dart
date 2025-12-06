@@ -6,7 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:semesta/app/configs/firebase_options.dart';
-import 'package:semesta/core/services/firebase_collection.dart';
+import 'package:semesta/core/services/firebase_path.dart';
 
 class FirebaseService extends FirebaseCollection {
   Future<void> init() async {
@@ -15,7 +15,9 @@ class FirebaseService extends FirebaseCollection {
     );
     FirebaseAuth.instanceFor(app: app);
     await Firebase.initializeApp();
-    await FirebaseAppCheck.instance.activate();
+    await FirebaseAppCheck.instance.activate(
+      providerAndroid: AndroidDebugProvider(),
+    );
     await google.initialize(
       serverClientId:
           '186960173803-q8c82j37onennb9inhf09tffh8optgq3.apps.googleusercontent.com',

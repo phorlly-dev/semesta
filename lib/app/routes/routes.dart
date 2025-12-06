@@ -1,60 +1,65 @@
-import 'package:flutter/material.dart';
 import 'package:semesta/app/routes/custom_route.dart';
 import 'package:semesta/app/routes/route_params.dart';
 
 class Routes extends CustomRoute {
-  //main pages
-  RouteParams get home => RouteParams(path: _convert('home'), name: 'home');
+  //pages inside
+  RouteParams get home => RouteParams(path: convert('home'), name: 'home');
+  RouteParams get explore =>
+      RouteParams(path: convert('explore'), name: 'explore');
+  RouteParams get reel => RouteParams(path: convert('reel'), name: 'reel');
+  RouteParams get notify =>
+      RouteParams(path: convert('notify'), name: 'notify');
+  RouteParams get messsage =>
+      RouteParams(path: convert('messsage'), name: 'messsage');
+
+  //pages outside
   RouteParams get splash =>
-      RouteParams(path: _convert('splash'), name: 'splash');
-  RouteParams get auth => RouteParams(path: _convert('auth'), name: 'auth');
-  RouteParams get friends =>
-      RouteParams(path: _convert('friends'), name: 'friends');
-  RouteParams get messenger =>
-      RouteParams(path: _convert('messenger'), name: 'messenger');
-  RouteParams get watches =>
-      RouteParams(path: _convert('watches'), name: 'watches');
-  RouteParams get notifications =>
-      RouteParams(path: _convert('notifications'), name: 'notifications');
-  RouteParams get marketplace =>
-      RouteParams(path: _convert('marketplace'), name: 'marketplace');
+      RouteParams(path: convert('splash'), name: 'splash');
+  RouteParams get auth => RouteParams(path: convert('auth'), name: 'auth');
 
-  //sub pages
-  RouteParams get createStory =>
-      RouteParams(path: _convert('story-create'), name: 'story.create');
-  RouteParams get storyDetail =>
-      RouteParams(path: _convert('story-detail'), name: 'story.detail');
+  RouteParams get profile =>
+      RouteParams(path: convert('users/:id/profile'), name: 'users.profile');
+  RouteParams get avatarPreview => RouteParams(
+    path: convert('users/avatar/:id/preview'),
+    name: 'users.avatar.preview',
+  );
 
-  //nav menu
-  List<BottomNavigationBarItem> get items => [
-    _item(Icons.ondemand_video_outlined, 'TV'),
-    _item(Icons.people_outline_rounded, 'People'),
-    _item(Icons.home, 'Home'),
-    _item(Icons.notifications_none, 'Notify'),
-    _item(Icons.menu, 'Menu'),
-  ];
+  RouteParams get createPost =>
+      RouteParams(path: convert('posts/create'), name: 'posts.create');
+  RouteParams get replyPost =>
+      RouteParams(path: convert('posts/:id/reply'), name: 'posts.reply');
+  RouteParams get repost =>
+      RouteParams(path: convert('posts/:id/repost'), name: 'posts.repost');
+  RouteParams get videoPreview => RouteParams(
+    path: convert('posts/videos/:id/preview'),
+    name: 'posts.videos.preview',
+  );
+  RouteParams get imagesPreview => RouteParams(
+    path: convert('posts/images/:id/preview'),
+    name: 'posts.images.preview',
+  );
+  RouteParams get postDatails =>
+      RouteParams(path: convert('posts/:id/details'), name: 'posts.details');
+  RouteParams get postsSaved =>
+      RouteParams(path: convert('posts/:id/saveds'), name: 'posts.saves');
 
   //path menu
   List<String> get paths => [
-    watches.path,
-    friends.path,
+    explore.path,
+    reel.path,
     home.path,
-    notifications.path,
-    marketplace.path,
+    notify.path,
+    messsage.path,
   ];
 
   List<String> get titles => [
     'Semesta',
-    watches.name,
-    friends.name,
-    notifications.name,
-    marketplace.name,
+    reel.name,
+    explore.name,
+    notify.name,
+    messsage.name,
   ];
 
   int getIndexFromLocation(String location) =>
       paths.indexWhere((p) => location.startsWith(p));
-
-  String _convert(String params) => '/$params-page';
-  BottomNavigationBarItem _item(IconData icon, [String? label]) =>
-      BottomNavigationBarItem(icon: Icon(icon), label: label);
 }

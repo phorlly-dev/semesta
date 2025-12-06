@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:semesta/app/routes/router.dart';
 import 'package:semesta/app/themes/theme_app.dart';
-import 'package:semesta/app/utils/theme_manager.dart';
+import 'package:semesta/app/themes/theme_manager.dart';
 import 'package:toastification/toastification.dart';
 
 class Startup extends StatelessWidget {

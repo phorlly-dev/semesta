@@ -1,40 +1,49 @@
+import 'package:semesta/app/utils/type_def.dart';
+import 'package:semesta/core/models/user_action_model.dart';
 import 'package:semesta/core/models/user_model.dart';
 import 'package:semesta/core/repositories/repository.dart';
+import 'package:semesta/core/repositories/user_action_repository.dart';
 
 class UserRepository extends IRepository<UserModel> {
-  Future<void> createUser(String userId, UserModel model) async {
+  UserActionRepository get act => UserActionRepository();
+
+  Future<void> createUser(UserModel model, [String? path]) async {
+    final now = DateTime.now();
     final newUser = UserModel(
-      id: userId,
+      id: model.id,
       email: model.email,
       name: model.name,
       avatar: model.avatar,
-      gender: model.gender,
-      birthday: model.birthday ?? DateTime.now().add(Duration(days: 365 * 16)),
+      username: model.username,
+      dob: model.dob ?? DateTime.now().add(Duration(days: 365 * 16)),
+      createdAt: now,
+      updatedAt: now,
     );
 
-    await firestore.collection(collectionPath).doc(userId).set(newUser.toMap());
+    await getPath(child: model.id).set(newUser.toMap());
+    await getPath(
+      parent: userActions,
+      child: model.id,
+    ).set(UserActionModel(userId: model.id).toMap());
+    await setUsername(model.id, model.username, path);
   }
 
-  Future<bool> isNotExist(String userId) async {
-    final userDoc = await firestore
-        .collection(collectionPath)
-        .doc(userId)
-        .get();
-
-    if (!userDoc.exists) return true;
-
-    return false;
+  Future<void> setUsername(String uid, String username, [String? path]) async {
+    await getPath(
+      parent: usernames,
+      child: username,
+    ).set({'user_id': uid, 'path': path, 'username': username.trim()});
   }
 
   @override
   String get collectionPath => users;
 
   @override
-  UserModel fromMap(Map<String, dynamic> map, String id) =>
+  UserModel fromMap(AsMap map, String id) =>
       UserModel.fromMap({...map, 'id': id});
 
   @override
-  Map<String, dynamic> toMap(UserModel model) => model.toMap();
+  AsMap toMap(UserModel model) => model.toMap();
 
   final pics = [
     'https://i.pravatar.cc/150?img=0',

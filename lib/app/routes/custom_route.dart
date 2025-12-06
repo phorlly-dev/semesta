@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:semesta/app/routes/function_helper.dart';
 import 'package:semesta/app/routes/route_params.dart';
 
-class CustomRoute {
+class CustomRoute extends FunctionHelper {
   GoRoute goRoute(
     RouteParams route, {
     GoRouterWidgetBuilder? builder,

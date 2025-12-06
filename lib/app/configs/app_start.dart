@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:semesta/app/configs/startup.dart';
-import 'package:semesta/app/utils/theme_manager.dart';
+import 'package:semesta/app/themes/theme_manager.dart';
 
 class AppStart extends StatelessWidget {
   const AppStart({super.key});

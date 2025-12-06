@@ -18,6 +18,7 @@ class DataForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.all(24.0),
       child: FormBuilder(
         key: formKey,

@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:semesta/app/utils/format.dart';
+import 'package:semesta/app/functions/format.dart';
 import 'package:semesta/ui/widgets/animated.dart';
 
 class ImagePicker extends StatelessWidget {
