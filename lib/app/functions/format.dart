@@ -59,6 +59,18 @@ String limitText(String text, [int maxChars = 12]) {
   return '${text.substring(0, maxChars)}... ';
 }
 
+bool isNot(dynamic data) {
+  if (data == null) {
+    return true;
+  } else if (data.isEmpty ?? false) {
+    return true;
+  } else if (data == '') {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 List<String> hashOrAt(String text) {
   final texts = <String>[];
   final regex = RegExp(r'(@\w+|#\w+)');

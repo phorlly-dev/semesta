@@ -1,9 +1,10 @@
-import 'package:get/get.dart';
 import 'package:semesta/app/utils/type_def.dart';
 import 'package:semesta/core/models/model.dart';
 import 'package:semesta/core/models/user_action_model.dart';
 
 enum Gender { female, male, other }
+
+enum FollowState { follow, followBack, following }
 
 class UserModel extends Model<UserModel> {
   final String avatar;
@@ -64,7 +65,7 @@ class UserModel extends Model<UserModel> {
     followingedCount,
   ];
 
-  factory UserModel.fromMap(AsMap json) {
+  factory UserModel.fromMap(AsMap json, {UserActionModel? action}) {
     final map = Model.convertJsonKeys(json, true);
     return UserModel(
       id: map['id'],
@@ -87,6 +88,7 @@ class UserModel extends Model<UserModel> {
       website: map['website'],
       createdAt: Model.createOrUpdate(map),
       updatedAt: Model.createOrUpdate(map, false),
+      action: action ?? const UserActionModel(),
     );
   }
 
@@ -152,5 +154,5 @@ class UserModel extends Model<UserModel> {
     updatedAt: DateTime.now(),
   );
 
-  RxBool isFollowing(String userId) => action.followings.contains(userId).obs;
+  bool isFollowing(String userId) => action.followings.contains(userId);
 }

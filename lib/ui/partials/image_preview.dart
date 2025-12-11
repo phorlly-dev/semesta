@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:semesta/app/functions/option_modal.dart';
 import 'package:semesta/ui/components/global/_layout_page.dart';
 import 'package:semesta/ui/components/global/nav_bar_layer.dart';
 
@@ -19,6 +20,7 @@ class _ImagePreviewState extends State<ImagePreview> {
   late final PageController _pageController;
   double _dragOffset = 0;
   int currentIndex = 0;
+  bool toggle = true;
 
   @override
   void initState() {
@@ -43,24 +45,29 @@ class _ImagePreviewState extends State<ImagePreview> {
 
   @override
   Widget build(BuildContext context) {
+    final options = OptionModal(context);
     final opacity = (1.0 - (_dragOffset.abs() / 300)).clamp(0.3, 1.0);
 
     return LayoutPage(
-      header: NavBarLayer(
-        start: IconButton(
-          onPressed: () => context.pop(),
-          icon: Icon(Icons.close_rounded, color: Colors.white),
-        ),
-        end: IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.more_horiz_rounded, color: Colors.white),
-        ),
-        bgColor: Colors.transparent,
-      ),
+      header: toggle
+          ? NavBarLayer(
+              start: IconButton(
+                onPressed: () => context.pop(),
+                icon: Icon(Icons.close_rounded, color: Colors.white),
+              ),
+              end: IconButton(
+                onPressed: options.imageOptions,
+                icon: Icon(Icons.more_horiz_rounded, color: Colors.white),
+              ),
+              bgColor: Colors.transparent,
+            )
+          : NavBarLayer(bgColor: Colors.transparent, start: SizedBox.shrink()),
       bgColor: Colors.black.withValues(alpha: opacity),
       content: GestureDetector(
         onVerticalDragUpdate: _onVerticalDragUpdate,
         onVerticalDragEnd: _onVerticalDragEnd,
+        onTap: () => setState(() => toggle = !toggle),
+        onLongPress: options.imageOptions,
         child: Stack(
           children: [
             Transform.translate(

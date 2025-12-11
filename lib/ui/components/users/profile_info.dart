@@ -1,62 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:semesta/app/routes/routes.dart';
 import 'package:semesta/app/utils/extension.dart';
 import 'package:semesta/core/models/user_model.dart';
+import 'package:semesta/ui/components/users/user_info.dart';
 import 'package:semesta/ui/widgets/action_button.dart';
 import 'package:semesta/ui/widgets/action_count.dart';
 import 'package:semesta/ui/widgets/avatar_animation.dart';
-import 'package:semesta/ui/widgets/custom_text_button.dart';
 
 class ProfileInfo extends StatelessWidget {
   final UserModel user;
-  final bool isOwner, isFollow;
-  final VoidCallback? onFollow, onPreview, onEdit;
-
+  final Widget action;
+  final VoidCallback? onPreview;
   const ProfileInfo({
     super.key,
     required this.user,
-    required this.isOwner,
-    this.isFollow = false,
-    this.onFollow,
+    required this.action,
     this.onPreview,
-    this.onEdit,
   });
 
   @override
   Widget build(BuildContext context) {
+    final route = Routes();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final text = theme.textTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ListTile(
-          title: Text(
-            user.name,
-            style: text.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Text(
-            '@${user.username}',
-            style: text.titleSmall?.copyWith(color: colors.outline),
-          ),
           leading: AvatarAnimation(
             imageUrl: user.avatar,
             size: 46,
             onTap: onPreview,
           ),
-          trailing: isOwner
-              ? CustomTextButton(
-                  label: 'Edit Profile',
-                  onPressed: onEdit,
-                  bgColor: colors.secondary,
-                  textColor: Colors.white,
-                )
-              : CustomTextButton(
-                  label: isFollow ? 'Following' : "Folllow",
-                  onPressed: onFollow,
-                  bgColor: isFollow ? colors.primaryFixedDim : colors.scrim,
-                  textColor: Colors.white,
-                ),
+          title: DisplayName(data: user.name),
+          subtitle: Username(data: user.username),
+          trailing: action,
         ),
 
         const SizedBox(height: 16),
@@ -91,10 +71,24 @@ class ProfileInfo extends StatelessWidget {
                     ActionCount(
                       label: 'following',
                       value: user.followingedCount,
+                      onTap: () async {
+                        await context.pushNamed(
+                          route.friendship.name,
+                          pathParameters: {'id': user.id},
+                          queryParameters: {'name': user.name, 'index': '1'},
+                        );
+                      },
                     ),
                     ActionCount(
                       label: 'followers',
                       value: user.followeredCount,
+                      onTap: () async {
+                        await context.pushNamed(
+                          route.friendship.name,
+                          pathParameters: {'id': user.id},
+                          queryParameters: {'name': user.name, 'index': '0'},
+                        );
+                      },
                     ),
                     ActionCount(label: 'posts', value: user.postedCount),
                   ],

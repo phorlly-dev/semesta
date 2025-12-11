@@ -8,14 +8,18 @@ import 'package:semesta/core/models/user_model.dart';
 import 'package:semesta/core/repositories/user_repository.dart';
 
 class UserController extends IController<UserModel> {
+  StreamSubscription? _userSub, _currentUserSub;
+  final currentId = ''.obs;
   final repo = UserRepository();
+  final currentUser = Rxn<UserModel>(null);
   final _loggedUser = Get.put(AuthController(), permanent: true).currentUser;
-  final currentUser = Rx<UserModel?>(null);
-  StreamSubscription? _userSub;
+  final followers = <UserModel>[].obs;
+  final followings = <UserModel>[].obs;
 
   @override
   void onInit() {
     ever(_loggedUser, _onAuthChanged);
+    loadInfo();
     super.onInit();
   }
 
@@ -23,69 +27,92 @@ class UserController extends IController<UserModel> {
     if (firebaseUser == null) {
       // Logged out → clear data
       currentUser.value = null;
+      currentId.value = '';
     } else {
       // Logged in → fetch new data
-      listenToUser(firebaseUser.uid); // 👈 this makes live updates work
-      update();
+      _currentUserSub = repo.live(
+        child: firebaseUser.uid,
+        onStream: (doc) {
+          final updated = UserModel.fromMap(doc.data()!);
+          currentId.value = updated.id;
+          currentUser.value = updated;
+        },
+      );
+    }
+  }
+
+  Future<void> loadInfo() async {
+    final data = await repo.index();
+    for (final u in data) {
+      listenToUser(u.id);
     }
   }
 
   Future<void> toggleFollow(String targetId) async {
-    await handleAsyncOperation(
+    final uid = currentId.value;
+    if (uid.isEmpty && targetId.isEmpty) return;
+    await tryCatch(
       callback: () async {
-        final uid = _loggedUser.value?.uid;
-        if (uid == null) return;
-
         await repo.act.toggleFollow(uid, targetId);
-
-        // Re-listen both users to refresh counts on both sides
+      },
+      onFinal: (_) {
         listenToUser(uid);
         listenToUser(targetId);
       },
     );
   }
 
-  Future<void> one(String uid) async {
-    await handleAsyncOperation(
+  void listenToUser(String userId) {
+    final userStream = repo.liveStream(child: userId);
+    final actStream = repo.act.liveStream(child: userId);
+
+    _userSub = repo
+        .bindStream(
+          first: userStream,
+          second: actStream,
+          combiner: (usr, act) {
+            final usrAc = UserActionModel.fromMap(act.data()!);
+            final updated = UserModel.fromMap(usr.data()!, action: usrAc);
+
+            return updated;
+          },
+        )
+        .listen((combined) => dataMapping[userId] = combined);
+  }
+
+  Future<void> loadFollowings(String userId) async {
+    await handleAsync(
       callback: () async {
-        element.value = await repo.show(uid);
+        final ids = await repo.act.getActions(userId);
+        if (ids.isEmpty) return;
+
+        final data = await repo.query(values: ids.toList());
+        followings
+          ..assignAll(data.toList())
+          ..refresh();
       },
     );
   }
 
-  void listenToUser(String uid) {
-    final loggedId = _loggedUser.value?.uid;
-    final userStream = repo.liveStream(child: uid);
-    final actStream = repo.act.liveStream(child: uid);
+  Future<void> loadFollowers(String userId) async {
+    await handleAsync(
+      callback: () async {
+        final ids = await repo.act.getActions(userId, field: 'followers');
+        if (ids.isEmpty) return;
 
-    _userSub = repo
-        .bindStream(
-          first: actStream,
-          second: userStream,
-          combiner: (doc, doc1) {
-            final usrAc = UserActionModel.fromMap(doc.data()!);
-            final updated = UserModel.fromMap(doc1.data()!);
-
-            return updated.copyWith(action: usrAc);
-          },
-        )
-        .listen((combined) {
-          if (uid == loggedId) {
-            currentUser.value = combined;
-          } else {
-            element.value = combined;
-          }
-        });
-  }
-
-  bool isCurrentUser(String userId) {
-    final current = currentUser.value;
-    return current != null && current.id == userId;
+        final data = await repo.query(values: ids.toList());
+        followers
+          ..assignAll(data.toList())
+          ..refresh();
+      },
+    );
   }
 
   @override
   void onClose() {
     _userSub?.cancel();
+    _currentUserSub?.cancel();
+    dataMapping.clear();
     super.onClose();
   }
 }

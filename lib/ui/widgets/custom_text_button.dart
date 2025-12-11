@@ -25,7 +25,7 @@ class CustomTextButton extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
-      child: TextButton.icon(
+      child: FilledButton.tonal(
         onPressed: onPressed,
         onLongPress: onLongPress,
         style: TextButton.styleFrom(
@@ -39,7 +39,7 @@ class CustomTextButton extends StatelessWidget {
             side: border,
           ),
         ),
-        label: Text(
+        child: Text(
           label,
           textAlign: TextAlign.center,
           style: TextStyle(

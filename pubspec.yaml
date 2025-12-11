@@ -24,7 +24,6 @@ dependencies:
     firebase_messaging:
     firebase_analytics:
     cached_network_image:
-    intl:
     # connectivity_plus: ^7.0.0
     video_player:
     flutter_native_splash:

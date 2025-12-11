@@ -54,7 +54,7 @@ class _GenericComposerState extends State<GenericComposer> {
 
         await _controller.save(post, files);
         if (mounted) context.pop();
-        await _controller.many(force: true);
+        await _controller.loadMoreForYou(false);
       },
       onQuote: () async {
         final post = PostModel(
@@ -66,7 +66,7 @@ class _GenericComposerState extends State<GenericComposer> {
 
         await _controller.save(post, files);
         if (mounted) context.pop();
-        await _controller.many(force: true);
+        await _controller.loadMoreForYou(false);
       },
       onReply: () async {
         final post = PostModel(
@@ -78,7 +78,7 @@ class _GenericComposerState extends State<GenericComposer> {
 
         await _controller.save(post, files);
         if (mounted) context.pop();
-        await _controller.many(force: true);
+        await _controller.loadMoreForYou(false);
       },
     );
   }
@@ -96,9 +96,9 @@ class _GenericComposerState extends State<GenericComposer> {
     final theme = Theme.of(context);
     final text = theme.textTheme;
     final options = ReplyOption(context);
-    final user = _controller.currentUser!;
 
     return Obx(() {
+      final user = _controller.currentUser;
       final isLoading = _controller.isLoading.value;
       final content = _controller.infoMessage.value;
       final files = _func.assets;

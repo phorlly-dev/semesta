@@ -37,10 +37,12 @@ class _ActionButtonState extends State<ActionButton>
 
     await Future.delayed(Durations.medium2);
 
-    setState(() {
-      _scale = 1.0;
-      _opacity = 1.0;
-    });
+    if (mounted) {
+      setState(() {
+        _scale = 1.0;
+        _opacity = 1.0;
+      });
+    }
   }
 
   @override
@@ -91,8 +93,8 @@ class _ActionButtonState extends State<ActionButton>
                 widget.label is int ? formatCount(widget.label!) : widget.label,
                 style: TextStyle(
                   color: color,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],

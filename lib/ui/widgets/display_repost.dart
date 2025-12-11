@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:semesta/ui/widgets/animated.dart';
 
 class DisplayRepost extends StatelessWidget {
@@ -18,7 +19,7 @@ class DisplayRepost extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+      padding: EdgeInsets.only(left: .1.sw, top: 8),
       child: Animated(
         onTap: onTap,
         child: Row(

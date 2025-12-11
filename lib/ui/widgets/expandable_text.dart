@@ -78,8 +78,16 @@ class _ExpandableTextState extends State<ExpandableText> {
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.textColor ?? Colors.black87;
+    Color textColor() {
+      final isDarkNow = Theme.of(context).brightness == Brightness.dark;
+      if (isDarkNow) {
+        return Colors.white;
+      } else {
+        return Colors.black87;
+      }
+    }
 
+    final color = widget.textColor ?? textColor();
     final displayText = expanded ? widget.text : visibleText;
 
     return GestureDetector(

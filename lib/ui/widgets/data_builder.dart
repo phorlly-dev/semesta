@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/app/utils/type_def.dart';
+import 'package:semesta/ui/widgets/loader.dart';
+import 'package:semesta/ui/widgets/no_data_entries.dart';
 
 class DataBuilder<T> extends StatelessWidget {
   final Future<T>? future;
   final Stream<T>? stream;
   final T? initialData;
-  final BuilderCallback<T?, Widget> builder;
+  final BuilderCallback<T, Widget> builder;
   final Widget? loading;
+  final String? message;
   final ErrorCallback<Widget>? error;
 
   const DataBuilder({
@@ -17,6 +20,7 @@ class DataBuilder<T> extends StatelessWidget {
     this.initialData,
     this.loading,
     this.error,
+    this.message,
   }) : assert(
          future != null || stream != null,
          'Either a future or a stream must be provided.',
@@ -26,7 +30,11 @@ class DataBuilder<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget connectionBuilder(AsyncSnapshot<T> snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
-        return loading ?? const Center(child: CircularProgressIndicator());
+        return loading ?? const Loader();
+      }
+
+      if (!snapshot.hasData || snapshot.data == null) {
+        return NoDataEntries(message: message ?? 'No data available');
       }
 
       if (snapshot.hasError) {
@@ -34,7 +42,7 @@ class DataBuilder<T> extends StatelessWidget {
             Center(child: Text(snapshot.error.toString()));
       }
 
-      return builder(snapshot.data);
+      return builder(snapshot.data as T);
     }
 
     if (stream != null) {

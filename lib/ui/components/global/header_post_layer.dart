@@ -1,75 +1,78 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/app/functions/format.dart';
+import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
+import 'package:semesta/app/functions/reply_option.dart';
+import 'package:semesta/app/routes/routes.dart';
+import 'package:semesta/core/controllers/post_controller.dart';
+import 'package:semesta/core/models/post_model.dart';
+import 'package:semesta/ui/components/users/user_info.dart';
 import 'package:semesta/ui/widgets/animated.dart';
 import 'package:semesta/ui/widgets/avatar_animation.dart';
 
 class HeaderPostLayer extends StatelessWidget {
-  final String name, username, avatar;
-  final DateTime? created;
-  final bool isVerified;
-  final VoidCallback? onDetails, onProfile;
+  final PostModel post;
   final Widget? action;
-  final IconData visibility;
-
-  const HeaderPostLayer({
-    super.key,
-    required this.name,
-    required this.username,
-    required this.avatar,
-    this.created,
-    this.isVerified = false,
-    this.onDetails,
-    this.onProfile,
-    this.visibility = Icons.public,
-    this.action,
-  });
+  const HeaderPostLayer({super.key, required this.post, this.action});
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final routes = Routes();
+    final icon = ReplyOption(context).mapToIcon(post.visibility);
+    final controller = Get.find<PostController>();
+    final isOwner = controller.isCurrentUser(post.userId);
 
-    return ListTile(
-      dense: true,
-      onTap: onDetails,
-      leading: AvatarAnimation(imageUrl: avatar, onTap: onProfile),
-      title: Animated(
-        onTap: onProfile,
-        child: Row(
-          spacing: 3.2,
-          children: [
-            Text(
-              name,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-
-            if (isVerified)
-              Icon(Icons.verified, color: colors.primary, size: 15),
-
-            Text(
-              '@${limitText(username, 16)}',
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 14.8,
-                fontWeight: FontWeight.w500,
-                color: colors.secondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-      subtitle: Row(
-        spacing: 3.2,
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, top: 12, bottom: 10),
+      child: Row(
+        spacing: 12,
         children: [
-          Text(
-            timeAgo(created),
-            style: TextStyle(fontSize: 13.6, color: colors.secondary),
+          // -------------------------------
+          // Avatar
+          // -------------------------------
+          AvatarAnimation(
+            imageUrl: post.userAvatar,
+            onTap: () async {
+              await context.pushNamed(
+                routes.profile.name,
+                pathParameters: {'id': post.userId},
+                queryParameters: {'self': isOwner.toString()},
+              );
+            },
           ),
-          Icon(Icons.circle, size: 3.2, color: colors.secondary),
-          Icon(visibility, size: 12, color: colors.primary),
+
+          // -------------------------------
+          // User info (name, username, status)
+          // -------------------------------
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Animated(
+                  onTap: () async {
+                    await context.pushNamed(
+                      routes.profile.name,
+                      pathParameters: {'id': post.userId},
+                      queryParameters: {'self': isOwner.toString()},
+                    );
+                  },
+                  child: Wrap(
+                    spacing: 3.2,
+                    children: [
+                      DisplayName(data: post.displayName),
+                      Username(data: post.username),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 4),
+                Status(icon: icon, created: post.createdAt),
+              ],
+            ),
+          ),
+
+          ?action,
         ],
       ),
-      trailing: action,
     );
   }
 }

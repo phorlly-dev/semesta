@@ -40,13 +40,7 @@ class PostActionRepository extends IRepository<PostActionModel> {
   Future<List<String>> getActions(
     String userId, {
     String field = 'liked',
-    String? currentUserId,
   }) async {
-    // Disallow fetching actions from others
-    if (currentUserId != null && currentUserId != userId) {
-      return [];
-    }
-
     final userDoc = await getPath(parent: userActions, child: userId).get();
     final postIds = parseToList(userDoc['${field}_posts']);
 
@@ -75,7 +69,7 @@ class PostActionRepository extends IRepository<PostActionModel> {
       toPosts.remove(userId);
       toUsers.remove(postId);
     } else {
-      await toggleCount(child: postId, parent: posts, field: field, delta: 1);
+      await toggleCount(child: postId, parent: posts, field: field);
       toPosts.add(userId);
       toUsers.add(postId);
     }

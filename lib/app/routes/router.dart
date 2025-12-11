@@ -5,17 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:semesta/app/routes/router_refresh_stream.dart';
 import 'package:semesta/app/routes/routes.dart';
 import 'package:semesta/app/utils/transition_page.dart';
-import 'package:semesta/core/controllers/action_controller.dart';
 import 'package:semesta/core/controllers/auth_controller.dart';
 import 'package:semesta/core/controllers/post_controller.dart';
-import 'package:semesta/core/models/post_model.dart';
-import 'package:semesta/core/models/user_model.dart';
 import 'package:semesta/ui/pages/create_post_page.dart';
-import 'package:semesta/ui/pages/post_details_page.dart';
+import 'package:semesta/ui/pages/friendship_view_page.dart';
 import 'package:semesta/ui/pages/image_preview_page.dart';
+import 'package:semesta/ui/pages/profile_view_page.dart';
 import 'package:semesta/ui/pages/reply_to_post_page.dart';
 import 'package:semesta/ui/pages/repost_post_page.dart';
-import 'package:semesta/ui/pages/profile_view_page.dart';
 import 'package:semesta/ui/pages/avatar_preview_page.dart';
 import 'package:semesta/ui/screens/message_screen.dart';
 import 'package:semesta/ui/pages/auth_page.dart';
@@ -78,7 +75,6 @@ class AppRouter extends Routes {
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) {
           Get.put(PostController());
-          Get.put(ActionController());
           return AppLayout(child: shell);
         },
         branches: [
@@ -95,13 +91,16 @@ class AppRouter extends Routes {
         profile,
         pageBuilder: (context, state) {
           final userId = state.pathParameters['id'];
-          final postId = state.uri.queryParameters['parent'];
+          final isOwner = state.uri.queryParameters['self'];
           if (userId == null) {
             throw Exception('Invalid user ID in post: $userId');
           }
 
           return TransitionPage(
-            child: ProfileViewPage(userId: userId, postId: postId ?? ''),
+            child: ProfileViewPage(
+              userId: userId,
+              isOwner: bool.parse(isOwner.toString()),
+            ),
           );
         },
       ),
@@ -120,10 +119,9 @@ class AppRouter extends Routes {
         avatarPreview,
         pageBuilder: (context, state) {
           final userId = state.pathParameters['id']!;
-          final isOwner = bool.parse(state.uri.queryParameters['self']!);
 
           return TransitionPage(
-            child: AvatarPreviewPage(userId: userId, isOwner: isOwner),
+            child: AvatarPreviewPage(userId: userId),
             fullscreenDialog: true,
           );
         },
@@ -164,26 +162,42 @@ class AppRouter extends Routes {
       goRoute(
         imagesPreview,
         pageBuilder: (context, state) {
-          final postId = state.pathParameters['id']!;
+          final postId = state.pathParameters['id'];
+          final idx = int.parse(state.uri.queryParameters['index'] ?? '0');
 
           return TransitionPage(
-            child: ImagePreviewPage(postId: postId),
+            child: ImagePreviewPage(postId: postId.toString(), index: idx),
             fullscreenDialog: true,
           );
         },
       ),
       goRoute(
-        postDatails,
+        friendship,
         pageBuilder: (context, state) {
-          final args = state.extra as Map<String, dynamic>;
-          final user = args['user'] as UserModel;
-          final post = args['post'] as PostModel;
+          final userId = state.pathParameters['id']!;
+          final displayName = state.uri.queryParameters['name'];
+          final idx = int.parse(state.uri.queryParameters['index'] ?? '0');
 
           return TransitionPage(
-            child: PostDetailsPage(user: user, post: post),
+            child: FriendshipViewPage(
+              userId: userId,
+              index: idx,
+              displayName: displayName.toString(),
+            ),
           );
         },
       ),
+      // goRoute(
+      //   postDatails,
+      //   pageBuilder: (context, state) {
+      //     final args = state.extra as Map<String, dynamic>;
+      //     final user = args['user'] as UserModel;
+      //     final post = args['post'] as PostModel;
+      //     return TransitionPage(
+      //       child: PostDetailsPage(user: user, post: post),
+      //     );
+      //   },
+      // ),
     ],
     extraCodec: const JsonCodec(),
     errorBuilder: (ctx, st) {

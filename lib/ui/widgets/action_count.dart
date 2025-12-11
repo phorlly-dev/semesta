@@ -7,13 +7,14 @@ class ActionCount extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
   final double space;
-
+  final Color? color;
   const ActionCount({
     super.key,
     required this.value,
     required this.label,
     this.onTap,
     this.space = 4.6,
+    this.color,
   });
 
   @override
@@ -35,7 +36,7 @@ class ActionCount extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: colors.outline,
+              color: color ?? colors.outline,
               fontWeight: FontWeight.w400,
             ),
           ),

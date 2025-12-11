@@ -10,11 +10,13 @@ class AppStart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
+      lazy: false,
       create: (ctx) => ThemeManager(),
       child: ScreenUtilInit(
         designSize: const Size(360, 800),
         minTextAdapt: true,
         splitScreenMode: true,
+        ensureScreenSize: true,
         builder: (context, child) => const Startup(),
       ),
     );

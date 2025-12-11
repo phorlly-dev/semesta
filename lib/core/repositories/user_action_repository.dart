@@ -47,20 +47,10 @@ class UserActionRepository extends IRepository<UserActionModel> {
         currentFollowings.add(targetUserId);
         targetFollowers.add(currentUserId);
 
-        toggleCount(
-          child: currentUserId,
-          field: 'followinged',
-          delta: 1,
-          parent: users,
-        );
+        toggleCount(child: currentUserId, field: 'followinged', parent: users);
         txn.update(currentUserRef, {'followings': currentFollowings});
 
-        toggleCount(
-          child: targetUserId,
-          field: 'followered',
-          delta: 1,
-          parent: users,
-        );
+        toggleCount(child: targetUserId, field: 'followered', parent: users);
         txn.update(targetUserRef, {'followers': targetFollowers});
       }
     });
@@ -76,9 +66,12 @@ class UserActionRepository extends IRepository<UserActionModel> {
   @override
   AsMap toMap(UserActionModel model) => model.toMap();
 
-  Future<List<String>> getActions(String userId) async {
+  Future<List<String>> getActions(
+    String userId, {
+    String field = 'followings',
+  }) async {
     final userDoc = await getPath(child: userId).get();
-    final userIds = parseToList(userDoc['followings']);
+    final userIds = parseToList(userDoc[field]);
 
     if (userIds.isEmpty) return [];
 

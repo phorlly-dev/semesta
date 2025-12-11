@@ -21,7 +21,7 @@ class AppLayout extends StatelessWidget {
     final controller = Get.find<PostController>();
 
     return Obx(() {
-      final user = controller.currentUser;
+      final user = controller.userCtrl.currentUser.value;
       final isVisible = scroller.isVisible.value;
       final curIdx = scroller.currentIndex.value;
       final curScroller = scroller.scrollControllers[curIdx];
@@ -56,14 +56,10 @@ class AppLayout extends StatelessWidget {
 
                       if (!controller.isLoading.value && idx == 2) {
                         if (curIdx == 0) {
-                          await controller.many(force: true);
+                          await controller.loadMoreForYou();
                         } else {
-                          final ids = controller.followingsMap[user?.id] ?? [];
-                          await controller.many(
-                            force: true,
-                            following: true,
-                            uids: ids.toList(),
-                          );
+                          final ids = controller.followings.toList();
+                          await controller.loadMoreFollowing(ids);
                         }
                       }
                     }

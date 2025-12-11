@@ -2,23 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:semesta/app/utils/type_def.dart';
 import 'package:semesta/ui/widgets/data_binder.dart';
 
-class ListGenerated extends StatelessWidget {
-  final int counter;
+class ListGridView extends StatelessWidget {
+  final int crossCount, counter;
   final BuilderCallback<int, Widget> builder;
   final bool neverScrollable, isLoading, isEmpty;
   final FutureCallback<void> onRefresh;
   final ScrollController? scroller;
   final String? message;
-
-  const ListGenerated({
+  const ListGridView({
     super.key,
+    this.crossCount = 3,
     required this.counter,
     required this.builder,
-    this.scroller,
     this.neverScrollable = false,
-    required this.onRefresh,
     this.isLoading = false,
     this.isEmpty = false,
+    required this.onRefresh,
+    this.scroller,
     this.message,
   });
 
@@ -29,14 +29,18 @@ class ListGenerated extends StatelessWidget {
       isLoading: isLoading,
       message: message,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 16, top: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
         child: RefreshIndicator(
           onRefresh: onRefresh,
-          child: ListView.builder(
-            controller: scroller,
-            physics: neverScrollable ? NeverScrollableScrollPhysics() : null,
+          child: GridView.builder(
             itemCount: counter,
-            itemBuilder: (ctx, idx) => builder(idx),
+            itemBuilder: (context, index) => builder(index),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossCount,
+              mainAxisSpacing: 6,
+              crossAxisSpacing: 6,
+              childAspectRatio: .89,
+            ),
           ),
         ),
       ),

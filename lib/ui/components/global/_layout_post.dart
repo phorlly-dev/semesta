@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/app/utils/type_def.dart';
 import 'package:semesta/ui/components/global/content_sliver_layer.dart';
-import 'package:semesta/ui/components/global/header_sliver_layer.dart';
+import 'package:semesta/ui/components/global/nav_bar_sliver_layer.dart';
 import 'package:semesta/ui/widgets/avatar_animation.dart';
+import 'package:semesta/ui/widgets/custom_tab_bar.dart';
 
 class PostLayout extends StatefulWidget {
   final bool isVisible;
   final String avatar;
   final ScrollController scroller;
-  final void Function(int index)? onTap;
+  final PropsCallback<int, void>? onTap;
   final VoidCallback? onLogo;
   final List<Widget> children;
 
@@ -47,12 +49,13 @@ class _PostLayoutState extends State<PostLayout>
 
     return ContentSliverLayer(
       scroller: widget.scroller,
-      builder: (innerScrolled) {
+      builder: (boxInScrolled) {
         return [
           if (widget.isVisible)
-            HeaderSliverLayer(
-              start: Container(
-                margin: EdgeInsets.only(left: 12),
+            NavBarSliverLayer(
+              isForce: boxInScrolled,
+              start: Padding(
+                padding: const EdgeInsets.all(8.0),
                 child: AvatarAnimation(
                   imageUrl: widget.avatar,
                   onTap: () => Scaffold.of(context).openDrawer(),
@@ -69,18 +72,8 @@ class _PostLayoutState extends State<PostLayout>
                   ),
                 ),
               ),
-              bottom: TabBar(
+              bottom: CustomTabBar(
                 controller: _tabController,
-                indicatorSize: TabBarIndicatorSize.label,
-                indicatorWeight: 2.6,
-                labelStyle: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                ),
-                unselectedLabelStyle: TextStyle(fontWeight: FontWeight.w500),
-                indicatorColor: colors.primary,
-                labelColor: colors.onSurface,
-                unselectedLabelColor: colors.outline,
                 tabs: [
                   Tab(text: 'For You'),
                   Tab(text: 'Following'),

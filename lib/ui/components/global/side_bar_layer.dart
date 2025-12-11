@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:semesta/app/routes/routes.dart';
 import 'package:semesta/app/themes/app_colors.dart';
 import 'package:semesta/app/themes/theme_manager.dart';
-import 'package:semesta/app/functions/format.dart';
 import 'package:semesta/core/controllers/auth_controller.dart';
+import 'package:semesta/ui/components/users/user_info.dart';
 import 'package:semesta/ui/widgets/action_count.dart';
 import 'package:semesta/ui/widgets/animated.dart';
 import 'package:semesta/ui/widgets/avatar_animation.dart';
@@ -31,8 +31,6 @@ class SideBarLayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final text = theme.textTheme;
-    final colors = theme.colorScheme;
     final route = Routes();
 
     return Drawer(
@@ -59,6 +57,7 @@ class SideBarLayer extends StatelessWidget {
                         context.pushNamed(
                           route.profile.name,
                           pathParameters: {'id': userId},
+                          queryParameters: {'self': 'true'},
                         );
                         context.pop();
                       },
@@ -66,17 +65,20 @@ class SideBarLayer extends StatelessWidget {
                     const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.menu_open_rounded),
-                      onPressed: () {},
+                      onPressed: () {
+                        context.pop();
+                      },
                     ),
                   ],
                 ),
                 const SizedBox(height: 6),
 
                 Animated(
-                  onTap: () {
+                  onTap: () async {
                     context.pushNamed(
                       route.profile.name,
                       pathParameters: {'id': userId},
+                      queryParameters: {'self': 'true'},
                     );
                     context.pop();
                   },
@@ -84,16 +86,8 @@ class SideBarLayer extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        toCapitalize(name),
-                        style: text.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '@$username',
-                        style: text.titleSmall?.copyWith(color: colors.outline),
-                      ),
+                      DisplayName(data: name),
+                      Username(data: username),
                     ],
                   ),
                 ),
@@ -105,12 +99,26 @@ class SideBarLayer extends StatelessWidget {
                     ActionCount(
                       label: 'following',
                       value: following,
-                      onTap: () {},
+                      onTap: () {
+                        context.pushNamed(
+                          route.friendship.name,
+                          pathParameters: {'id': userId},
+                          queryParameters: {'name': name, 'index': '1'},
+                        );
+                        context.pop();
+                      },
                     ),
                     ActionCount(
                       label: 'followers',
                       value: followers,
-                      onTap: () {},
+                      onTap: () {
+                        context.pushNamed(
+                          route.friendship.name,
+                          pathParameters: {'id': userId},
+                          queryParameters: {'name': name, 'index': '0'},
+                        );
+                        context.pop();
+                      },
                     ),
                   ],
                 ),
@@ -130,6 +138,7 @@ class SideBarLayer extends StatelessWidget {
                     context.pushNamed(
                       route.profile.name,
                       pathParameters: {'id': userId},
+                      queryParameters: {'self': 'true'},
                     );
                     context.pop();
                   },

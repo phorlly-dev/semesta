@@ -23,6 +23,10 @@ class Routes extends CustomRoute {
     path: convert('users/avatar/:id/preview'),
     name: 'users.avatar.preview',
   );
+  RouteParams get friendship => RouteParams(
+    path: convert('users/:id/friendship'),
+    name: 'users.friendship',
+  );
 
   RouteParams get createPost =>
       RouteParams(path: convert('posts/create'), name: 'posts.create');

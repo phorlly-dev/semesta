@@ -91,7 +91,6 @@ class AuthController extends GetxController {
 
   StreamSubscription? _authSub;
   void _bindAuthStream() {
-    _authSub?.cancel();
     _authSub = _authRepo.auth.authStateChanges().listen((user) {
       currentUser.value = user;
       HandleLogger.info('🔥 Auth state updated: $user');
@@ -114,5 +113,11 @@ class AuthController extends GetxController {
       default:
         return e.message ?? 'Unexpected error';
     }
+  }
+
+  @override
+  void onClose() {
+    _authSub?.cancel();
+    super.onClose();
   }
 }

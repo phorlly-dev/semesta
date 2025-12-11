@@ -39,7 +39,7 @@ class MediaGallery extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: spaceX, vertical: 8),
         itemCount: media.length,
-        separatorBuilder: (ctx, idx) => const SizedBox(width: 8),
+        separatorBuilder: (ctx, idx) => const SizedBox(width: 6),
         itemBuilder: (context, index) {
           final m = media[index];
           return MediaItem(
@@ -48,6 +48,7 @@ class MediaGallery extends StatelessWidget {
             type: m.type,
             height: 210.h,
             width: .48.sw,
+            initIndex: index,
           );
         },
       ),

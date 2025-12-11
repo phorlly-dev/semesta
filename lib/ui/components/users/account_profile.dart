@@ -3,25 +3,26 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:semesta/app/functions/tab_delegate.dart';
 import 'package:semesta/app/routes/routes.dart';
+import 'package:semesta/app/utils/type_def.dart';
 import 'package:semesta/core/controllers/post_controller.dart';
-import 'package:semesta/core/controllers/user_controller.dart';
 import 'package:semesta/ui/components/users/profile_info.dart';
 import 'package:semesta/ui/components/global/content_sliver_layer.dart';
-import 'package:semesta/ui/components/global/header_sliver_layer.dart';
-import 'package:semesta/ui/widgets/loader.dart';
+import 'package:semesta/ui/components/global/nav_bar_sliver_layer.dart';
+import 'package:semesta/ui/widgets/custom_tab_bar.dart';
+import 'package:semesta/ui/widgets/custom_text_button.dart';
+import 'package:semesta/ui/widgets/follow_button.dart';
 
 class AccountProfile extends StatefulWidget {
+  final bool isOwner;
   final String userId;
   final List<Widget> children;
-  final void Function(int idx)? onTap;
-  final ScrollController? scroller;
-
+  final PropsCallback<int, void>? onTap;
   const AccountProfile({
     super.key,
     required this.children,
-    this.scroller,
     required this.userId,
     this.onTap,
+    this.isOwner = false,
   });
 
   @override
@@ -31,100 +32,119 @@ class AccountProfile extends StatefulWidget {
 class _AccountProfileState extends State<AccountProfile>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final _userCtrl = Get.find<UserController>();
-  final _postCtrl = Get.find<PostController>();
   List<String> get tabs => [
     'Posts',
     'Replies',
     'Media',
     'Reposts',
-    if (_userCtrl.isCurrentUser(widget.userId)) 'Likes',
+    if (widget.isOwner) 'Likes',
   ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: tabs.length, vsync: this);
-    _userCtrl.listenToUser(widget.userId);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final route = Routes();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final route = Routes();
 
-    return Obx(() {
-      final isOwner = _userCtrl.isCurrentUser(widget.userId);
-      final user = isOwner
-          ? _userCtrl.currentUser.value
-          : _userCtrl.element.value;
-      final isFollow = _postCtrl.currentUser?.isFollowing(widget.userId);
+    final controller = Get.find<PostController>();
+    final userCtrl = controller.userCtrl;
+    final currentId = controller.currentId;
 
-      if (user == null) return Loader();
+    return ContentSliverLayer(
+      builder: (boxInScrolled) {
+        return [
+          NavBarSliverLayer(
+            pinned: true,
+            isForce: boxInScrolled,
+            middle: Obx(() {
+              final user = userCtrl.dataMapping[widget.userId];
+              return Text(
+                widget.isOwner ? 'Your profile' : "${user?.name}'s profile",
+              );
+            }),
+            ends: [
+              if (widget.isOwner)
+                IconButton(
+                  onPressed: () {},
+                  icon: Icon(Icons.settings),
+                  color: colors.outline,
+                ),
+            ],
+          ),
 
-      return ContentSliverLayer(
-        scroller: widget.scroller,
-        builder: (inner) {
-          return [
-            HeaderSliverLayer(
-              pinned: true,
-              middle: Text(isOwner ? 'Your profile' : "${user.name}'s profile"),
-              ends: [
-                if (isOwner)
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(Icons.settings),
-                    color: colors.outline,
-                  ),
-              ],
-            ),
+          // Profile info section
+          SliverToBoxAdapter(
+            child: Obx(() {
+              final viewer = userCtrl.dataMapping[currentId];
+              final owner = userCtrl.dataMapping[widget.userId];
 
-            // Profile info section
-            SliverToBoxAdapter(
-              child: ProfileInfo(
-                user: user,
-                isFollow: isFollow!.value,
-                isOwner: isOwner,
-                onFollow: () async {
-                  await _postCtrl.toggleFollow(user.id, isFollow.value);
-                  isFollow.toggle();
-                },
+              if (viewer == null || owner == null) {
+                return const SizedBox.shrink();
+              }
+
+              final iFollowThem = viewer.isFollowing(owner.id);
+              final theyFollowMe = owner.isFollowing(currentId);
+              final state = resolveState(iFollowThem, theyFollowMe);
+
+              return ProfileInfo(
+                user: owner,
+                action: widget.isOwner
+                    ? CustomTextButton(
+                        label: 'Edit Profile',
+                        onPressed: () {},
+                        bgColor: colors.secondary,
+                        textColor: Colors.white,
+                      )
+                    : FollowButton(
+                        user: owner,
+                        state: state,
+                        onPressed: () async {
+                          await controller.toggleFollow(owner.id, iFollowThem);
+                        },
+                      ),
                 onPreview: () {
                   context.pushNamed(
                     route.avatarPreview.name,
-                    pathParameters: {'id': user.id},
-                    queryParameters: {'self': isOwner.toString()},
+                    pathParameters: {'id': owner.id},
                   );
                 },
+              );
+            }),
+          ),
+
+          // Tab bar section
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: TabDelegate(
+              CustomTabBar(
+                isScrollable: true,
+                controller: _tabController,
+                tabs: tabs.map((tab) => Tab(text: tab)).toList(),
+                onTap: widget.onTap,
+                tabAlignment: TabAlignment.center,
               ),
             ),
+          ),
+        ];
+      },
 
-            // Tab bar section
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: TabDelegate(
-                TabBar(
-                  isScrollable: true,
-                  controller: _tabController,
-                  labelColor: colors.scrim,
-                  unselectedLabelColor: colors.secondary,
-                  indicatorColor: colors.primary,
-                  tabs: tabs.map((tab) => Tab(text: tab)).toList(),
-                  onTap: widget.onTap,
-                  tabAlignment: TabAlignment.center,
-                ),
-              ),
-            ),
-          ];
-        },
-
-        // Body scrollable content
-        content: TabBarView(
-          controller: _tabController,
-          children: widget.children,
-        ),
-      );
-    });
+      // Body scrollable content
+      content: TabBarView(
+        controller: _tabController,
+        children: widget.children,
+      ),
+    );
   }
 }

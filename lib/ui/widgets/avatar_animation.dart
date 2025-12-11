@@ -12,7 +12,7 @@ class AvatarAnimation extends StatelessWidget {
   const AvatarAnimation({
     super.key,
     required this.imageUrl,
-    this.size = 42,
+    this.size = 48,
     this.onTap,
     this.isNetwork = false,
   });

@@ -70,6 +70,13 @@ abstract class IRepository<T> extends FirebaseService {
     return snapshot.docs.map((doc) => fromMap(doc.data(), doc.id)).toList();
   }
 
+  Stream<T> stream(String child, {String? parent}) {
+    return getPath(
+      parent: parent,
+      child: child,
+    ).snapshots().map((e) => fromMap(e.data()!, e.id));
+  }
+
   Future<List<T>> viewByLimit({
     String field = 'created_at',
     int limit = 10,
@@ -93,7 +100,7 @@ abstract class IRepository<T> extends FirebaseService {
     required String child,
   }) => getPath(child: child, parent: parent).snapshots();
 
-  CombineLatestStream<dynamic, T> bindStream({
+  Stream<T> bindStream({
     required StreamDoc<AsMap> first,
     required StreamDoc<AsMap> second,
     required ConbineData<Doc<AsMap>, Doc<AsMap>, T> combiner,

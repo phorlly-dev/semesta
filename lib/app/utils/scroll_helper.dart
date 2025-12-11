@@ -28,6 +28,7 @@ class ScrollHelper extends GetxController {
       ctrl.removeListener(_listener);
     }
     scrollControllers[index].addListener(_listener);
+    update();
   }
 
   void _listener() {

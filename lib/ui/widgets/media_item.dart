@@ -10,7 +10,8 @@ class MediaItem extends StatelessWidget {
   final double width;
   final double height;
   final MediaType type;
-
+  final double radius;
+  final int initIndex;
   const MediaItem({
     super.key,
     required this.url,
@@ -18,6 +19,8 @@ class MediaItem extends StatelessWidget {
     required this.height,
     required this.type,
     required this.id,
+    this.radius = 12,
+    this.initIndex = 0,
   });
 
   bool get isVideo => type == MediaType.video;
@@ -33,11 +36,12 @@ class MediaItem extends StatelessWidget {
               image: url,
               width: width,
               height: height,
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                context.pushNamed(
+              borderRadius: BorderRadius.circular(radius),
+              onTap: () async {
+                await context.pushNamed(
                   Routes().imagesPreview.name,
                   pathParameters: {'id': id},
+                  queryParameters: {'index': initIndex.toString()},
                 );
               },
             ),

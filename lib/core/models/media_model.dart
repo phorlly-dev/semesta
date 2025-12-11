@@ -6,12 +6,12 @@ class MediaModel {
   final String display;
   final String path;
   final MediaType type;
-  final int? width;
-  final int? height;
+  final int width;
+  final int height;
 
   const MediaModel({
-    this.width,
-    this.height,
+    this.width = 0,
+    this.height = 0,
     required this.display,
     this.type = MediaType.image,
     required this.path,

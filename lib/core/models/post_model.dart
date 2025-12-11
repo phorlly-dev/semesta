@@ -1,4 +1,3 @@
-import 'package:get/get.dart';
 import 'package:semesta/app/functions/json_helpers.dart';
 import 'package:semesta/app/utils/type_def.dart';
 import 'package:semesta/core/models/media_model.dart';
@@ -7,7 +6,7 @@ import 'package:semesta/core/models/post_action_model.dart';
 
 enum PostVisibility { everyone, verified, following, mentioned }
 
-enum PostType { post, reply, repost, quote }
+enum PostType { post, reply, quote }
 
 class PostModel extends Model<PostModel> {
   final String userId;
@@ -141,7 +140,7 @@ class PostModel extends Model<PostModel> {
     sharedCount,
   ];
 
-  factory PostModel.fromMap(AsMap json) {
+  factory PostModel.fromMap(AsMap json, {PostActionModel? action}) {
     final map = Model.convertJsonKeys(json, true);
     return PostModel(
       id: map['id'],
@@ -171,6 +170,7 @@ class PostModel extends Model<PostModel> {
         (e) => e.name == map['type'],
         orElse: () => PostType.post,
       ),
+      action: action ?? PostActionModel(),
       createdAt: Model.createOrUpdate(map),
       updatedAt: Model.createOrUpdate(map, false),
     );
@@ -204,7 +204,7 @@ class PostModel extends Model<PostModel> {
     return Model.convertJsonKeys(data);
   }
 
-  RxBool isLiked(String uid) => action.likedBy.contains(uid).obs;
-  RxBool isSaved(String uid) => action.savedBy.contains(uid).obs;
-  RxBool isReposted(String uid) => action.repostedBy.contains(uid).obs;
+  bool isLiked(String uid) => action.likedBy.contains(uid);
+  bool isSaved(String uid) => action.savedBy.contains(uid);
+  bool isReposted(String uid) => action.repostedBy.contains(uid);
 }

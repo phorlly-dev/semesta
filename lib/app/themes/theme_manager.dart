@@ -1,11 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/app/utils/share_storage.dart';
 
 class ThemeManager with ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.system;
+  static const _key = "app_theme_mode";
+  final _storage = ShareStorage();
 
+  ThemeMode _themeMode = ThemeMode.system;
   ThemeMode get themeMode => _themeMode;
 
-  void toggleTheme(BuildContext context) {
+  ThemeManager() {
+    _loadTheme();
+  }
+
+  Future<void> _loadTheme() async {
+    final stored = _storage.getStorage(_key);
+
+    if (stored == 'light') {
+      _themeMode = ThemeMode.light;
+    } else if (stored == 'dark') {
+      _themeMode = ThemeMode.dark;
+    } else {
+      _themeMode = ThemeMode.system;
+    }
+
+    notifyListeners();
+  }
+
+  void toggleTheme(BuildContext context) async {
     // What is currently rendered?
     final isDarkNow = Theme.of(context).brightness == Brightness.dark;
 
@@ -18,6 +39,9 @@ class ThemeManager with ChangeNotifier {
           ? ThemeMode.light
           : ThemeMode.dark;
     }
+
+    // SAVE to prefs
+    await _storage.setStorage(_key, _themeMode.name); // "light" / "dark"
 
     notifyListeners();
   }

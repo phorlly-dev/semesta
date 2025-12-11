@@ -22,19 +22,20 @@ class OptionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theColor = color ?? Theme.of(context).colorScheme.secondary;
     final iconWidget = icon is IconData
-        ? Icon(icon, size: sizeIcon, color: color)
+        ? Icon(icon, size: sizeIcon, color: theColor)
         : Image.asset(
             setImage(icon, true),
             width: sizeIcon,
             height: sizeIcon,
-            color: color,
+            color: theColor,
           );
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: iconWidget,
-      title: Text(label, style: TextStyle(fontSize: 16, color: color)),
+      title: Text(label, style: TextStyle(fontSize: 16, color: theColor)),
       trailing: status,
       onTap: onTap != null
           ? () {

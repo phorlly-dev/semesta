@@ -13,7 +13,5 @@ class ShareStorage {
     await prefs.setString(key, value);
   }
 
-  String? getStorage(String key) {
-    return prefs.getString(key);
-  }
+  String? getStorage(String key) => prefs.getString(key);
 }
