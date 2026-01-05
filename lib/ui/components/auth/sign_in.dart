@@ -4,7 +4,7 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
 import 'package:semesta/core/controllers/auth_controller.dart';
 import 'package:semesta/ui/widgets/custom_button.dart';
-import 'package:semesta/ui/widgets/loader.dart';
+import 'package:semesta/ui/widgets/loading_animated.dart';
 import 'package:semesta/ui/widgets/text_input.dart';
 
 class SignIn extends StatefulWidget {
@@ -68,7 +68,7 @@ class _SignInState extends State<SignIn> {
 
           return CustomButton(
             enableShadow: true,
-            icon: isLoading ? Loader() : Icons.login_rounded,
+            icon: isLoading ? LoadingAnimated() : Icons.login_rounded,
             label: isLoading ? 'Signing In...' : 'Sign In',
             color: Theme.of(context).colorScheme.primary,
             onPressed: isLoading

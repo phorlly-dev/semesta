@@ -1,20 +1,27 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:semesta/core/mixins/repo_mixin.dart';
+import 'package:semesta/app/utils/cached_helper.dart';
 import 'package:semesta/core/controllers/auth_controller.dart';
 import 'package:semesta/core/controllers/controller.dart';
-import 'package:semesta/core/models/user_action_model.dart';
-import 'package:semesta/core/models/user_model.dart';
+import 'package:semesta/core/models/author.dart';
 import 'package:semesta/core/repositories/user_repository.dart';
+import 'package:semesta/core/views/audit_view.dart';
 
-class UserController extends IController<UserModel> {
+class UserController extends IController<AuthedView> {
   StreamSubscription? _userSub, _currentUserSub;
-  final currentId = ''.obs;
-  final repo = UserRepository();
-  final currentUser = Rxn<UserModel>(null);
-  final _loggedUser = Get.put(AuthController(), permanent: true).currentUser;
-  final followers = <UserModel>[].obs;
-  final followings = <UserModel>[].obs;
+  final _repo = UserRepository();
+  final _loggedUser = Get.put(AuthController()).currentUser;
+
+  final currentUid = ''.obs;
+  final dataMapping = <String, Author>{}.obs;
+  final currentUser = Rxn<Author>(null);
+
+  final Map<String, CachedState<AuthedView>> _states = {};
+  CachedState<AuthedView> stateFor(String key) {
+    return _states.putIfAbsent(key, () => CachedState<AuthedView>());
+  }
 
   @override
   void onInit() {
@@ -27,92 +34,64 @@ class UserController extends IController<UserModel> {
     if (firebaseUser == null) {
       // Logged out → clear data
       currentUser.value = null;
-      currentId.value = '';
+      currentUid.value = '';
     } else {
       // Logged in → fetch new data
-      _currentUserSub = repo.live(
-        child: firebaseUser.uid,
-        onStream: (doc) {
-          final updated = UserModel.fromMap(doc.data()!);
-          currentId.value = updated.id;
-          currentUser.value = updated;
-        },
-      );
+      _currentUserSub = _repo.stream$(firebaseUser.uid).listen((u) {
+        currentUid.value = u.id;
+        currentUser.value = u;
+      });
     }
   }
 
   Future<void> loadInfo() async {
-    final data = await repo.index();
+    final data = await _repo.index(limit: 100);
+    if (data.isEmpty) return;
+
     for (final u in data) {
       listenToUser(u.id);
     }
   }
 
   Future<void> toggleFollow(String targetId) async {
-    final uid = currentId.value;
-    if (uid.isEmpty && targetId.isEmpty) return;
-    await tryCatch(
-      callback: () async {
-        await repo.act.toggleFollow(uid, targetId);
-      },
-      onFinal: (_) {
-        listenToUser(uid);
-        listenToUser(targetId);
-      },
-    );
+    final uid = currentUid.value;
+    if (uid.isEmpty || targetId.isEmpty) return;
+
+    await _repo.toggleFollow(uid, targetId);
   }
 
-  void listenToUser(String userId) {
-    final userStream = repo.liveStream(child: userId);
-    final actStream = repo.act.liveStream(child: userId);
-
-    _userSub = repo
-        .bindStream(
-          first: userStream,
-          second: actStream,
-          combiner: (usr, act) {
-            final usrAc = UserActionModel.fromMap(act.data()!);
-            final updated = UserModel.fromMap(usr.data()!, action: usrAc);
-
-            return updated;
-          },
-        )
-        .listen((combined) => dataMapping[userId] = combined);
+  void listenToUser(String uid) {
+    _userSub = _repo.stream$(uid).listen((u) => dataMapping[uid] = u);
   }
 
-  Future<void> loadFollowings(String userId) async {
-    await handleAsync(
-      callback: () async {
-        final ids = await repo.act.getActions(userId);
-        if (ids.isEmpty) return;
+  Future<List<AuthedView>> loadUserFollowing(
+    String uid, [
+    QueryMode mode = QueryMode.normal,
+  ]) async {
+    final actions = await _repo.getFollowing(uid);
+    final ids = actions.map((a) => a.targetId).toList();
+    if (ids.isEmpty) return const [];
 
-        final data = await repo.query(values: ids.toList());
-        followings
-          ..assignAll(data.toList())
-          ..refresh();
-      },
-    );
+    final users = await _repo.getInOrder(ids, mode: mode);
+    return users.map((u) => AuthedView(u)).toList();
   }
 
-  Future<void> loadFollowers(String userId) async {
-    await handleAsync(
-      callback: () async {
-        final ids = await repo.act.getActions(userId, field: 'followers');
-        if (ids.isEmpty) return;
+  Future<List<AuthedView>> loadUserFollowers(
+    String uid, [
+    QueryMode mode = QueryMode.normal,
+  ]) async {
+    final actions = await _repo.getFollowers(uid);
+    final ids = actions.map((a) => a.currentId).toList();
+    if (ids.isEmpty) return const [];
 
-        final data = await repo.query(values: ids.toList());
-        followers
-          ..assignAll(data.toList())
-          ..refresh();
-      },
-    );
+    final users = await _repo.getInOrder(ids, mode: mode);
+    return users.map((u) => AuthedView(u)).toList();
   }
 
   @override
   void onClose() {
     _userSub?.cancel();
     _currentUserSub?.cancel();
-    dataMapping.clear();
     super.onClose();
   }
 }

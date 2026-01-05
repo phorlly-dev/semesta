@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/app/functions/format.dart';
+import 'package:semesta/ui/widgets/animated.dart';
 
 class DisplayName extends StatelessWidget {
   final String data;
-  const DisplayName({super.key, required this.data});
+  final Color? color;
+  final int maxChars;
+  const DisplayName({
+    super.key,
+    required this.data,
+    this.color,
+    this.maxChars = 24,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Text(
-      limitText(data, 24),
+      limitText(data, maxChars),
       style: TextStyle(
         fontSize: 16,
         overflow: TextOverflow.ellipsis,
-        fontWeight: FontWeight.w700,
-        color: colors.onSurface,
+        fontWeight: FontWeight.w600,
+        color: color ?? colors.onSurface,
       ),
     );
   }
@@ -22,18 +30,25 @@ class DisplayName extends StatelessWidget {
 
 class Username extends StatelessWidget {
   final String data;
-  const Username({super.key, required this.data});
+  final Color? color;
+  final int maxChars;
+  const Username({
+    super.key,
+    required this.data,
+    this.color,
+    this.maxChars = 12,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Text(
-      '@${limitText(data, 16)}',
+      '@${limitText(data, maxChars)}',
       style: TextStyle(
-        fontSize: 14.2,
+        fontSize: 15,
         overflow: TextOverflow.ellipsis,
         fontWeight: FontWeight.w500,
-        color: colors.secondary,
+        color: color ?? colors.secondary,
       ),
     );
   }
@@ -41,8 +56,16 @@ class Username extends StatelessWidget {
 
 class Status extends StatelessWidget {
   final DateTime? created;
-  final IconData icon;
-  const Status({super.key, this.created, required this.icon});
+  final IconData? icon;
+  final Color? color;
+  final bool hasIcon;
+  const Status({
+    super.key,
+    this.created,
+    this.icon,
+    this.color,
+    this.hasIcon = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -50,12 +73,16 @@ class Status extends StatelessWidget {
     return Row(
       spacing: 4.2,
       children: [
+        if (!hasIcon) Icon(Icons.circle, size: 3.2, color: colors.secondary),
         Text(
           timeAgo(created),
-          style: TextStyle(fontSize: 14.6, color: colors.secondary),
+          style: TextStyle(fontSize: 14.6, color: color ?? colors.secondary),
         ),
-        Icon(Icons.circle, size: 3.2, color: colors.secondary),
-        Icon(icon, size: 12, color: colors.primary),
+
+        if (hasIcon) ...[
+          Icon(Icons.circle, size: 3.2, color: colors.secondary),
+          Icon(icon, size: 12, color: colors.primary),
+        ],
       ],
     );
   }
@@ -63,7 +90,8 @@ class Status extends StatelessWidget {
 
 class Bio extends StatelessWidget {
   final String data;
-  const Bio({super.key, required this.data});
+  final Color? color;
+  const Bio({super.key, required this.data, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -75,8 +103,8 @@ class Bio extends StatelessWidget {
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          fontSize: 15,
-          color: colors.onSurface.withValues(alpha: 0.7),
+          fontSize: 16,
+          color: color ?? colors.onSurface.withValues(alpha: 0.7),
         ),
       ),
     );
@@ -90,7 +118,7 @@ class FollowYou extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 28),
+      padding: const EdgeInsets.only(left: 42),
       child: Row(
         spacing: 8,
         children: [
@@ -103,6 +131,37 @@ class FollowYou extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class DisplayRepost extends StatelessWidget {
+  final VoidCallback? onTap;
+  final String displayName;
+  const DisplayRepost({super.key, this.onTap, required this.displayName});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: EdgeInsets.only(left: 30, top: 8),
+      child: Animated(
+        onTap: onTap,
+        child: Row(
+          spacing: 6,
+          children: [
+            Icon(Icons.autorenew_rounded, color: theme.hintColor),
+            Text(
+              '$displayName reposted',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: theme.hintColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

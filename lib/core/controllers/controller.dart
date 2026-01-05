@@ -1,15 +1,13 @@
 import 'dart:math';
 
 import 'package:get/get.dart';
-import 'package:semesta/app/utils/logger.dart';
+import 'package:semesta/app/functions/logger.dart';
+import 'package:semesta/core/mixins/pager_mixin.dart';
 import 'package:semesta/app/utils/type_def.dart';
 
-abstract class IController<T> extends GetxController {
+abstract class IController<T> extends GetxController with PagerMixin<T> {
   final RxString hasError = ''.obs;
-  final RxString infoMessage = ''.obs;
-  final RxBool isLoading = false.obs;
-  final RxList<T> elements = <T>[].obs;
-  final dataMapping = <String, T>{}.obs;
+  final RxString message = ''.obs;
 
   /// A reusable async handler for try/catch/finally logic.
   Future<void> handleAsync({
@@ -22,6 +20,7 @@ abstract class IController<T> extends GetxController {
     try {
       // 2. Clear any previous error.
       hasError.value = ''; // Or an empty string, depending on your type
+      message.value = '';
 
       // 3. Execute the function with () and await its completion.
       await callback();
@@ -54,6 +53,8 @@ abstract class IController<T> extends GetxController {
   }
 
   final rand = Random();
+  int get sessionSeed => rand.nextInt(1 << 31);
+  int get refreshSeed => sessionSeed + rand.nextInt(1000);
   String getRandomId(List<String> ids) {
     if (ids.isEmpty) return 'unknown';
 

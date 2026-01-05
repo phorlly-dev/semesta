@@ -31,13 +31,15 @@ class AvatarAnimation extends StatelessWidget {
               )
             : null,
         child: !isNetwork
-            ? CustomImage(
-                image: imageUrl.isNotEmpty
-                    ? imageUrl
-                    : setImage('default.png', true),
+            ? ClipRRect(
                 borderRadius: BorderRadius.circular(size / 2),
-                width: size,
-                height: size,
+                child: CustomImage(
+                  image: imageUrl.isNotEmpty
+                      ? imageUrl
+                      : setImage('default.png', true),
+                  width: size,
+                  height: size,
+                ),
               )
             : null,
       ),

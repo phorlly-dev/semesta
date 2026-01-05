@@ -35,7 +35,14 @@ class OptionButton extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: iconWidget,
-      title: Text(label, style: TextStyle(fontSize: 16, color: theColor)),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontSize: 16,
+          color: theColor,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
       trailing: status,
       onTap: onTap != null
           ? () {

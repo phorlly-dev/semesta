@@ -8,17 +8,23 @@ abstract class Model<T extends Model<T>> extends Equatable {
   final String id;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? deletedAt;
 
-  const Model({required this.id, this.createdAt, this.updatedAt});
+  const Model({
+    required this.id,
+    this.createdAt,
+    this.updatedAt,
+    this.deletedAt,
+  });
 
   /// Forces subclasses to implement a copyWith method
-  T copyWith();
+  T copy();
 
   /// Convert the model into a serializable Map (for Firebase)
-  AsMap toMap();
+  AsMap to();
 
   //Get data from db
-  static DateTime? createOrUpdate(AsMap map, [bool isCreate = true]) {
+  static DateTime createOrUpdate(AsMap map, [bool isCreate = true]) {
     return isCreate
         ? toDateTime(map['createdAt'])
         : toDateTime(map['updatedAt']);
@@ -32,7 +38,7 @@ abstract class Model<T extends Model<T>> extends Equatable {
   };
 
   /// Convert to JSON string
-  String toJson() => jsonEncode(toMap());
+  String toJson() => jsonEncode(to());
 
   /// Convert Firestore Timestamp or JSON int → DateTime
   static DateTime toDateTime(dynamic value) {
@@ -84,26 +90,17 @@ abstract class Model<T extends Model<T>> extends Equatable {
 
       if (toCamelCase) {
         // ✅ Handle special Mongo/Firestore ID fields
-        if (key == '_id') {
-          newKey = 'id';
-        } else {
-          // snake_case → camelCase
-          newKey = key.replaceAllMapped(
-            RegExp(r'_([a-z])'),
-            (match) => match[1]!.toUpperCase(),
-          );
-        }
+        // snake_case → camelCase
+        newKey = key.replaceAllMapped(
+          RegExp(r'_([a-z])'),
+          (match) => match[1]!.toUpperCase(),
+        );
       } else {
         // camelCase → snake_case
         newKey = key.replaceAllMapped(
           RegExp(r'[A-Z]'),
           (match) => '_${match[0]!.toLowerCase()}',
         );
-
-        // Special rule: convert 'id' endings to '_id'
-        if (!newKey.endsWith('_id') && key.toLowerCase().endsWith('id')) {
-          newKey = newKey.replaceFirst(RegExp(r'id$'), '_id');
-        }
       }
 
       // Recursion for nested maps/lists
@@ -122,5 +119,5 @@ abstract class Model<T extends Model<T>> extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, createdAt, updatedAt];
+  List<Object?> get props => [id, createdAt, updatedAt, deletedAt];
 }

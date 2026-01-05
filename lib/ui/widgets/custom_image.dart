@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:semesta/ui/widgets/animated.dart';
-import 'package:semesta/ui/widgets/loader.dart';
+import 'package:semesta/ui/widgets/loading_animated.dart';
 
 class CustomImage extends StatelessWidget {
   const CustomImage({
@@ -11,7 +11,6 @@ class CustomImage extends StatelessWidget {
     this.width,
     this.errorWidget,
     this.fit = BoxFit.cover,
-    this.borderRadius,
     this.enableFade = true,
     this.spaceX = 0,
     this.spaceY = 0,
@@ -23,7 +22,6 @@ class CustomImage extends StatelessWidget {
   final double spaceX, spaceY;
   final Widget? errorWidget;
   final BoxFit fit;
-  final BorderRadius? borderRadius;
   final bool enableFade;
   final VoidCallback? onTap;
 
@@ -39,7 +37,7 @@ class CustomImage extends StatelessWidget {
             width: width,
             decoration: BoxDecoration(
               color: Colors.grey.shade200,
-              borderRadius: borderRadius ?? BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.image_not_supported, color: Colors.grey),
           );
@@ -52,7 +50,11 @@ class CustomImage extends StatelessWidget {
             width: width,
             fit: fit,
             placeholder: (ctx, str) => Center(
-              child: SizedBox(height: 24, width: 24, child: Loader(bold: 1.8)),
+              child: SizedBox(
+                height: 24,
+                width: 24,
+                child: LoadingAnimated(bold: 1.8),
+              ),
             ),
             errorWidget: (ctx, str, err) =>
                 errorWidget ??
@@ -71,10 +73,7 @@ class CustomImage extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: spaceX, vertical: spaceY),
-        child: ClipRRect(
-          borderRadius: borderRadius ?? BorderRadius.zero,
-          child: url,
-        ),
+        child: url,
       ),
     );
   }

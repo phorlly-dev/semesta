@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
@@ -6,67 +5,84 @@ import 'package:semesta/app/functions/custom_bottom_sheet.dart';
 import 'package:semesta/app/functions/custom_modal.dart';
 import 'package:semesta/app/functions/reply_option.dart';
 import 'package:semesta/app/routes/routes.dart';
+import 'package:semesta/core/controllers/action_controller.dart';
 import 'package:semesta/core/controllers/post_controller.dart';
-import 'package:semesta/core/models/post_model.dart';
-import 'package:semesta/core/models/user_model.dart';
+import 'package:semesta/core/models/feed.dart';
+import 'package:semesta/core/views/audit_view.dart';
+import 'package:semesta/core/views/helper.dart';
 import 'package:semesta/ui/widgets/option_button.dart';
+
+const unfollow =
+    'Their posts will no longer show up in your home timeline. You can still view their profile, unless their posts are proteted.';
 
 class OptionModal {
   final BuildContext context;
   ColorScheme get colors => Theme.of(context).colorScheme;
 
   final _routes = Routes();
+  // final _files = GenericRepository();
   final _controller = Get.find<PostController>();
+  final _actCtrl = Get.find<ActionController>();
 
   OptionModal(this.context);
 
   void anotherOptions(
-    UserModel user,
-    String postId, {
-    bool isFollowing = false,
-    bool isSaved = false,
+    Feed post, {
+    bool iFollow = false,
+    required String name,
+    bool active = false,
   }) {
     CustomBottomSheet(
       context,
       children: [
         OptionButton(
-          icon: isSaved
-              ? Icons.bookmark_remove_outlined
-              : Icons.bookmark_border,
-          label: isSaved ? 'Unbookmark' : 'Bookmark',
+          icon: active ? Icons.bookmark_remove_outlined : Icons.bookmark_border,
+          label: active ? 'Unbookmark' : 'Bookmark',
           onTap: () async {
-            await _controller.toggleSave(postId, isSaved);
+            await _actCtrl.toggleBookmark(
+              FeedTarget(post.id),
+              post.id,
+              active: active,
+            );
           },
         ),
-        if (isFollowing)
-          OptionButton(
-            icon: Icons.person_remove_alt_1,
-            label: 'Unfollow',
-            onTap: () {
+
+        OptionButton(
+          icon: iFollow ? Icons.person_remove_alt_1 : Icons.person_add,
+          label: iFollow ? 'Unfollow' : 'Follow',
+          onTap: () async {
+            if (iFollow) {
               CustomModal(
                 context,
-                title: '@${user.username}',
+                title: 'Unfollow $name',
+                children: [Text(unfollow)],
                 onConfirm: () async {
                   context.pop();
-                  await _controller.toggleFollow(user.id, true);
+                  await _actCtrl.toggleFollow(post.uid, iFollow);
                 },
                 label: 'Unfollow',
                 icon: Icons.person_remove_sharp,
                 color: colors.primary,
               );
-            },
-          ),
+            } else {
+              await _actCtrl.toggleFollow(post.uid, iFollow);
+            }
+          },
+        ),
+
         OptionButton(
           icon: Icons.visibility_off_outlined,
           label: 'Not interested',
           onTap: () {},
         ),
+
         OptionButton(
           icon: Icons.person_off,
           color: colors.error,
           label: 'Block',
           onTap: () {},
         ),
+
         OptionButton(
           icon: Icons.report_problem_outlined,
           color: colors.error,
@@ -78,39 +94,40 @@ class OptionModal {
   }
 
   void currentOptions(
-    String postId,
-    String userId, {
-    PostVisibility option = PostVisibility.everyone,
-    bool isPrivate = false,
-    bool isSaved = false,
+    Feed post, {
+    Visible option = Visible.everyone,
+    bool me = false,
+    bool active = false,
   }) {
     CustomBottomSheet(
       context,
       children: [
-        if (!isPrivate)
+        if (!me)
           OptionButton(
             icon: Icons.person,
             label: 'Go to Profile',
             onTap: () {
               context.pushNamed(
                 _routes.profile.name,
-                pathParameters: {'id': userId},
+                pathParameters: {'id': post.uid},
                 queryParameters: {'self': 'true'},
               );
             },
           ),
 
         OptionButton(
-          icon: isSaved
-              ? Icons.bookmark_remove_outlined
-              : Icons.bookmark_border,
-          label: isSaved ? 'Unbookmark' : 'Bookmark',
+          icon: active ? Icons.bookmark_remove_outlined : Icons.bookmark_border,
+          label: active ? 'Unbookmark' : 'Bookmark',
           onTap: () async {
-            await _controller.toggleSave(postId, isSaved);
+            await _actCtrl.toggleBookmark(
+              FeedTarget(post.id),
+              post.id,
+              active: active,
+            );
           },
         ),
 
-        if (isPrivate)
+        if (me)
           OptionButton(
             icon: Icons.edit_square,
             label: 'Edit Post',
@@ -127,15 +144,13 @@ class OptionModal {
             show.showModal(
               selected: show.mapVisibleToId(option),
               onSelected: (id, opt) async {
-                await _controller.saveChange(postId, {'visibility': opt.name});
-                unawaited(_controller.loadPosts(userId));
-                unawaited(_controller.loadMoreForYou());
+                await _controller.saveChange(post.id, {'visible': opt.name});
               },
             );
           },
         ),
 
-        if (isPrivate)
+        if (me)
           OptionButton(
             icon: Icons.delete_outline,
             label: 'Delete post',
@@ -151,9 +166,7 @@ class OptionModal {
                 ],
                 onConfirm: () async {
                   context.pop();
-                  await _controller.remove(postId, userId);
-                  unawaited(_controller.loadPosts(userId));
-                  unawaited(_controller.loadMoreForYou());
+                  await _controller.remove(post.id, post.uid);
                 },
                 color: colors.error,
               );
@@ -163,27 +176,25 @@ class OptionModal {
     );
   }
 
-  void repostOptions(String postId, bool isReposted) {
+  void repostOptions(ActionsView vm) {
     CustomBottomSheet(
       context,
       children: [
         OptionButton(
           icon: Icons.autorenew_rounded,
-          label: isReposted ? 'Undo Repost' : 'Repost',
+          label: vm.reposted ? 'Undo Repost' : 'Repost',
           onTap: () async {
-            await _controller.toggleRepost(postId, isReposted);
+            await _actCtrl.toggleRepost(vm.target, vm.pid, active: vm.reposted);
           },
-          color: colors.scrim,
         ),
 
         OptionButton(
           icon: Icons.edit_square,
           label: 'Quote',
-          color: colors.primary,
           onTap: () async {
             await context.pushNamed(
               _routes.repost.name,
-              pathParameters: {'id': postId},
+              pathParameters: {'id': vm.pid},
             );
           },
         ),
@@ -191,7 +202,7 @@ class OptionModal {
     );
   }
 
-  void imageOptions() {
+  void imageOptions(String path) {
     CustomBottomSheet(
       context,
       children: [
@@ -199,7 +210,19 @@ class OptionModal {
           icon: Icons.file_download_outlined,
           label: 'Save to photo',
           color: colors.secondary,
-          onTap: () {},
+          onTap: () async {
+            // await _files.saveImageToGallery(
+            //   path,
+            //   onProgress: (received, total) {
+            //     if (total > 0) {
+            //       final percent = (received / total * 100).toStringAsFixed(0);
+            //       debugPrint('Downloading: $percent%');
+            //     }
+
+            //     CustomToast.info('Saved to gallery');
+            //   },
+            // );
+          },
         ),
         OptionButton(
           icon: 'share.png',

@@ -1,82 +1,94 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:semesta/app/functions/logger.dart';
+import 'package:semesta/core/mixins/post_mixin.dart';
 import 'package:semesta/app/utils/type_def.dart';
-import 'package:semesta/core/models/post_action_model.dart';
-import 'package:semesta/core/models/post_model.dart';
-import 'package:semesta/core/repositories/generic_repository.dart';
-import 'package:semesta/core/repositories/post_action_repository.dart';
+import 'package:semesta/core/mixins/repo_mixin.dart';
+import 'package:semesta/core/models/reaction.dart';
+import 'package:semesta/core/models/feed.dart';
 import 'package:semesta/core/repositories/repository.dart';
-import 'package:semesta/core/repositories/user_action_repository.dart';
 import 'package:semesta/core/repositories/user_repository.dart';
 
-class PostRepository extends IRepository<PostModel> {
+class PostRepository extends IRepository<Feed> with PostMixin {
   UserRepository get usr => UserRepository();
-  UserActionRepository get usrAc => UserActionRepository();
-  GenericRepository get gen => GenericRepository();
-  PostActionRepository get act => PostActionRepository();
 
-  Future<void> insert(PostModel model) async {
-    if (model.parentId.isNotEmpty && model.type == PostType.reply) {
-      final doc = getPath(parent: replies);
-      doc.set(model.copyWith(id: doc.id).toMap());
-      await setAction(doc.id);
-    } else if (model.parentId.isNotEmpty && model.type == PostType.quote) {
-      final doc = getPath(parent: reposts);
-      doc.set(model.copyWith(id: doc.id).toMap());
-      await usr.toggleCount(child: model.userId);
-      await setAction(doc.id);
-    } else {
-      final postId = await store(model);
-      await usr.toggleCount(child: model.userId);
-      await setAction(postId);
+  Stream<List<Reaction>> followingIds(String uid, {int limit = 30}) {
+    return liveReactions$(following, uid, limit: limit);
+  }
+
+  Future<void> insert(Feed model) async {
+    assert(model.uid.isNotEmpty);
+
+    try {
+      await db.runTransaction((txs) async {
+        // ─────────────────────────────────────────────
+        // COMMENT
+        // ─────────────────────────────────────────────
+        if (model.type == Post.comment) {
+          assert(model.pid.isNotEmpty);
+
+          final parentRef = collection(path).doc(model.pid);
+          final commentRef = parentRef.collection(comments).doc(); // 🔑 NEW ID
+
+          final comment = model.copy(id: commentRef.id, pid: parentRef.id);
+          txs.set(commentRef, comment.to());
+
+          // increment comment counter on parent
+          txs.update(parentRef, {'comments_count': FieldValue.increment(1)});
+
+          return;
+        }
+
+        // ─────────────────────────────────────────────
+        // QUOTE (standalone post with reference)
+        // ─────────────────────────────────────────────
+        if (model.type == Post.quote) {
+          assert(model.pid.isNotEmpty);
+
+          final quoteRef = collection(path).doc();
+          final parentRef = collection(path).doc(model.pid);
+
+          final quote = model.copy(id: quoteRef.id, pid: model.pid);
+          txs.set(quoteRef, quote.to());
+
+          // increment quote counter on parent post
+          txs.update(parentRef, {'reposts_count': FieldValue.increment(1)});
+
+          return;
+        }
+
+        // ─────────────────────────────────────────────
+        // ORIGINAL POST
+        // ─────────────────────────────────────────────
+        final postRef = collection(path).doc();
+        txs.set(postRef, model.copy(id: postRef.id).to());
+      });
+    } catch (e, s) {
+      HandleLogger.error('Failed to create', message: e, stack: s);
+      rethrow;
     }
   }
 
-  Future<void> setAction(String postId) async {
-    await getPath(
-      parent: postActions,
-      child: postId,
-    ).set(PostActionModel(postId: postId).toMap());
-  }
+  Future<List<Feed>> loadComments(
+    String uid, {
+    String key = 'target_id',
+    int limit = 20,
+    QueryMode mode = QueryMode.normal,
+  }) async {
+    final query = subcollection(comments)
+        .where(key, isEqualTo: uid)
+        .orderBy('created_at', descending: true)
+        .limit(mode == QueryMode.refresh ? 100 : limit);
 
-  Future<List<PostModel>> getReplies(String parentId) async {
-    final parentRef = getPath(child: parentId);
-    final snapshot = await parentRef.collection('replies').get();
-
-    return snapshot.docs.map((doc) => PostModel.fromMap(doc.data())).toList();
-  }
-
-  Future<List<PostModel>> getQuotes(String parentId) async {
-    final parentRef = getPath(child: parentId);
-    final snapshot = await parentRef.collection('reposts').get();
-
-    return snapshot.docs.map((doc) => PostModel.fromMap(doc.data())).toList();
-  }
-
-  Future<List<PostModel>> getRepliesByUser(String userId) async {
-    final data = await firestore
-        .collectionGroup('replies')
-        .where('user_id', isEqualTo: userId)
-        .get();
-
-    return data.docs.map((d) => PostModel.fromMap(d.data())).toList();
-  }
-
-  Future<List<PostModel>> getQuotesByUser(String userId) async {
-    final data = await firestore
-        .collectionGroup('reposts')
-        .where('user_id', isEqualTo: userId)
-        .where('content', isNotEqualTo: '')
-        .get();
-
-    return data.docs.map((d) => PostModel.fromMap(d.data())).toList();
+    final snap = await query.get();
+    return snap.docs.map((e) => Feed.from(e.data())).toList();
   }
 
   @override
-  String get collectionPath => posts;
+  String get path => posts;
 
   @override
-  PostModel fromMap(AsMap map, String id) =>
-      PostModel.fromMap({...map, '_id': id});
+  Feed from(AsMap map, String id) => Feed.from({...map, 'id': id});
 
   @override
-  AsMap toMap(PostModel model) => model.toMap();
+  AsMap to(Feed model) => model.to();
 }

@@ -4,13 +4,13 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get_rx/get_rx.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
-import 'package:semesta/app/utils/custom_toast.dart';
-import 'package:semesta/app/utils/logger.dart';
-import 'package:semesta/core/models/user_model.dart';
+import 'package:semesta/app/functions/custom_toast.dart';
+import 'package:semesta/app/functions/logger.dart';
+import 'package:semesta/core/models/author.dart';
 import 'package:semesta/core/repositories/auth_repository.dart';
 
 class AuthController extends GetxController {
-  final _authRepo = AuthRepository();
+  final _repo = AuthRepository();
   final currentUser = Rxn<User>(null);
   final isLoading = false.obs;
 
@@ -25,7 +25,7 @@ class AuthController extends GetxController {
   Future<void> login(String email, String password) async {
     isLoading.value = true;
     try {
-      final user = await _authRepo.signIn(email, password);
+      final user = await _repo.signIn(email, password);
 
       // Force currentUser refresh
       currentUser.value = user;
@@ -46,11 +46,11 @@ class AuthController extends GetxController {
     String email,
     String password,
     File file,
-    UserModel model,
+    Author model,
   ) async {
     isLoading.value = true;
     try {
-      final user = await _authRepo.signUp(email, password, file, model);
+      final user = await _repo.signUp(email, password, file, model);
 
       // Force currentUser refresh
       currentUser.value = user;
@@ -67,15 +67,14 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> loginWithGoogle() async => await _authRepo.signInWithGoogle();
+  Future<void> loginWithGoogle() async => await _repo.signInWithGoogle();
 
-  Future<void> loginWithFacebook() async =>
-      await _authRepo.signInWithFacebook();
+  // Future<void> loginWithFacebook() async => await _repo.signInWithFacebook();
 
   Future<void> logout() async {
     isLoading.value = true;
     try {
-      await _authRepo.signOut();
+      await _repo.signOut();
       currentUser.value = null;
       CustomToast.warning('You have been signed out');
       await Future.delayed(const Duration(milliseconds: 300));
@@ -91,7 +90,7 @@ class AuthController extends GetxController {
 
   StreamSubscription? _authSub;
   void _bindAuthStream() {
-    _authSub = _authRepo.auth.authStateChanges().listen((user) {
+    _authSub = _repo.auth.authStateChanges().listen((user) {
       currentUser.value = user;
       HandleLogger.info('🔥 Auth state updated: $user');
     });

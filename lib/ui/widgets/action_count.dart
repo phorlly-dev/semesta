@@ -29,7 +29,7 @@ class ActionCount extends StatelessWidget {
           Text(
             formatCount(value),
             style: TextStyle(
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w900,
               color: colors.secondary,
             ),
           ),
@@ -37,7 +37,7 @@ class ActionCount extends StatelessWidget {
             label,
             style: TextStyle(
               color: color ?? colors.outline,
-              fontWeight: FontWeight.w400,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],

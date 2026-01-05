@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/ui/components/global/_layout_page.dart';
+import 'package:semesta/ui/components/layouts/_layout_page.dart';
 import 'package:semesta/ui/components/users/list_friendship.dart';
 import 'package:semesta/ui/partials/followers_tab.dart';
 import 'package:semesta/ui/partials/following_tab.dart';
 
 class FriendshipViewPage extends StatelessWidget {
-  final String userId, displayName;
+  final String uid, displayName;
   final int index;
   const FriendshipViewPage({
     super.key,
-    required this.userId,
+    required this.uid,
     required this.displayName,
     this.index = 0,
   });
@@ -21,8 +21,8 @@ class FriendshipViewPage extends StatelessWidget {
         name: displayName,
         initIndex: index,
         children: [
-          FollowersTab(userId: userId),
-          FollowingTab(userId: userId),
+          FollowersTab(uid: uid),
+          FollowingTab(uid: uid),
         ],
       ),
     );

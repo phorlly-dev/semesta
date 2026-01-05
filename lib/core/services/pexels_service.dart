@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:semesta/app/utils/type_def.dart';
-import 'package:semesta/core/services/firebase_path.dart';
+import 'package:semesta/core/mixins/firebase_path_mixin.dart';
 
-class PexelsService extends FirebaseCollection {
+class PexelsService with FirebasePathMixin {
   Dio get _dio =>
       Dio(BaseOptions(baseUrl: 'https://api.pexels.com/v1/', headers: headers));
 
@@ -33,4 +33,17 @@ class PexelsService extends FirebaseCollection {
     final List videos = res.data['videos'];
     return videos.cast<AsMap>();
   }
+
+  final pics = [
+    'https://i.pravatar.cc/150?img=0',
+    'https://i.pravatar.cc/150?img=1',
+    'https://i.pravatar.cc/150?img=2',
+    'https://i.pravatar.cc/150?img=3',
+    'https://i.pravatar.cc/150?img=4',
+    'https://i.pravatar.cc/150?img=5',
+    'https://i.pravatar.cc/150?img=6',
+    'https://i.pravatar.cc/150?img=7',
+    'https://i.pravatar.cc/150?img=8',
+    'https://i.pravatar.cc/150?img=9',
+  ];
 }

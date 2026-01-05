@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/core/models/post_model.dart';
+import 'package:semesta/core/models/feed.dart';
+
+class RouteParams {
+  final String name, path;
+  RouteParams({required this.name, required this.path});
+}
 
 class ReplyParams {
   final int id;
@@ -7,7 +12,7 @@ class ReplyParams {
   final bool selected;
   final IconData icon;
   final VoidCallback? onTap;
-  final PostVisibility option;
+  final Visible option;
 
   ReplyParams({
     required this.option,
@@ -17,4 +22,10 @@ class ReplyParams {
     required this.selected,
     this.onTap,
   });
+}
+
+class CountState {
+  final String key;
+  final int value;
+  const CountState(this.key, this.value);
 }

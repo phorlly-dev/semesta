@@ -1,48 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:semesta/app/extensions/controller_extension.dart';
+import 'package:semesta/core/mixins/repo_mixin.dart';
 import 'package:semesta/core/controllers/post_controller.dart';
-import 'package:semesta/ui/components/global/private_post_card.dart';
-import 'package:semesta/ui/widgets/keep_alive_client.dart';
-import 'package:semesta/ui/widgets/list_generated.dart';
+import 'package:semesta/core/views/feed_view.dart';
+import 'package:semesta/ui/components/globals/cached_tab.dart';
+import 'package:semesta/ui/components/globals/live_feed.dart';
 
-class PostsTab extends StatefulWidget {
-  final String userId;
-  const PostsTab({super.key, required this.userId});
-
-  @override
-  State<PostsTab> createState() => _PostsTabState();
-}
-
-class _PostsTabState extends State<PostsTab> {
-  final _controller = Get.find<PostController>();
-
-  @override
-  void initState() {
-    Future.microtask(() => loadInfo());
-    super.initState();
-  }
-
-  Future<void> loadInfo() async {
-    await _controller.loadPosts(widget.userId);
-  }
+class PostsTab extends StatelessWidget {
+  final String uid;
+  const PostsTab({super.key, required this.uid});
 
   @override
   Widget build(BuildContext context) {
-    return KeepAliveClient(
-      child: Obx(() {
-        final posts = _controller.elements;
-        final isLoading = _controller.isLoading.value;
+    final controller = Get.find<PostController>();
+    return CachedTab<FeedView>(
+      autoLoad: false,
+      controller: controller,
+      cache: controller.stateFor('profile:$uid:posts'),
+      emptyMessage: "There's no posts yet.",
+      onInitial: () => controller.combinePosts(uid),
+      onMore: () => controller.combinePosts(uid, QueryMode.next),
+      onRefresh: () {
+        final meta = controller.metaFor('profile:$uid:posts');
+        if (meta.dirty) {
+          controller.stateFor('profile:$uid:posts').clear();
+          meta.dirty = false;
+        }
 
-        return ListGenerated(
-          onRefresh: loadInfo,
-          counter: posts.length,
-          builder: (idx) => PrivatePostCard(post: posts[idx]),
-          isEmpty: posts.isEmpty,
-          isLoading: isLoading,
-          neverScrollable: true,
-          message: "There's no posts yet.",
-        );
-      }),
+        return controller.combinePosts(uid, QueryMode.refresh);
+      },
+      itemBuilder: (item) => LiveFeed(feed: item, me: true),
     );
   }
 }

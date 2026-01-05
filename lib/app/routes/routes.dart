@@ -1,7 +1,7 @@
-import 'package:semesta/app/routes/custom_route.dart';
-import 'package:semesta/app/routes/route_params.dart';
+import 'package:semesta/core/mixins/router_mixin.dart';
+import 'package:semesta/app/utils/params.dart';
 
-class Routes extends CustomRoute {
+class Routes with RouterMixin {
   //pages inside
   RouteParams get home => RouteParams(path: convert('home'), name: 'home');
   RouteParams get explore =>
@@ -17,6 +17,8 @@ class Routes extends CustomRoute {
       RouteParams(path: convert('splash'), name: 'splash');
   RouteParams get auth => RouteParams(path: convert('auth'), name: 'auth');
 
+  RouteParams get userBookmark =>
+      RouteParams(path: convert('users/:id/bookmark'), name: 'posts.bookmark');
   RouteParams get profile =>
       RouteParams(path: convert('users/:id/profile'), name: 'users.profile');
   RouteParams get avatarPreview => RouteParams(
@@ -39,13 +41,11 @@ class Routes extends CustomRoute {
     name: 'posts.videos.preview',
   );
   RouteParams get imagesPreview => RouteParams(
-    path: convert('posts/images/:id/preview'),
+    path: convert('posts/images/:id/previews'),
     name: 'posts.images.preview',
   );
   RouteParams get postDatails =>
-      RouteParams(path: convert('posts/:id/details'), name: 'posts.details');
-  RouteParams get postsSaved =>
-      RouteParams(path: convert('posts/:id/saveds'), name: 'posts.saves');
+      RouteParams(path: convert('posts/:id/detail'), name: 'posts.detail');
 
   //path menu
   List<String> get paths => [

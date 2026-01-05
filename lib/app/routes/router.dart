@@ -6,7 +6,6 @@ import 'package:semesta/app/routes/router_refresh_stream.dart';
 import 'package:semesta/app/routes/routes.dart';
 import 'package:semesta/app/utils/transition_page.dart';
 import 'package:semesta/core/controllers/auth_controller.dart';
-import 'package:semesta/core/controllers/post_controller.dart';
 import 'package:semesta/ui/pages/create_post_page.dart';
 import 'package:semesta/ui/pages/friendship_view_page.dart';
 import 'package:semesta/ui/pages/image_preview_page.dart';
@@ -14,19 +13,18 @@ import 'package:semesta/ui/pages/profile_view_page.dart';
 import 'package:semesta/ui/pages/reply_to_post_page.dart';
 import 'package:semesta/ui/pages/repost_post_page.dart';
 import 'package:semesta/ui/pages/avatar_preview_page.dart';
+import 'package:semesta/ui/pages/bookmark_views_page.dart';
 import 'package:semesta/ui/screens/message_screen.dart';
 import 'package:semesta/ui/pages/auth_page.dart';
 import 'package:semesta/ui/screens/explore_screen.dart';
 import 'package:semesta/ui/screens/home_screen.dart';
-import 'package:semesta/ui/pages/saved_views_page.dart';
-import 'package:semesta/ui/components/global/index.dart';
+import 'package:semesta/ui/components/layouts/index.dart';
 import 'package:semesta/ui/screens/notifications_screen.dart';
 import 'package:semesta/ui/pages/splash_page.dart';
 import 'package:semesta/ui/screens/reels_screen.dart';
 
 class AppRouter extends Routes {
   final _auth = Get.find<AuthController>();
-  String get uid => _auth.currentUser.value?.uid ?? '';
   static final appReady = ValueNotifier<bool>(false);
   final rootNavKey = GlobalKey<NavigatorState>();
 
@@ -73,10 +71,7 @@ class AppRouter extends Routes {
 
       // Shell (tabs)
       StatefulShellRoute.indexedStack(
-        builder: (context, state, shell) {
-          Get.put(PostController());
-          return AppLayout(child: shell);
-        },
+        builder: (context, state, shell) => AppLayout(child: shell),
         branches: [
           branch(home, child: HomeScreen()),
           branch(reel, child: const ReelsScreen()),
@@ -90,38 +85,38 @@ class AppRouter extends Routes {
       goRoute(
         profile,
         pageBuilder: (context, state) {
-          final userId = state.pathParameters['id'];
-          final isOwner = state.uri.queryParameters['self'];
-          if (userId == null) {
-            throw Exception('Invalid user ID in post: $userId');
+          final uid = state.pathParameters['id'];
+          final authed = state.uri.queryParameters['self'];
+          if (uid == null) {
+            throw Exception('Invalid user ID in post: $uid');
           }
 
           return TransitionPage(
             child: ProfileViewPage(
-              userId: userId,
-              isOwner: bool.parse(isOwner.toString()),
+              uid: uid,
+              authed: bool.parse(authed.toString()),
             ),
           );
         },
       ),
       goRoute(
-        postsSaved,
+        userBookmark,
         pageBuilder: (context, state) {
-          final userId = state.pathParameters['id'];
-          if (userId == null) {
-            throw Exception('Invalid user ID in post: $userId');
+          final uid = state.pathParameters['id'];
+          if (uid == null) {
+            throw Exception('Invalid user ID in post: $uid');
           }
 
-          return TransitionPage(child: SavedViewsPage(userId: userId));
+          return TransitionPage(child: BookmarkViewsPage(uid: uid));
         },
       ),
       goRoute(
         avatarPreview,
         pageBuilder: (context, state) {
-          final userId = state.pathParameters['id']!;
+          final uid = state.pathParameters['id']!;
 
           return TransitionPage(
-            child: AvatarPreviewPage(userId: userId),
+            child: AvatarPreviewPage(uid: uid),
             fullscreenDialog: true,
           );
         },
@@ -134,13 +129,13 @@ class AppRouter extends Routes {
       goRoute(
         replyPost,
         pageBuilder: (context, state) {
-          final postId = state.pathParameters['id'];
-          if (postId == null) {
-            throw Exception('Invalid post ID: $postId');
+          final pid = state.pathParameters['id'];
+          if (pid == null) {
+            throw Exception('Invalid post ID: $pid');
           }
 
           return TransitionPage(
-            child: ReplyToPostPage(postId: postId),
+            child: ReplyToPostPage(pid: pid),
             fullscreenDialog: true,
           );
         },
@@ -148,13 +143,13 @@ class AppRouter extends Routes {
       goRoute(
         repost,
         pageBuilder: (context, state) {
-          final postId = state.pathParameters['id'];
-          if (postId == null) {
-            throw Exception('Invalid post ID: $postId');
+          final pid = state.pathParameters['id'];
+          if (pid == null) {
+            throw Exception('Invalid post ID: $pid');
           }
 
           return TransitionPage(
-            child: PostRepost(postId: postId),
+            child: PostRepost(pid: pid),
             fullscreenDialog: true,
           );
         },
@@ -162,11 +157,11 @@ class AppRouter extends Routes {
       goRoute(
         imagesPreview,
         pageBuilder: (context, state) {
-          final postId = state.pathParameters['id'];
+          final pid = state.pathParameters['id'];
           final idx = int.parse(state.uri.queryParameters['index'] ?? '0');
 
           return TransitionPage(
-            child: ImagePreviewPage(postId: postId.toString(), index: idx),
+            child: ImagePreviewPage(pid: pid.toString(), index: idx),
             fullscreenDialog: true,
           );
         },
@@ -174,13 +169,13 @@ class AppRouter extends Routes {
       goRoute(
         friendship,
         pageBuilder: (context, state) {
-          final userId = state.pathParameters['id']!;
+          final uid = state.pathParameters['id']!;
           final displayName = state.uri.queryParameters['name'];
           final idx = int.parse(state.uri.queryParameters['index'] ?? '0');
 
           return TransitionPage(
             child: FriendshipViewPage(
-              userId: userId,
+              uid: uid,
               index: idx,
               displayName: displayName.toString(),
             ),

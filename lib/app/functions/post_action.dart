@@ -1,11 +1,6 @@
 import 'package:flutter/rendering.dart';
 
-enum ComposerType {
-  post, // new post
-  reply, // replying to another post
-  repost, // reposting with/without comment
-  quote, // quoting another post (optional)
-}
+enum ComposerType { post, reply, quote }
 
 class PostAction {
   final ComposerType type;
@@ -26,7 +21,6 @@ class PostAction {
         break;
 
       case ComposerType.post:
-      default:
         onPost.call();
     }
   }
@@ -35,7 +29,7 @@ class PostAction {
     switch (type) {
       case ComposerType.reply:
         return 'Reply';
-      case ComposerType.repost:
+      case ComposerType.quote:
         return 'Repost';
       default:
         return 'Post';
@@ -46,7 +40,7 @@ class PostAction {
     switch (type) {
       case ComposerType.reply:
         return 'Reply to Post';
-      case ComposerType.repost:
+      case ComposerType.quote:
         return 'Repost';
       default:
         return 'Create Post';
@@ -57,7 +51,7 @@ class PostAction {
     switch (type) {
       case ComposerType.reply:
         return 'Post your reply';
-      case ComposerType.repost:
+      case ComposerType.quote:
         return 'Add a comment...';
       default:
         return "What's new?";

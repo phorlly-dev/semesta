@@ -2,14 +2,11 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
+import 'package:semesta/app/bindings/global_bindings.dart';
 import 'package:semesta/app/configs/app_start.dart';
-import 'package:semesta/app/utils/logger.dart';
+import 'package:semesta/app/functions/logger.dart';
 import 'package:semesta/app/configs/handle_error.dart';
-import 'package:semesta/app/utils/scroll_helper.dart';
 import 'package:semesta/app/utils/share_storage.dart';
-import 'package:semesta/core/controllers/auth_controller.dart';
-import 'package:semesta/core/controllers/user_controller.dart';
 import 'package:semesta/core/services/firebase_service.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
@@ -35,9 +32,7 @@ class AppConfigure {
         onError();
 
         // Register GetX controllers, etc.
-        Get.put(AuthController(), permanent: true);
-        Get.put(UserController(), permanent: true);
-        Get.put(ScrollHelper(), permanent: true);
+        GlobalBindings().dependencies();
 
         //ScreenUtil
         await ScreenUtil.ensureScreenSize();

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:semesta/app/utils/logger.dart';
-import 'package:semesta/app/utils/custom_snack_bar.dart';
+import 'package:semesta/app/functions/logger.dart';
+import 'package:semesta/app/functions/custom_snack_bar.dart';
 
 class CustomClipboard extends StatelessWidget {
   final String data;

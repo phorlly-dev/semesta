@@ -24,7 +24,7 @@ class CustomModal<T> {
     this.label = 'Yes',
   }) {
     final formKey = GlobalKey<FormState>();
-    final colors = Theme.of(context).colorScheme;
+    final col = Theme.of(context).hintColor;
 
     showDialog<T>(
       context: context,
@@ -36,14 +36,18 @@ class CustomModal<T> {
           content: SingleChildScrollView(
             child: Form(
               key: formKey,
-              child: Column(mainAxisSize: size, children: children),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: size,
+                children: children,
+              ),
             ),
           ),
           actions: [
             TextButton.icon(
               onPressed: () => context.pop(),
-              icon: Icon(Icons.close, color: colors.scrim),
-              label: Text('Cancel', style: TextStyle(color: colors.scrim)),
+              icon: Icon(Icons.close, color: col),
+              label: Text('Cancel', style: TextStyle(color: col)),
             ),
             TextButton.icon(
               onPressed: onConfirm,

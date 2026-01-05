@@ -35,7 +35,7 @@ dependencies:
     onesignal_flutter:
     shared_preferences:
     provider:
-    flutter_facebook_auth:
+    # flutter_facebook_auth:
     form_builder_validators:
     flutter_form_builder:
     firebase_app_check:
@@ -51,7 +51,10 @@ dependencies:
     visibility_detector:
     faker:
     wechat_camera_picker:
-    rxdart: ^0.28.0
+    rxdart:
+    video_thumbnail:
+    lazy_load_scrollview:
+    path_provider:
 
 dev_dependencies:
     flutter_launcher_icons:

@@ -31,11 +31,11 @@ class CustomTextButton extends StatelessWidget {
         style: TextButton.styleFrom(
           backgroundColor: bgColor,
           foregroundColor: fgColor,
-          minimumSize: Size(46, 12),
+          minimumSize: Size(46, 16),
           alignment: Alignment.center,
           padding: EdgeInsets.symmetric(horizontal: width, vertical: height),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(16),
             side: border,
           ),
         ),

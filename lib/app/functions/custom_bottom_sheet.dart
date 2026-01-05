@@ -10,9 +10,10 @@ class CustomBottomSheet<T> {
     required this.children,
     this.mainAxisSize = MainAxisSize.min,
   }) {
+    final theme = Theme.of(context);
     showModalBottomSheet<T>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: theme.cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

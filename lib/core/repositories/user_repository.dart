@@ -1,60 +1,44 @@
+import 'package:semesta/app/functions/format.dart';
+import 'package:semesta/core/mixins/user_mixin.dart';
 import 'package:semesta/app/utils/type_def.dart';
-import 'package:semesta/core/models/user_action_model.dart';
-import 'package:semesta/core/models/user_model.dart';
+import 'package:semesta/core/models/author.dart';
 import 'package:semesta/core/repositories/repository.dart';
-import 'package:semesta/core/repositories/user_action_repository.dart';
 
-class UserRepository extends IRepository<UserModel> {
-  UserActionRepository get act => UserActionRepository();
-
-  Future<void> createUser(UserModel model, [String? path]) async {
-    final now = DateTime.now();
-    final newUser = UserModel(
+class UserRepository extends IRepository<Author> with UserMixin {
+  Future<void> createUser(Author model, [String? path]) async {
+    final newUser = Author(
       id: model.id,
       email: model.email,
       name: model.name,
       avatar: model.avatar,
-      username: model.username,
-      dob: model.dob ?? DateTime.now().add(Duration(days: 365 * 16)),
+      uname: model.uname,
+      dob: model.dob ?? now.add(Duration(days: 365 * 16)),
       createdAt: now,
       updatedAt: now,
     );
 
-    await getPath(child: model.id).set(newUser.toMap());
-    await getPath(
-      parent: userActions,
-      child: model.id,
-    ).set(UserActionModel(userId: model.id).toMap());
-    await setUsername(model.id, model.username, path);
+    await collection(users)
+        .doc(model.id)
+        .set(newUser.to())
+        .catchError(
+          (e) => throw Exception('Failed to create user: ${e.toString()}'),
+        );
+    await setUsername(model.id, model.uname, path);
   }
 
-  Future<void> setUsername(String uid, String username, [String? path]) async {
-    await getPath(
-      parent: usernames,
-      child: username,
-    ).set({'user_id': uid, 'path': path, 'username': username.trim()});
+  Future<void> setUsername(String uid, String uname, [String? path]) async {
+    await collection(usernames)
+        .doc(uname)
+        .set({'uid': uid, 'path': path, 'uname': uname.trim()})
+        .catchError((e) => throw Exception('Username $uname is already taken'));
   }
 
   @override
-  String get collectionPath => users;
+  String get path => users;
 
   @override
-  UserModel fromMap(AsMap map, String id) =>
-      UserModel.fromMap({...map, 'id': id});
+  Author from(AsMap map, String id) => Author.from({...map, 'id': id});
 
   @override
-  AsMap toMap(UserModel model) => model.toMap();
-
-  final pics = [
-    'https://i.pravatar.cc/150?img=0',
-    'https://i.pravatar.cc/150?img=1',
-    'https://i.pravatar.cc/150?img=2',
-    'https://i.pravatar.cc/150?img=3',
-    'https://i.pravatar.cc/150?img=4',
-    'https://i.pravatar.cc/150?img=5',
-    'https://i.pravatar.cc/150?img=6',
-    'https://i.pravatar.cc/150?img=7',
-    'https://i.pravatar.cc/150?img=8',
-    'https://i.pravatar.cc/150?img=9',
-  ];
+  AsMap to(Author model) => model.to();
 }

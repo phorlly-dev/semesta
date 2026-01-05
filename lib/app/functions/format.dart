@@ -1,10 +1,12 @@
 import 'package:get/get.dart';
+import 'package:semesta/app/extensions/extension.dart';
+import 'package:semesta/app/utils/type_def.dart';
 
 String setImage(String path, [bool isIcon = false]) =>
     isIcon ? 'assets/icons/$path' : 'assets/images/$path';
 
 DateTime syncDate([DateTime? date, bool isLocal = true]) {
-  final effectiveDate = date ?? DateTime.now();
+  final effectiveDate = date ?? now;
   final local = effectiveDate.toLocal();
   final utc = effectiveDate.toUtc();
 
@@ -14,7 +16,6 @@ DateTime syncDate([DateTime? date, bool isLocal = true]) {
 String timeAgo(DateTime? date) {
   if (date == null) return '';
 
-  final now = DateTime.now();
   final diff = now.difference(date);
 
   if (diff.inSeconds < 60) return 'Just now';
@@ -28,6 +29,8 @@ String timeAgo(DateTime? date) {
 
   return '${(diff.inDays / 365).floor()}y';
 }
+
+DateTime get now => DateTime.now();
 
 String toCapitalize(String? name) => name?.capitalize ?? '';
 
@@ -53,22 +56,12 @@ String formatCount(int count) {
   }
 }
 
+int toInt(AsMap data) => data.toString().toInt;
+
 String limitText(String text, [int maxChars = 12]) {
   if (text.length <= maxChars) return text;
 
   return '${text.substring(0, maxChars)}... ';
-}
-
-bool isNot(dynamic data) {
-  if (data == null) {
-    return true;
-  } else if (data.isEmpty ?? false) {
-    return true;
-  } else if (data == '') {
-    return true;
-  } else {
-    return false;
-  }
 }
 
 List<String> hashOrAt(String text) {

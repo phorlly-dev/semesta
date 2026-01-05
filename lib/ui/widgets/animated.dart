@@ -21,7 +21,7 @@ class _AnimatedState extends State<Animated> {
   void _animateTap() async {
     setState(() {
       _opacity = 0.6;
-      _scale = 0.89;
+      _scale = 0.98;
     });
 
     await Future.delayed(const Duration(milliseconds: 120));

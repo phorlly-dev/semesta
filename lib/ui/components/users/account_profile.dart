@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
-import 'package:semesta/app/functions/tab_delegate.dart';
+import 'package:semesta/app/extensions/controller_extension.dart';
+import 'package:semesta/app/utils/params.dart';
+import 'package:semesta/app/utils/tab_delegate.dart';
 import 'package:semesta/app/routes/routes.dart';
 import 'package:semesta/app/utils/type_def.dart';
-import 'package:semesta/core/controllers/post_controller.dart';
+import 'package:semesta/core/controllers/action_controller.dart';
+import 'package:semesta/core/views/audit_view.dart';
 import 'package:semesta/ui/components/users/profile_info.dart';
-import 'package:semesta/ui/components/global/content_sliver_layer.dart';
-import 'package:semesta/ui/components/global/nav_bar_sliver_layer.dart';
 import 'package:semesta/ui/widgets/custom_tab_bar.dart';
 import 'package:semesta/ui/widgets/custom_text_button.dart';
 import 'package:semesta/ui/widgets/follow_button.dart';
+import 'package:semesta/ui/components/layouts/loading_skelenton.dart';
 
 class AccountProfile extends StatefulWidget {
-  final bool isOwner;
-  final String userId;
+  final bool authed;
+  final String uid;
+  final CountState state;
+  final int initIndex;
   final List<Widget> children;
   final PropsCallback<int, void>? onTap;
   const AccountProfile({
     super.key,
     required this.children,
-    required this.userId,
+    required this.uid,
     this.onTap,
-    this.isOwner = false,
+    this.authed = false,
+    this.initIndex = 0,
+    required this.state,
   });
 
   @override
@@ -32,19 +38,24 @@ class AccountProfile extends StatefulWidget {
 class _AccountProfileState extends State<AccountProfile>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  List<String> get tabs => [
-    'Posts',
-    'Replies',
-    'Media',
-    'Reposts',
-    if (widget.isOwner) 'Likes',
-  ];
+  final _controller = Get.find<ActionController>();
+  AsList get _tabs => ['Posts', 'Replies', 'Media', if (widget.authed) 'Likes'];
 
   @override
   void initState() {
+    _tabController = TabController(
+      length: _tabs.length,
+      vsync: this,
+      initialIndex: widget.initIndex,
+    );
     super.initState();
-    _tabController = TabController(length: tabs.length, vsync: this);
   }
+
+  CustomTabBar get _tabBar => CustomTabBar(
+    controller: _tabController,
+    tabs: _tabs.map((tab) => Tab(text: tab)).toList(),
+    onTap: widget.onTap,
+  );
 
   @override
   void dispose() {
@@ -58,49 +69,38 @@ class _AccountProfileState extends State<AccountProfile>
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    final controller = Get.find<PostController>();
-    final userCtrl = controller.userCtrl;
-    final currentId = controller.currentId;
+    return StreamBuilder<StatusView>(
+      stream: _controller.statusStream$(widget.uid),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const LoadingSkelenton();
 
-    return ContentSliverLayer(
-      builder: (boxInScrolled) {
-        return [
-          NavBarSliverLayer(
-            pinned: true,
-            isForce: boxInScrolled,
-            middle: Obx(() {
-              final user = userCtrl.dataMapping[widget.userId];
-              return Text(
-                widget.isOwner ? 'Your profile' : "${user?.name}'s profile",
-              );
-            }),
-            ends: [
-              if (widget.isOwner)
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(Icons.settings),
-                  color: colors.outline,
-                ),
-            ],
-          ),
+        final ctx = snapshot.data!;
+        return NestedScrollView(
+          headerSliverBuilder: (_, innerBox) => [
+            SliverAppBar(
+              centerTitle: true,
+              title: Text(ctx.authed ? 'Your profile' : ctx.author.name),
+              actions: [
+                ctx.authed
+                    ? IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.settings),
+                        color: colors.outline,
+                      )
+                    : IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.search),
+                        color: colors.outline,
+                      ),
+              ],
+            ),
 
-          // Profile info section
-          SliverToBoxAdapter(
-            child: Obx(() {
-              final viewer = userCtrl.dataMapping[currentId];
-              final owner = userCtrl.dataMapping[widget.userId];
-
-              if (viewer == null || owner == null) {
-                return const SizedBox.shrink();
-              }
-
-              final iFollowThem = viewer.isFollowing(owner.id);
-              final theyFollowMe = owner.isFollowing(currentId);
-              final state = resolveState(iFollowThem, theyFollowMe);
-
-              return ProfileInfo(
-                user: owner,
-                action: widget.isOwner
+            // Profile info section
+            SliverToBoxAdapter(
+              child: ProfileInfo(
+                state: widget.state,
+                user: ctx.author,
+                action: ctx.authed
                     ? CustomTextButton(
                         label: 'Edit Profile',
                         onPressed: () {},
@@ -108,43 +108,35 @@ class _AccountProfileState extends State<AccountProfile>
                         textColor: Colors.white,
                       )
                     : FollowButton(
-                        user: owner,
-                        state: state,
+                        state: resolveState(ctx.iFollow, ctx.theyFollow),
                         onPressed: () async {
-                          await controller.toggleFollow(owner.id, iFollowThem);
+                          await _controller.toggleFollow(
+                            widget.uid,
+                            ctx.iFollow,
+                          );
                         },
                       ),
-                onPreview: () {
-                  context.pushNamed(
+                onPreview: () async {
+                  await context.pushNamed(
                     route.avatarPreview.name,
-                    pathParameters: {'id': owner.id},
+                    pathParameters: {'id': widget.uid},
                   );
                 },
-              );
-            }),
-          ),
-
-          // Tab bar section
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: TabDelegate(
-              CustomTabBar(
-                isScrollable: true,
-                controller: _tabController,
-                tabs: tabs.map((tab) => Tab(text: tab)).toList(),
-                onTap: widget.onTap,
-                tabAlignment: TabAlignment.center,
               ),
             ),
-          ),
-        ];
-      },
 
-      // Body scrollable content
-      content: TabBarView(
-        controller: _tabController,
-        children: widget.children,
-      ),
+            // Tab bar section
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: TabDelegate(_tabBar),
+            ),
+          ],
+          body: TabBarView(
+            controller: _tabController,
+            children: widget.children,
+          ),
+        );
+      },
     );
   }
 }

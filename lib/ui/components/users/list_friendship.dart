@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/app/functions/tab_delegate.dart';
+import 'package:semesta/app/utils/tab_delegate.dart';
 import 'package:semesta/app/utils/type_def.dart';
-import 'package:semesta/ui/components/global/content_sliver_layer.dart';
-import 'package:semesta/ui/components/global/nav_bar_sliver_layer.dart';
 import 'package:semesta/ui/widgets/custom_tab_bar.dart';
 
 class ListFriendship extends StatefulWidget {
@@ -26,6 +24,11 @@ class _ListFriendshipState extends State<ListFriendship>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<String> get tabs => ['Followers', 'Following'];
+  CustomTabBar get tabBar => CustomTabBar(
+    controller: _tabController,
+    tabs: tabs.map((tab) => Tab(text: tab)).toList(),
+    onTap: widget.onTap,
+  );
 
   @override
   void initState() {
@@ -40,38 +43,27 @@ class _ListFriendshipState extends State<ListFriendship>
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return ContentSliverLayer(
-      builder: (boxInScrolled) {
-        return [
-          NavBarSliverLayer(
-            isForce: boxInScrolled,
-            middle: Text(widget.name),
-            ends: [
-              IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.person_add_alt_1_outlined),
-                color: colors.outline,
-              ),
-            ],
-          ),
-
-          // Tab bar section
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: TabDelegate(
-              CustomTabBar(
-                controller: _tabController,
-                tabs: tabs.map((tab) => Tab(text: tab)).toList(),
-                onTap: widget.onTap,
-              ),
+    return NestedScrollView(
+      headerSliverBuilder: (_, innerBox) => [
+        SliverAppBar(
+          centerTitle: true,
+          title: Text(widget.name),
+          actions: [
+            IconButton(
+              onPressed: () {},
+              icon: Icon(Icons.person_add_alt_1_outlined),
+              color: colors.outline,
             ),
-          ),
-        ];
-      },
-      content: TabBarView(
-        controller: _tabController,
-        children: widget.children,
-      ),
+          ],
+        ),
+
+        SliverPersistentHeader(
+          pinned: true,
+          floating: true,
+          delegate: TabDelegate(tabBar),
+        ),
+      ],
+      body: TabBarView(controller: _tabController, children: widget.children),
     );
   }
 }

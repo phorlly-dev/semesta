@@ -1,131 +1,260 @@
 import 'dart:async';
-
+import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:rxdart/streams.dart';
+import 'package:semesta/app/functions/format.dart';
+import 'package:semesta/app/functions/logger.dart';
+import 'package:semesta/core/mixins/repo_mixin.dart';
 import 'package:semesta/app/utils/type_def.dart';
-import 'package:semesta/core/services/firebase_service.dart';
+import 'package:semesta/core/models/reaction.dart';
+import 'package:semesta/core/repositories/generic_repository.dart';
 
-abstract class IRepository<T> extends FirebaseService {
-  /// Returns the Firestore collection path
-  String get collectionPath;
+abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
+  Stream<T> stream$(String doc) {
+    assert(doc.isNotEmpty, 'Document ID must not be empty');
 
-  /// Convert model -> Firestore map
-  AsMap toMap(T model);
+    return collection(path)
+        .doc(doc)
+        .snapshots()
+        .map<T>((e) {
+          if (!e.exists) throw StateError('Document does not exist');
 
-  /// Convert Firestore doc -> model
-  T fromMap(AsMap map, String id);
-
-  /// Add a new document
-  Future<String> store(T model) async {
-    final docRef = getPath();
-    final newModel = (model as dynamic).copyWith(id: docRef.id);
-    await docRef.set(toMap(newModel));
-
-    return docRef.id;
+          return from(e.data()!, e.id);
+        })
+        .handleError((error) {
+          // Log error or provide fallback
+          HandleLogger.error('Failed to stream data $doc', message: error);
+        });
   }
 
-  /// Get document by ID
-  Future<T?> show(String id) async {
-    final doc = await getPath(child: id).get();
-    if (!doc.exists) return null;
-
-    return fromMap(doc.data()!, doc.id);
+  Stream<Doc<AsMap>> liveStream(String doc) {
+    return collection(path).doc(doc).snapshots();
   }
 
-  /// Update an existing document
-  Future<void> modify(String id, AsMap data) async =>
-      await getPath(child: id).update(data);
-
-  /// Delete a document
-  Future<void> destroy(String id) async => await getPath(child: id).delete();
-
-  /// Get all documents (basic)
-  Future<List<T>> index([String field = 'created_at']) async {
-    final query = await getCollection.orderBy(field, descending: true).get();
-
-    return query.docs.map((doc) => fromMap(doc.data(), doc.id)).toList();
+  Stream<bool> has$(String docPath) {
+    return document(docPath).snapshots().map((d) => d.exists);
   }
 
-  Future<List<T>> query({
-    String field = '_id',
-    Object? value,
-    Iterable<Object>? values,
-    bool orderBy = true,
-    String fieldName = 'created_at',
-  }) async {
-    Query<AsMap> ref = getCollection;
-
-    if (field.isNotEmpty && value != null) {
-      ref = ref.where(field, isEqualTo: value);
-    } else if (field.isNotEmpty && values != null) {
-      ref = ref.where(field, whereIn: values);
-    }
-
-    // ✅ Only order if explicitly enabled
-    if (orderBy) {
-      ref = ref.orderBy(fieldName, descending: true);
-    }
-
-    final snapshot = await ref.get();
-    return snapshot.docs.map((doc) => fromMap(doc.data(), doc.id)).toList();
-  }
-
-  Stream<T> stream(String child, {String? parent}) {
-    return getPath(
-      parent: parent,
-      child: child,
-    ).snapshots().map((e) => fromMap(e.data()!, e.id));
-  }
-
-  Future<List<T>> viewByLimit({
-    String field = 'created_at',
-    int limit = 10,
-  }) async {
-    final query = await getCollection
-        .orderBy(field, descending: true)
-        .limit(limit)
-        .get();
-
-    return query.docs.map((doc) => fromMap(doc.data(), doc.id)).toList();
-  }
-
-  StreamSubscription<DocumentSnapshot<AsMap>> live({
-    String? parent,
-    required String child,
-    void Function(DocumentSnapshot<AsMap> doc)? onStream,
-  }) => getPath(child: child, parent: parent).snapshots().listen(onStream);
-
-  Stream<DocumentSnapshot<AsMap>> liveStream({
-    String? parent,
-    required String child,
-  }) => getPath(child: child, parent: parent).snapshots();
-
-  Stream<T> bindStream({
-    required StreamDoc<AsMap> first,
-    required StreamDoc<AsMap> second,
-    required ConbineData<Doc<AsMap>, Doc<AsMap>, T> combiner,
-  }) => CombineLatestStream.combine2(first, second, combiner);
-
-  CollectionReference<AsMap> get getCollection =>
-      firestore.collection(collectionPath);
-
-  DocumentReference<AsMap> getPath({String? parent, String? child}) =>
-      firestore.collection(parent ?? collectionPath).doc(child);
-
-  Future<void> toggleCount({
-    required String child,
-    String? parent,
-    String field = 'posted',
+  Future<void> toggleCount(
+    String doc, {
+    String? col,
+    String key = 'posts',
     int delta = 1,
   }) async {
-    final ref = getPath(parent: parent, child: child);
+    final ref = collection(col ?? path).doc(doc);
+    try {
+      await db.runTransaction((txn) async {
+        final snap = await txn.get(ref);
+        if (!snap.exists) return;
 
-    await firestore.runTransaction((txn) async {
-      final snap = await txn.get(ref);
-      if (!snap.exists) return;
+        final value = (snap.data()?['${key}_count'] ?? 0) as num;
+        if (value + delta < 0) return;
 
-      final currentValue = (snap.data()?['${field}_count'] ?? 0) as num;
-      txn.update(ref, {'${field}_count': currentValue + delta});
-    });
+        txn.update(ref, {'${key}_count': value + delta});
+      });
+    } catch (e, s) {
+      HandleLogger.error('Failed to toggle $key', message: e, stack: s);
+      rethrow;
+    }
+  }
+
+  /// [sdoc] - Source document ID (e.g., user ID)
+  /// [edoc] - Edge/target document ID (e.g., post ID)
+  /// [key] - The reaction type key (default: 'favorites')
+  /// [subcol] - The subcollection name (default: 'favorites')
+  Future<void> toggle(
+    String sdoc,
+    String edoc, {
+    String key = 'favorites',
+    String subcol = 'favorites',
+  }) async {
+    final doc = collection(path).doc(sdoc);
+    final edgeRef = doc.collection(subcol).doc(edoc);
+    final countField = '${key}_count';
+
+    try {
+      await db.runTransaction((txn) async {
+        // Fetch both documents in parallel for better performance
+        final edgeSnap = await txn.get(edgeRef);
+        final snap = await txn.get(doc);
+
+        // Validate post document exists
+        if (!snap.exists) {
+          throw StateError('Document $sdoc does not exist');
+        }
+
+        final currentCount = (snap.data()?[countField] as int?) ?? 0;
+
+        if (edgeSnap.exists) {
+          // Remove reaction
+          txn.delete(edgeRef);
+          txn.update(doc, {countField: math.max(0, currentCount - 1)});
+        } else {
+          // Add reaction
+          final reactionData = Reaction(
+            currentId: sdoc,
+            targetId: edoc,
+            createdAt: now,
+          ).to();
+
+          txn.set(edgeRef, reactionData);
+          txn.update(doc, {countField: currentCount + 1});
+        }
+      });
+    } on FirebaseException catch (e) {
+      HandleLogger.error(
+        'Failed to toggle $key',
+        message: 'Firebase error: ${e.code} - ${e.message}',
+      );
+      rethrow;
+    } catch (e, stackTrace) {
+      HandleLogger.error(
+        'Failed to toggle $key',
+        message: e,
+        stack: stackTrace,
+      );
+      rethrow;
+    }
+  }
+
+  /// [sdoc] - Source document ID (e.g., post ID)
+  /// [bdoc] - Between/parent document ID (e.g., comment ID)
+  /// [edoc] - Edge/target document ID (e.g., user ID performing the action)
+  /// [key] - The reaction type key (default: 'favorites')
+  /// [subcol] - The subcollection name for reactions (default: 'favorites')
+  /// [inSubcol] - The intermediate subcollection name (default: 'comments')
+  Future<void> subtoggle(
+    String sdoc,
+    String bdoc,
+    String edoc, {
+    String key = 'favorites',
+    String inSubcol = 'comments',
+    String subcol = 'favorites',
+  }) async {
+    final doc = collection(path).doc(sdoc);
+    final nestedRef = doc
+        .collection(inSubcol)
+        .doc(bdoc)
+        .collection(subcol)
+        .doc(edoc);
+    final countField = '${key}_count';
+
+    try {
+      await db.runTransaction((txn) async {
+        // Fetch both documents
+        final actionSnap = await txn.get(nestedRef);
+        final docSnap = await txn.get(doc);
+
+        // Validate source document exists
+        if (!docSnap.exists) {
+          throw StateError('Document $sdoc does not exist');
+        }
+
+        final currentCount = (docSnap.data()?[countField] as int?) ?? 0;
+
+        if (actionSnap.exists) {
+          // Remove nested reaction
+          txn
+            ..delete(nestedRef)
+            ..update(doc, {countField: math.max(0, currentCount - 1)});
+        } else {
+          // Add nested reaction
+          final reactionData = NestedReaction(
+            currentId: sdoc,
+            targetId: edoc,
+            betweenId: bdoc,
+            createdAt: now,
+          ).to();
+
+          txn
+            ..set(nestedRef, reactionData)
+            ..update(doc, {countField: currentCount + 1});
+        }
+      });
+    } on FirebaseException catch (e) {
+      HandleLogger.error(
+        'Failed to toggle $key on nested document',
+        message: 'Firebase error: ${e.code} - ${e.message}',
+      );
+      rethrow;
+    } catch (e, stackTrace) {
+      HandleLogger.error(
+        'Failed to toggle $key on nested document',
+        message: e,
+        stack: stackTrace,
+      );
+      rethrow;
+    }
+  }
+
+  Future<List<Reaction>> reactions(
+    String col,
+    String doc, {
+    String key = 'target_id',
+    int limit = 30,
+  }) {
+    assert(
+      col.isNotEmpty && doc.isNotEmpty,
+      'Collection and Document ID must not be empty',
+    );
+
+    return subcollection(col)
+        .where(key, isEqualTo: doc)
+        .orderBy('created_at', descending: true)
+        .limit(limit)
+        .get()
+        .then((value) {
+          return value.docs.map((d) => Reaction.from(d.data())).toList();
+        })
+        .catchError((error) {
+          // Log error or provide fallback
+          HandleLogger.error('Failed to list to actions', message: error);
+
+          return <Reaction>[];
+        });
+  }
+
+  Stream<List<Reaction>> liveReactions$(
+    String col,
+    String doc, {
+    String key = 'target_id',
+    int limit = 30,
+  }) {
+    assert(
+      col.isNotEmpty && doc.isNotEmpty,
+      'Collection and Document ID must not be empty',
+    );
+
+    return subcollection(col)
+        .where(key, isEqualTo: doc)
+        .orderBy('created_at', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) => Reaction.from(doc.data())).toList();
+        })
+        .handleError((error) {
+          // Log error or provide fallback
+          HandleLogger.error('Failed to list to actions', message: error);
+
+          return <Reaction>[];
+        });
+  }
+
+  Future<List<T>> getInOrder(
+    AsList values, {
+    int limit = 20,
+    QueryMode mode = QueryMode.normal,
+  }) async {
+    if (values.isEmpty) return [];
+
+    final snap = await collection(path)
+        .where(FieldPath.documentId, whereIn: values)
+        .limit(mode == QueryMode.refresh ? 100 : limit)
+        .get();
+
+    final map = {for (var d in snap.docs) d.id: from(d.data(), d.id)};
+
+    // Rebuild list in ACTION order
+    return values.where(map.containsKey).map((id) => map[id]!).toList();
   }
 }

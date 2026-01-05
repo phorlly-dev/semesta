@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:semesta/app/functions/option_modal.dart';
-import 'package:semesta/ui/components/global/_layout_page.dart';
-import 'package:semesta/ui/components/global/nav_bar_layer.dart';
+import 'package:semesta/ui/components/layouts/_layout_page.dart';
+import 'package:semesta/ui/components/layouts/nav_bar_layer.dart';
 
 class ImagePreview extends StatefulWidget {
   final List<String> images;
@@ -48,74 +49,88 @@ class _ImagePreviewState extends State<ImagePreview> {
     final options = OptionModal(context);
     final opacity = (1.0 - (_dragOffset.abs() / 300)).clamp(0.3, 1.0);
 
-    return LayoutPage(
-      header: toggle
-          ? NavBarLayer(
-              start: IconButton(
-                onPressed: () => context.pop(),
-                icon: Icon(Icons.close_rounded, color: Colors.white),
-              ),
-              end: IconButton(
-                onPressed: options.imageOptions,
-                icon: Icon(Icons.more_horiz_rounded, color: Colors.white),
-              ),
-              bgColor: Colors.transparent,
-            )
-          : NavBarLayer(bgColor: Colors.transparent, start: SizedBox.shrink()),
-      bgColor: Colors.black.withValues(alpha: opacity),
-      content: GestureDetector(
-        onVerticalDragUpdate: _onVerticalDragUpdate,
-        onVerticalDragEnd: _onVerticalDragEnd,
-        onTap: () => setState(() => toggle = !toggle),
-        onLongPress: options.imageOptions,
-        child: Stack(
-          children: [
-            Transform.translate(
-              offset: Offset(0, _dragOffset),
-              child: PhotoViewGallery.builder(
-                pageController: _pageController,
-                scrollPhysics: const BouncingScrollPhysics(),
-                backgroundDecoration: const BoxDecoration(
-                  color: Colors.transparent,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light, // Android
+        statusBarBrightness: Brightness.dark, // iOS
+      ),
+      child: LayoutPage(
+        header: toggle
+            ? NavBarLayer(
+                start: IconButton(
+                  onPressed: () => context.pop(),
+                  icon: Icon(Icons.close_rounded, color: Colors.white),
                 ),
-                itemCount: widget.images.length,
-                builder: (context, index) => PhotoViewGalleryPageOptions(
-                  imageProvider: NetworkImage(widget.images[index]),
-                  minScale: PhotoViewComputedScale.contained,
-                  maxScale: PhotoViewComputedScale.covered * 2,
-                  heroAttributes: PhotoViewHeroAttributes(
-                    tag: widget.images[index],
+                end: IconButton(
+                  onPressed: () {
+                    options.imageOptions(widget.images[currentIndex]);
+                  },
+                  icon: Icon(Icons.more_horiz_rounded, color: Colors.white),
+                ),
+                bgColor: Colors.transparent,
+              )
+            : NavBarLayer(
+                bgColor: Colors.transparent,
+                start: SizedBox.shrink(),
+              ),
+        bgColor: Colors.black.withValues(alpha: opacity),
+        content: GestureDetector(
+          onVerticalDragUpdate: _onVerticalDragUpdate,
+          onVerticalDragEnd: _onVerticalDragEnd,
+          onTap: () => setState(() => toggle = !toggle),
+          onLongPress: () {
+            options.imageOptions(widget.images[currentIndex]);
+          },
+          child: Stack(
+            children: [
+              Transform.translate(
+                offset: Offset(0, _dragOffset),
+                child: PhotoViewGallery.builder(
+                  pageController: _pageController,
+                  scrollPhysics: const BouncingScrollPhysics(),
+                  backgroundDecoration: const BoxDecoration(
+                    color: Colors.transparent,
                   ),
+                  itemCount: widget.images.length,
+                  builder: (context, index) => PhotoViewGalleryPageOptions(
+                    imageProvider: NetworkImage(widget.images[index]),
+                    minScale: PhotoViewComputedScale.contained,
+                    maxScale: PhotoViewComputedScale.covered * 2,
+                    heroAttributes: PhotoViewHeroAttributes(
+                      tag: widget.images[index],
+                    ),
+                  ),
+                  onPageChanged: (i) => setState(() => currentIndex = i),
                 ),
-                onPageChanged: (i) => setState(() => currentIndex = i),
               ),
-            ),
 
-            // Index indicator (optional)
-            if (widget.images.length > 1)
-              Positioned(
-                bottom: 24,
-                left: 0,
-                right: 0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    widget.images.length,
-                    (index) => Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: index == currentIndex
-                            ? Colors.white
-                            : Colors.white38,
+              // Index indicator (optional)
+              if (widget.images.length > 1)
+                Positioned(
+                  bottom: 24,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      widget.images.length,
+                      (index) => Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: index == currentIndex
+                              ? Colors.white
+                              : Colors.white38,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -124,6 +139,7 @@ class _ImagePreviewState extends State<ImagePreview> {
   @override
   void dispose() {
     _pageController.dispose();
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
     super.dispose();
   }
 }

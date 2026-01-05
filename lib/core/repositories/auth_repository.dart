@@ -1,40 +1,34 @@
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:semesta/app/utils/logger.dart';
-import 'package:semesta/core/models/user_model.dart';
-import 'package:semesta/core/repositories/generic_repository.dart';
+import 'package:semesta/app/functions/logger.dart';
+import 'package:semesta/core/models/author.dart';
 import 'package:semesta/core/repositories/user_repository.dart';
-import 'package:semesta/core/services/firebase_service.dart';
 
-class AuthRepository extends FirebaseService {
-  final _repo = UserRepository();
-  final _func = GenericRepository();
-
+class AuthRepository extends UserRepository {
   // ---------- SIGN UP ----------
   Future<User?> signUp(
     String email,
     String password,
     File file,
-    UserModel model,
+    Author model,
   ) async {
     final response = await auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
 
-    final firebaseUser = response.user;
-    if (firebaseUser == null) return null;
+    final author = response.user;
+    if (author == null) return null;
 
-    final avatarUrl = await _func.uploadProfile(firebaseUser.uid, file);
-    await _repo.createUser(
-      model.copyWith(avatar: avatarUrl?.display, id: firebaseUser.uid),
+    final avatarUrl = await uploadProfile(author.uid, file);
+    await createUser(
+      model.copy(avatar: avatarUrl?.display, id: author.uid),
       avatarUrl?.path,
     );
 
-    return firebaseUser;
+    return author;
   }
 
   // ---------- SIGN IN ----------
@@ -44,32 +38,30 @@ class AuthRepository extends FirebaseService {
       password: password,
     );
 
-    final firebaseUser = response.user;
-    if (firebaseUser == null) return null;
+    final author = response.user;
+    if (author == null) return null;
 
     // Ensure Firestore user exists (e.g., for old accounts)
-    final exists = await isExists(firebaseUser.uid);
-    if (!exists) {
-      await _repo.createUser(
-        UserModel(
-          id: firebaseUser.uid,
-          username: _func.generateUsername(
-            firebaseUser.displayName ?? _func.fakeName,
-          ),
+    final exist = await exists(author.uid);
+    if (!exist) {
+      await createUser(
+        Author(
+          id: author.uid,
+          uname: getUname(author.displayName ?? fakeName),
           email: email,
-          name: firebaseUser.displayName ?? '',
-          avatar: firebaseUser.photoURL ?? '',
+          name: author.displayName ?? '',
+          avatar: author.photoURL ?? '',
         ),
       );
     }
 
-    return firebaseUser;
+    return author;
   }
 
   Future<User?> signInWithGoogle() async {
     try {
       // Trigger the authentication flow
-      final googleUser = await google.authenticate();
+      final googleUser = await gg.authenticate();
 
       // Obtain the auth details from the request
       final googleAuth = googleUser.authentication;
@@ -81,26 +73,24 @@ class AuthRepository extends FirebaseService {
 
       // Once signed in, return the UserCredential
       final response = await auth.signInWithCredential(credential);
-      final firebaseUser = response.user;
-      if (firebaseUser == null) return null;
+      final author = response.user;
+      if (author == null) return null;
 
       // Ensure Firestore user exists (e.g., for old accounts)
-      final exist = await isExists(firebaseUser.uid);
+      final exist = await exists(author.uid);
       if (!exist) {
-        await _repo.createUser(
-          UserModel(
-            id: firebaseUser.uid,
-            username: _func.generateUsername(
-              firebaseUser.displayName ?? _func.fakeName,
-            ),
-            email: firebaseUser.email,
-            name: firebaseUser.displayName ?? '',
-            avatar: firebaseUser.photoURL ?? '',
+        await createUser(
+          Author(
+            id: author.uid,
+            uname: getUname(author.displayName ?? fakeName),
+            email: author.email,
+            name: author.displayName ?? '',
+            avatar: author.photoURL ?? '',
           ),
         );
       }
 
-      return firebaseUser;
+      return author;
       // proceed
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
@@ -113,44 +103,40 @@ class AuthRepository extends FirebaseService {
     return null;
   }
 
-  Future<User?> signInWithFacebook() async {
-    // Trigger the sign-in flow
-    final result = await facebook.login();
+  // Future<User?> signInWithFacebook() async {
+  //   // Trigger the sign-in flow
+  //   final result = await fb.login();
 
-    if (result.status == LoginStatus.success) {
-      final accessToken = result.accessToken!;
-      final credential = FacebookAuthProvider.credential(
-        accessToken.tokenString,
-      );
+  //   if (result.status == LoginStatus.success) {
+  //     final accessToken = result.accessToken!;
+  //     final credential = FacebookAuthProvider.credential(accessToken.token);
 
-      final response = await auth.signInWithCredential(credential);
-      final firebaseUser = response.user;
-      if (firebaseUser == null) return null;
+  //     final response = await auth.signInWithCredential(credential);
+  //     final author = response.user;
+  //     if (author == null) return null;
 
-      // Ensure Firestore user exists (e.g., for old accounts)
-      final exist = await isExists(firebaseUser.uid);
-      if (!exist) {
-        await _repo.createUser(
-          UserModel(
-            id: firebaseUser.uid,
-            username: _func.generateUsername(
-              firebaseUser.displayName ?? _func.fakeName,
-            ),
-            email: firebaseUser.email,
-            name: firebaseUser.displayName ?? '',
-            avatar: firebaseUser.photoURL ?? '',
-          ),
-        );
-      }
+  //     // Ensure Firestore user exists (e.g., for old accounts)
+  //     final exist = await exists(author.uid);
+  //     if (!exist) {
+  //       await createUser(
+  //         Author(
+  //           id: author.uid,
+  //           username: generateUsername(author.displayName ?? fakeName),
+  //           email: author.email,
+  //           name: author.displayName ?? '',
+  //           avatar: author.photoURL ?? '',
+  //         ),
+  //       );
+  //     }
 
-      return firebaseUser;
-    } else {
-      HandleLogger.error('Facebook login failed: ${result.status}');
-      return null;
-    }
-  }
+  //     return author;
+  //   } else {
+  //     HandleLogger.error('Facebook login failed: ${result.status}');
+  //     return null;
+  //   }
+  // }
 
-  Future<bool> isExists(String child) async => _func.isExists(users, child);
+  Future<bool> exists(String child) async => isExists(users, child);
 
   // ---------- SIGN OUT ----------
   Future<void> signOut() async {

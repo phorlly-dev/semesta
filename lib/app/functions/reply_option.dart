@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/app/functions/custom_bottom_sheet.dart';
 import 'package:semesta/app/utils/params.dart';
-import 'package:semesta/core/models/post_model.dart';
+import 'package:semesta/core/models/feed.dart';
 import 'package:semesta/ui/widgets/option_button.dart';
 
 class ReplyOption {
@@ -10,7 +10,7 @@ class ReplyOption {
 
   void showModal({
     int selected = 1,
-    required void Function(int value, PostVisibility option) onSelected,
+    required void Function(int value, Visible option) onSelected,
   }) {
     CustomBottomSheet<ReplyParams>(
       context,
@@ -22,7 +22,7 @@ class ReplyOption {
         const SizedBox(height: 4),
         const Text(
           'Pick who can reply to this post. Anyone mentioned can always reply.',
-          style: TextStyle(fontSize: 14, color: Colors.black54),
+          style: TextStyle(fontSize: 14),
         ),
         const SizedBox(height: 20),
 
@@ -41,26 +41,26 @@ class ReplyOption {
     );
   }
 
-  int mapVisibleToId(PostVisibility v) {
+  int mapVisibleToId(Visible v) {
     switch (v) {
-      case PostVisibility.verified:
+      case Visible.verified:
         return 2;
-      case PostVisibility.following:
+      case Visible.following:
         return 3;
-      case PostVisibility.mentioned:
+      case Visible.mentioned:
         return 4;
       default:
         return 1;
     }
   }
 
-  IconData mapToIcon(PostVisibility v) {
+  IconData mapToIcon(Visible v) {
     switch (v) {
-      case PostVisibility.verified:
+      case Visible.verified:
         return Icons.verified;
-      case PostVisibility.following:
+      case Visible.following:
         return Icons.people_alt_outlined;
-      case PostVisibility.mentioned:
+      case Visible.mentioned:
         return Icons.alternate_email_outlined;
       default:
         return Icons.public;
@@ -69,39 +69,39 @@ class ReplyOption {
 
   List<ReplyParams> select(
     int selected,
-    Function(int value, PostVisibility option) onSelected,
+    Function(int value, Visible option) onSelected,
   ) => [
     ReplyParams(
       icon: Icons.public,
       id: 1,
       label: 'Everyone',
-      option: PostVisibility.everyone,
+      option: Visible.everyone,
       selected: selected == 1,
-      onTap: () => onSelected(1, PostVisibility.everyone),
+      onTap: () => onSelected(1, Visible.everyone),
     ),
     ReplyParams(
       icon: Icons.verified,
       id: 2,
       label: 'Verified Accounts',
-      option: PostVisibility.verified,
+      option: Visible.verified,
       selected: selected == 2,
-      onTap: () => onSelected(2, PostVisibility.verified),
+      onTap: () => onSelected(2, Visible.verified),
     ),
     ReplyParams(
       icon: Icons.people_alt_outlined,
       id: 3,
       label: 'Accounts You Follow',
-      option: PostVisibility.following,
+      option: Visible.following,
       selected: selected == 3,
-      onTap: () => onSelected(3, PostVisibility.following),
+      onTap: () => onSelected(3, Visible.following),
     ),
     ReplyParams(
       icon: Icons.alternate_email_outlined,
       id: 4,
       label: 'Only Accounts You Mention',
       selected: selected == 4,
-      option: PostVisibility.mentioned,
-      onTap: () => onSelected(4, PostVisibility.mentioned),
+      option: Visible.mentioned,
+      onTap: () => onSelected(4, Visible.mentioned),
     ),
   ];
 }

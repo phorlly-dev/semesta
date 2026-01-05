@@ -5,7 +5,7 @@ class ActionButton extends StatefulWidget {
   final dynamic icon;
   final dynamic label;
   final Color? iconColor;
-  final double sizeIcon;
+  final double sizeIcon, textSize;
   final bool isActive; // 🔥 for liked/reposted/saved state
   final VoidCallback? onPressed;
 
@@ -14,9 +14,10 @@ class ActionButton extends StatefulWidget {
     this.icon,
     this.label,
     this.iconColor,
-    this.sizeIcon = 24,
+    this.sizeIcon = 22,
     this.isActive = false,
     this.onPressed,
+    this.textSize = 16,
   });
 
   @override
@@ -27,11 +28,12 @@ class _ActionButtonState extends State<ActionButton>
     with SingleTickerProviderStateMixin {
   double _scale = 1.0;
   double _opacity = 1.0;
+  bool _tapped = false; // 🔑 local-only flag
 
   void _animate() async {
     if (!widget.isActive) return; // only animate on "like"
     setState(() {
-      _scale = 2.6;
+      _scale = 2;
       _opacity = 0.8;
     });
 
@@ -48,9 +50,14 @@ class _ActionButtonState extends State<ActionButton>
   @override
   void didUpdateWidget(ActionButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Detect state change from unliked → liked
-    if (!oldWidget.isActive && widget.isActive) {
+
+    if (_tapped && // user tapped
+        !oldWidget.isActive && // was inactive
+        widget
+            .isActive // now active
+            ) {
       _animate();
+      _tapped = false; // reset
     }
   }
 
@@ -71,35 +78,37 @@ class _ActionButtonState extends State<ActionButton>
           );
 
     return GestureDetector(
-      onTap: widget.onPressed,
+      onTap: () {
+        _tapped = true;
+        widget.onPressed?.call();
+      },
       behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedScale(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedScale(
+            duration: Durations.medium2,
+            scale: _scale,
+            child: AnimatedOpacity(
               duration: Durations.medium2,
-              scale: _scale,
-              child: AnimatedOpacity(
-                duration: Durations.medium2,
-                opacity: _opacity,
-                child: iconWidget,
+              opacity: _opacity,
+              child: iconWidget,
+            ),
+          ),
+          if (widget.label != null) ...[
+            const SizedBox(width: 4.6),
+            Text(
+              widget.label is int
+                  ? formatCount(widget.label ?? 0)
+                  : widget.label,
+              style: TextStyle(
+                color: color,
+                fontSize: widget.textSize,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            if (widget.label != null) ...[
-              const SizedBox(width: 6),
-              Text(
-                widget.label is int ? formatCount(widget.label!) : widget.label,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
           ],
-        ),
+        ],
       ),
     );
   }

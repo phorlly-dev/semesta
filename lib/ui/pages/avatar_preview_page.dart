@@ -5,14 +5,14 @@ import 'package:semesta/ui/partials/image_preview.dart';
 import 'package:semesta/ui/widgets/data_binder.dart';
 
 class AvatarPreviewPage extends StatelessWidget {
-  final String userId;
-  const AvatarPreviewPage({super.key, required this.userId});
+  final String uid;
+  const AvatarPreviewPage({super.key, required this.uid});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<UserController>();
     return Obx(() {
-      final data = controller.dataMapping[userId];
+      final data = controller.dataMapping[uid];
       final avatar = data?.avatar ?? '';
 
       return DataBinder(

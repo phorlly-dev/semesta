@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:semesta/app/utils/logger.dart';
+import 'package:semesta/app/functions/logger.dart';
 
 class HandleError {
   final void Function() callback;

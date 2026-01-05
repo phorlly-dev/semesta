@@ -5,8 +5,8 @@ import 'package:semesta/core/controllers/post_controller.dart';
 import 'package:semesta/ui/partials/generic_composer.dart';
 
 class PostRepost extends StatelessWidget {
-  final String postId;
-  const PostRepost({super.key, required this.postId});
+  final String pid;
+  const PostRepost({super.key, required this.pid});
 
   @override
   Widget build(BuildContext context) {
@@ -14,8 +14,8 @@ class PostRepost extends StatelessWidget {
 
     return Obx(() {
       return GenericComposer(
-        type: ComposerType.repost,
-        parent: controller.dataMapping[postId],
+        type: ComposerType.quote,
+        parent: controller.dataMapping[pid],
       );
     });
   }

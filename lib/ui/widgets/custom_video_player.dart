@@ -6,7 +6,6 @@ import 'package:visibility_detector/visibility_detector.dart';
 class CustomVideoPlayer extends StatefulWidget {
   final String video;
   final bool showProgress;
-
   const CustomVideoPlayer({
     super.key,
     required this.video,
@@ -65,17 +64,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         children: [
           // --- Video player ---
           if (_controller.value.isInitialized)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: _controller.value.size.width,
-                  height: _controller.value.size.height,
-                  child: VideoPlayer(_controller),
-                ),
-              ),
-            )
+            FittedBox(fit: BoxFit.cover, child: VideoPlayer(_controller))
           else
             const Center(child: CircularProgressIndicator()),
 

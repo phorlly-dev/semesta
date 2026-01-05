@@ -7,7 +7,7 @@ import 'package:semesta/ui/components/auth/auth_foooter.dart';
 import 'package:semesta/ui/components/auth/auth_header.dart';
 import 'package:semesta/ui/components/auth/sign_in.dart';
 import 'package:semesta/ui/components/auth/sign_up.dart';
-import 'package:semesta/ui/components/global/_layout_page.dart';
+import 'package:semesta/ui/components/layouts/_layout_page.dart';
 import 'package:semesta/ui/widgets/block_overlay.dart';
 import 'package:semesta/ui/widgets/custom_button.dart';
 import 'package:semesta/ui/widgets/data_form.dart';
@@ -110,13 +110,13 @@ class _AuthPageState extends State<AuthPage> {
           spaceY: 8,
           enableShadow: true,
         ),
-        CustomButton(
-          icon: Icons.facebook,
-          label: 'Continue with Facebook',
-          onPressed: controller.loginWithFacebook,
-          color: Colors.blueAccent,
-          enableShadow: true,
-        ),
+        // CustomButton(
+        //   icon: Icons.facebook,
+        //   label: 'Continue with Facebook',
+        //   onPressed: controller.loginWithFacebook,
+        //   color: Colors.blueAccent,
+        //   enableShadow: true,
+        // ),
       ],
     );
   }

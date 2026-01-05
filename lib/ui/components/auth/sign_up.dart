@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
-import 'package:semesta/app/utils/custom_toast.dart';
+import 'package:semesta/app/functions/custom_toast.dart';
 import 'package:semesta/core/controllers/auth_controller.dart';
-import 'package:semesta/core/models/user_model.dart';
+import 'package:semesta/core/models/author.dart';
 import 'package:semesta/core/repositories/generic_repository.dart';
 import 'package:semesta/ui/widgets/custom_button.dart';
 import 'package:semesta/ui/widgets/date_time_input.dart';
 import 'package:semesta/ui/widgets/image_picker.dart';
-import 'package:semesta/ui/widgets/loader.dart';
+import 'package:semesta/ui/widgets/loading_animated.dart';
 import 'package:semesta/ui/widgets/text_input.dart';
 
 class SignUp extends StatefulWidget {
@@ -68,7 +68,7 @@ class _SignUpState extends State<SignUp> {
           onChanged: (value) {
             final name = value?.trim() ?? '';
             if (name.length >= 2) {
-              final suggestion = _func.generateUsername(name);
+              final suggestion = _func.getUname(name);
               if (uController.text != suggestion) {
                 uController.value = uController.value.copyWith(
                   text: suggestion,
@@ -96,7 +96,7 @@ class _SignUpState extends State<SignUp> {
           onChanged: (value) async {
             final v = value?.trim() ?? '';
             if (v.length >= 2) {
-              final exists = await _func.usernameExists(v);
+              final exists = await _func.unameExists(v);
               if (exists) {
                 CustomToast.warning(
                   'Oops',
@@ -218,7 +218,7 @@ class _SignUpState extends State<SignUp> {
 
           return CustomButton(
             enableShadow: true,
-            icon: isLoading ? Loader() : Icons.create_new_folder,
+            icon: isLoading ? LoadingAnimated() : Icons.create_new_folder,
             label: isLoading ? 'Signing Up...' : 'Sign Up',
             color: Theme.of(context).colorScheme.secondary,
             onPressed: isLoading
@@ -230,15 +230,13 @@ class _SignUpState extends State<SignUp> {
                     final data = state.value;
                     final email = data['email'];
                     final password = data['password'];
-                    final uname = await _func.getUniqueUsername(
-                      data['username'],
-                    );
+                    final uname = await _func.getUniqueName(data['username']);
 
-                    final model = UserModel(
+                    final model = Author(
                       name: data['name'],
                       email: email,
                       dob: data['dob'],
-                      username: uname,
+                      uname: uname,
                     );
 
                     await controller.register(
