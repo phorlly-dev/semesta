@@ -3,9 +3,8 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
 import 'package:semesta/app/functions/custom_toast.dart';
-import 'package:semesta/core/controllers/auth_controller.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/core/models/author.dart';
-import 'package:semesta/core/repositories/generic_repository.dart';
 import 'package:semesta/ui/widgets/custom_button.dart';
 import 'package:semesta/ui/widgets/date_time_input.dart';
 import 'package:semesta/ui/widgets/image_picker.dart';
@@ -13,10 +12,8 @@ import 'package:semesta/ui/widgets/loading_animated.dart';
 import 'package:semesta/ui/widgets/text_input.dart';
 
 class SignUp extends StatefulWidget {
-  final AuthController controller;
   final GlobalKey<FormBuilderState> formKey;
-
-  const SignUp({super.key, required this.formKey, required this.controller});
+  const SignUp(this.formKey, {super.key});
 
   @override
   State<SignUp> createState() => _SignUpState();
@@ -24,199 +21,197 @@ class SignUp extends StatefulWidget {
 
 class _SignUpState extends State<SignUp> {
   var _ckpassword = '';
-  var _isVisible = false;
-  var _isConfirm = false;
-  final pController = TextEditingController();
-  final cController = TextEditingController();
-  final uController = TextEditingController();
-  final focus = FocusNode();
-  final _func = Get.put(GenericRepository());
+  var _visible = false;
+  var _confirm = false;
+  final _pinput = TextEditingController();
+  final _cinput = TextEditingController();
+  final _uinput = TextEditingController();
+  final _focus = FocusNode();
 
   @override
   void dispose() {
     _ckpassword = '';
-    _isVisible = false;
-    _isConfirm = false;
-    cController.dispose();
-    pController.dispose();
-    uController.dispose();
+    _visible = false;
+    _confirm = false;
+    _cinput.dispose();
+    _pinput.dispose();
+    _uinput.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = widget.controller;
-    final form = widget.formKey;
+    return Obx(() {
+      final form = widget.formKey;
+      final isLoading = octrl.isLoading.value;
 
-    return Column(
-      children: [
-        Obx(
-          () => ImagePicker(onTap: _func.fromPicture, image: _func.file.value),
-        ),
+      return Column(
+        children: [
+          ImagePicker(onTap: grepo.fromPicture, image: grepo.file.value),
 
-        TextInput(
-          name: 'name',
-          focusNode: focus,
-          prefixIcon: const Icon(Icons.person),
-          validator: FormBuilderValidators.compose([
-            FormBuilderValidators.required(errorText: 'Name is required'),
-            FormBuilderValidators.minLength(
-              2,
-              errorText: 'Name must be at least 2 characters',
-            ),
-          ]),
-          onChanged: (value) {
-            final name = value?.trim() ?? '';
-            if (name.length >= 2) {
-              final suggestion = _func.getUname(name);
-              if (uController.text != suggestion) {
-                uController.value = uController.value.copyWith(
-                  text: suggestion,
-                  selection: TextSelection.collapsed(offset: suggestion.length),
-                  composing: TextRange.empty,
-                );
+          TextInput(
+            name: 'name',
+            focusNode: _focus,
+            prefixIcon: const Icon(Icons.person),
+            validator: FormBuilderValidators.compose([
+              FormBuilderValidators.required(errorText: 'Name is required'),
+              FormBuilderValidators.minLength(
+                2,
+                errorText: 'Name must be at least 2 characters',
+              ),
+            ]),
+            onChanged: (value) {
+              final name = value?.trim() ?? '';
+              if (name.length >= 2) {
+                final suggestion = grepo.getUname(name);
+                if (_uinput.text != suggestion) {
+                  _uinput.value = _uinput.value.copyWith(
+                    text: suggestion,
+                    selection: TextSelection.collapsed(
+                      offset: suggestion.length,
+                    ),
+                    composing: TextRange.empty,
+                  );
+                }
+              } else if (name.isEmpty) {
+                _uinput.clear();
               }
-            } else if (name.isEmpty) {
-              uController.clear();
-            }
-          },
-        ),
-
-        TextInput(
-          name: 'username',
-          controller: uController,
-          prefixIcon: const Icon(Icons.person_outline),
-          validator: FormBuilderValidators.compose([
-            FormBuilderValidators.required(errorText: 'Username is required'),
-            FormBuilderValidators.minLength(
-              2,
-              errorText: 'Username must be at least 2 characters',
-            ),
-          ]),
-          onChanged: (value) async {
-            final v = value?.trim() ?? '';
-            if (v.length >= 2) {
-              final exists = await _func.unameExists(v);
-              if (exists) {
-                CustomToast.warning(
-                  'Oops',
-                  title: 'This username is already taken',
-                  duration: 6,
-                );
-              }
-            }
-          },
-        ),
-
-        // RadioGroupInput(
-        //   name: 'gender',
-        //   icon: Icons.group_outlined,
-        //   initValue: Gender.female.name,
-        //   items: Gender.values.map((g) {
-        //     return FormBuilderFieldOption(
-        //       value: g.name,
-        //       child: Text(toCapitalize(g.name)),
-        //     );
-        //   }).toList(),
-        // ),
-        DateTimeInput(
-          name: 'dob',
-          lable: 'Date of Birth',
-          icon: Icons.date_range,
-          validator: FormBuilderValidators.compose([
-            FormBuilderValidators.required(
-              errorText: 'Date of Birth is required',
-            ),
-            (value) {
-              if (value == null) return null; // already handled by 'required'
-              final today = DateTime.now();
-              final age =
-                  today.year -
-                  value.year -
-                  ((today.month < value.month ||
-                          (today.month == value.month && today.day < value.day))
-                      ? 1
-                      : 0);
-
-              if (age < 13) {
-                return 'You must be at least 13 years old';
-              }
-
-              return null; // valid
             },
-          ]),
-        ),
-        TextInput(
-          name: 'email',
-          keyboardType: TextInputType.emailAddress,
-          prefixIcon: const Icon(Icons.email_outlined),
-          validator: FormBuilderValidators.compose([
-            FormBuilderValidators.required(errorText: 'Email is required'),
-            FormBuilderValidators.email(errorText: 'Enter a valid email'),
-          ]),
-        ),
-
-        TextInput(
-          name: 'password',
-          controller: pController,
-          keyboardType: TextInputType.visiblePassword,
-          prefixIcon: const Icon(Icons.lock_outline_rounded),
-          obscureText: !_isVisible,
-          onChanged: (value) {
-            setState(() => _ckpassword = value ?? '');
-
-            // Trigger revalidation of confirm when password changes
-            form.currentState?.fields['confirm']?.validate();
-          },
-          suffixIcon: IconButton(
-            icon: Icon(
-              _isVisible
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-            ),
-            onPressed: () => setState(() => _isVisible = !_isVisible),
           ),
-          validator: FormBuilderValidators.compose([
-            FormBuilderValidators.required(errorText: 'Password is required'),
-            FormBuilderValidators.minLength(
-              6,
-              errorText: 'Password must be at least 6 characters',
-            ),
-          ]),
-        ),
 
-        TextInput(
-          name: 'confirm',
-          controller: cController,
-          keyboardType: TextInputType.visiblePassword,
-          prefixIcon: const Icon(Icons.lock_outline_rounded),
-          obscureText: !_isConfirm,
-          suffixIcon: IconButton(
-            icon: Icon(
-              _isConfirm
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-            ),
-            onPressed: () => setState(() => _isConfirm = !_isConfirm),
+          TextInput(
+            name: 'username',
+            controller: _uinput,
+            prefixIcon: const Icon(Icons.person_outline),
+            validator: FormBuilderValidators.compose([
+              FormBuilderValidators.required(errorText: 'Username is required'),
+              FormBuilderValidators.minLength(
+                2,
+                errorText: 'Username must be at least 2 characters',
+              ),
+            ]),
+            onChanged: (value) async {
+              final v = value?.trim() ?? '';
+              if (v.length >= 2) {
+                final exists = await grepo.unameExists(v);
+                if (exists) {
+                  CustomToast.warning(
+                    'Oops',
+                    title: 'This username is already taken',
+                    duration: 6,
+                  );
+                }
+              }
+            },
           ),
-          validator: (val) {
-            if (val == null || val.isEmpty) {
-              return 'Please confirm your password';
-            }
-            if (val != _ckpassword) {
-              return 'Passwords do not match';
-            }
-            return null;
-          },
-        ),
 
-        const SizedBox(height: 12),
+          // RadioGroupInput(
+          //   name: 'gender',
+          //   icon: Icons.group_outlined,
+          //   initValue: Gender.female.name,
+          //   items: Gender.values.map((g) {
+          //     return FormBuilderFieldOption(
+          //       value: g.name,
+          //       child: Text(toCapitalize(g.name)),
+          //     );
+          //   }).toList(),
+          // ),
+          DateTimeInput(
+            name: 'dob',
+            lable: 'Date of Birth',
+            icon: Icons.date_range,
+            validator: FormBuilderValidators.compose([
+              FormBuilderValidators.required(
+                errorText: 'Date of Birth is required',
+              ),
+              (value) {
+                if (value == null) return null; // already handled by 'required'
+                final today = DateTime.now();
+                final age =
+                    today.year -
+                    value.year -
+                    ((today.month < value.month ||
+                            (today.month == value.month &&
+                                today.day < value.day))
+                        ? 1
+                        : 0);
 
-        // Sign Up Button
-        Obx(() {
-          final isLoading = controller.isLoading.value;
+                if (age < 13) {
+                  return 'You must be at least 13 years old';
+                }
 
-          return CustomButton(
+                return null; // valid
+              },
+            ]),
+          ),
+          TextInput(
+            name: 'email',
+            keyboardType: TextInputType.emailAddress,
+            prefixIcon: const Icon(Icons.email_outlined),
+            validator: FormBuilderValidators.compose([
+              FormBuilderValidators.required(errorText: 'Email is required'),
+              FormBuilderValidators.email(errorText: 'Enter a valid email'),
+            ]),
+          ),
+
+          TextInput(
+            name: 'password',
+            controller: _pinput,
+            keyboardType: TextInputType.visiblePassword,
+            prefixIcon: const Icon(Icons.lock_outline_rounded),
+            obscureText: !_visible,
+            onChanged: (value) {
+              setState(() => _ckpassword = value ?? '');
+
+              // Trigger revalidation of confirm when password changes
+              form.currentState?.fields['confirm']?.validate();
+            },
+            suffixIcon: IconButton(
+              icon: Icon(
+                _visible
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+              ),
+              onPressed: () => setState(() => _visible = !_visible),
+            ),
+            validator: FormBuilderValidators.compose([
+              FormBuilderValidators.required(errorText: 'Password is required'),
+              FormBuilderValidators.minLength(
+                6,
+                errorText: 'Password must be at least 6 characters',
+              ),
+            ]),
+          ),
+
+          TextInput(
+            name: 'confirm',
+            controller: _cinput,
+            keyboardType: TextInputType.visiblePassword,
+            prefixIcon: const Icon(Icons.lock_outline_rounded),
+            obscureText: !_confirm,
+            suffixIcon: IconButton(
+              icon: Icon(
+                _confirm
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+              ),
+              onPressed: () => setState(() => _confirm = !_confirm),
+            ),
+            validator: (val) {
+              if (val == null || val.isEmpty) {
+                return 'Please confirm your password';
+              }
+              if (val != _ckpassword) {
+                return 'Passwords do not match';
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 12),
+
+          // Sign Up Button
+          CustomButton(
             enableShadow: true,
             icon: isLoading ? LoadingAnimated() : Icons.create_new_folder,
             label: isLoading ? 'Signing Up...' : 'Sign Up',
@@ -230,7 +225,7 @@ class _SignUpState extends State<SignUp> {
                     final data = state.value;
                     final email = data['email'];
                     final password = data['password'];
-                    final uname = await _func.getUniqueName(data['username']);
+                    final uname = await grepo.getUniqueName(data['username']);
 
                     final model = Author(
                       name: data['name'],
@@ -239,16 +234,16 @@ class _SignUpState extends State<SignUp> {
                       uname: uname,
                     );
 
-                    await controller.register(
+                    await octrl.register(
                       email,
                       password,
-                      _func.file.value!,
+                      grepo.file.value!,
                       model,
                     );
                   },
-          );
-        }),
-      ],
-    );
+          ),
+        ],
+      );
+    });
   }
 }

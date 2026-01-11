@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/ui/components/layouts/_layout_page.dart';
-import 'package:semesta/ui/components/users/list_friendship.dart';
+import 'package:semesta/ui/components/users/friendship_view.dart';
 import 'package:semesta/ui/partials/followers_tab.dart';
 import 'package:semesta/ui/partials/following_tab.dart';
 
@@ -17,7 +17,7 @@ class FriendshipViewPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutPage(
-      content: ListFriendship(
+      content: FriendshipView(
         name: displayName,
         initIndex: index,
         children: [

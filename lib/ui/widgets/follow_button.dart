@@ -65,9 +65,3 @@ class _FollowButtonState extends State<FollowButton> {
     );
   }
 }
-
-Follow resolveState(bool iFollow, bool theyFollow) {
-  if (!iFollow && theyFollow) return Follow.followBack;
-  if (iFollow) return Follow.following;
-  return Follow.follow;
-}

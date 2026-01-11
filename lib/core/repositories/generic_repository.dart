@@ -4,6 +4,7 @@ import 'package:faker/faker.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get_rx/get_rx.dart';
 import 'package:semesta/app/functions/custom_toast.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/core/models/media.dart';
 import 'package:semesta/core/services/storage_service.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
@@ -36,8 +37,9 @@ class GenericRepository extends IStorageService {
     return '$base$suffix'.toLowerCase();
   }
 
-  Future<bool> unameExists(String username) async =>
-      isExists('usernames', username.toLowerCase());
+  Future<bool> unameExists(String username) {
+    return isExists(unames, username.toLowerCase());
+  }
 
   Future<String> getUniqueName(String name) async {
     var username = getUname(name);

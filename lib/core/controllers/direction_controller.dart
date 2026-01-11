@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 
-class ScrollHelper extends GetxController {
+class DirectionController extends GetxController {
   final isVisible = true.obs;
   final currentIndex = 0.obs;
   final scrollControllers = List.generate(8, (_) => ScrollController());

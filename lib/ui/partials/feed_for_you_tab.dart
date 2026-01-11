@@ -3,8 +3,9 @@ import 'package:get/get.dart';
 import 'package:semesta/app/extensions/controller_extension.dart';
 import 'package:semesta/app/extensions/list_extension.dart';
 import 'package:semesta/app/functions/custom_toast.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/core/mixins/repo_mixin.dart';
-import 'package:semesta/core/controllers/post_controller.dart';
+import 'package:semesta/core/views/utils_helper.dart';
 import 'package:semesta/ui/components/globals/items_builder.dart';
 import 'package:semesta/ui/components/globals/live_feed.dart';
 
@@ -17,7 +18,7 @@ class FeedForYouTab extends StatefulWidget {
 }
 
 class _FeedForYouTabState extends State<FeedForYouTab> {
-  final _ctrl = Get.find<PostController>();
+  final _key = getKey();
 
   @override
   void initState() {
@@ -30,21 +31,22 @@ class _FeedForYouTabState extends State<FeedForYouTab> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      final session = _ctrl.sessionSeed;
+      pctrl.freeOldPosts();
+      final session = pctrl.sessionSeed;
       if (retred) {
-        _ctrl.retry(
-          fetch: _ctrl.loadMoreForYou,
+        pctrl.retry(
+          fetch: pctrl.loadMoreForYou,
           apply: (items) {
             final ranked = items.rankFeed(session);
-            _ctrl.stateFor('home:all').set(ranked);
+            pctrl.stateFor(_key).set(ranked);
           },
         );
       } else {
-        _ctrl.loadStart(
-          fetch: _ctrl.loadMoreForYou,
+        pctrl.loadStart(
+          fetch: pctrl.loadMoreForYou,
           apply: (items) {
             final ranked = items.rankFeed(session);
-            _ctrl.stateFor('home:all').set(ranked);
+            pctrl.stateFor(_key).set(ranked);
           },
           onError: () => _showError('Failed to load data'),
         );
@@ -53,11 +55,11 @@ class _FeedForYouTabState extends State<FeedForYouTab> {
   }
 
   Future<void> _loadMore() async {
-    await _ctrl.loadMore(
-      fetch: () => _ctrl.loadMoreForYou(QueryMode.next),
+    await pctrl.loadMore(
+      fetch: () => pctrl.loadMoreForYou(QueryMode.next),
       apply: (items) {
-        final ranked = items.rankFeed(_ctrl.sessionSeed);
-        _ctrl.stateFor('home:all').append(ranked);
+        final ranked = items.rankFeed(pctrl.sessionSeed);
+        pctrl.stateFor(_key).append(ranked);
       },
       onError: () => _showError('Failed to load more'),
     );
@@ -66,18 +68,18 @@ class _FeedForYouTabState extends State<FeedForYouTab> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final states = _ctrl.stateFor('home:all');
+      final states = pctrl.stateFor(_key);
       return ItemsBuilder(
         scroller: widget.scroller,
         counter: states.length,
         isEmpty: states.isEmpty,
-        isLoading: _ctrl.isAnyLoading,
-        isLoadingNext: _ctrl.isLoadingMore.value,
+        isLoading: pctrl.anyLoading,
+        isLoadingNext: pctrl.loadingMore.value,
         message: "There's no posts yet.",
-        hasError: _ctrl.error.value,
+        hasError: pctrl.error.value,
         builder: (ctx, idx) => LiveFeed(feed: states[idx]),
         onMore: _loadMore,
-        onRefresh: _ctrl.refreshPost,
+        onRefresh: pctrl.refreshPost,
         onRetry: () => _loadInit(true),
       );
     });
@@ -86,7 +88,7 @@ class _FeedForYouTabState extends State<FeedForYouTab> {
   void _showError(String title) {
     if (!mounted) return;
 
-    final errorMessage = _ctrl.error.value ?? 'Unknown error';
+    final errorMessage = pctrl.error.value ?? 'Unknown error';
     CustomToast.error(errorMessage, title: title);
   }
 }

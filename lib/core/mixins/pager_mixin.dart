@@ -1,16 +1,16 @@
 import 'dart:ui';
 import 'package:get/get.dart';
-import 'package:semesta/app/functions/format.dart';
 import 'package:semesta/app/functions/logger.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/app/utils/type_def.dart';
 
 typedef PageFetch<T> = FutureCallback<List<T>>;
 typedef PageApply<T> = void Function(List<T> items);
 
 mixin PagerMixin<T> on GetxController {
-  final isLoading = false.obs;
-  final isLoadingMore = false.obs;
-  final isRefreshing = false.obs;
+  final loading = false.obs;
+  final loadingMore = false.obs;
+  final refreshing = false.obs;
   final hasMore = true.obs;
   final error = Rxn<String>();
 
@@ -22,9 +22,9 @@ mixin PagerMixin<T> on GetxController {
     VoidCallback? onSuccess,
     VoidCallback? onError,
   }) async {
-    if (isLoading.value) return;
+    if (loading.value) return;
 
-    isLoading.value = true;
+    loading.value = true;
     error.value = null;
     try {
       final items = await fetch();
@@ -37,7 +37,7 @@ mixin PagerMixin<T> on GetxController {
       HandleLogger.error('Failed to load $T', message: e, stack: stack);
       onError?.call();
     } finally {
-      isLoading.value = false;
+      loading.value = false;
     }
   }
 
@@ -49,9 +49,9 @@ mixin PagerMixin<T> on GetxController {
     VoidCallback? onSuccess,
     VoidCallback? onError,
   }) async {
-    if (isLoadingMore.value || !hasMore.value || isLoading.value) return;
+    if (loadingMore.value || !hasMore.value || loading.value) return;
 
-    isLoadingMore.value = true;
+    loadingMore.value = true;
     error.value = null;
     try {
       final sw = Stopwatch()..start();
@@ -74,7 +74,7 @@ mixin PagerMixin<T> on GetxController {
       HandleLogger.error('Failed to load more $T', message: e, stack: stack);
       onError?.call();
     } finally {
-      isLoadingMore.value = false;
+      loadingMore.value = false;
     }
   }
 
@@ -85,9 +85,9 @@ mixin PagerMixin<T> on GetxController {
     VoidCallback? onSuccess,
     VoidCallback? onError,
   }) async {
-    if (isRefreshing.value) return;
+    if (refreshing.value) return;
 
-    isRefreshing.value = true;
+    refreshing.value = true;
     error.value = null;
     try {
       final start = now;
@@ -105,7 +105,7 @@ mixin PagerMixin<T> on GetxController {
       HandleLogger.error('Failed to refresh $T', message: e, stack: stack);
       onError?.call();
     } finally {
-      isRefreshing.value = false;
+      refreshing.value = false;
     }
   }
 
@@ -121,12 +121,12 @@ mixin PagerMixin<T> on GetxController {
 
   /// Reset pagination state
   void resetPagination() {
-    isLoading.value = false;
-    isLoadingMore.value = false;
-    isRefreshing.value = false;
+    loading.value = false;
+    loadingMore.value = false;
+    refreshing.value = false;
     hasMore.value = true;
     error.value = null;
   }
 
-  bool get isAnyLoading => isLoading.value || isRefreshing.value;
+  bool get anyLoading => loading.value || refreshing.value;
 }

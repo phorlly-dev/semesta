@@ -2,29 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
-import 'package:semesta/core/controllers/auth_controller.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/ui/widgets/custom_button.dart';
 import 'package:semesta/ui/widgets/loading_animated.dart';
 import 'package:semesta/ui/widgets/text_input.dart';
 
 class SignIn extends StatefulWidget {
-  final AuthController controller;
   final GlobalKey<FormBuilderState> formKey;
-
-  const SignIn({super.key, required this.controller, required this.formKey});
+  const SignIn(this.formKey, {super.key});
 
   @override
   State<SignIn> createState() => _SignInState();
 }
 
 class _SignInState extends State<SignIn> {
-  var _isVisible = false;
-  final pController = TextEditingController();
+  var _visible = false;
+  final _input = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    final controller = widget.controller;
-
     return Column(
       children: [
         TextInput(
@@ -39,17 +35,17 @@ class _SignInState extends State<SignIn> {
 
         TextInput(
           name: 'password',
-          controller: pController,
+          controller: _input,
           keyboardType: TextInputType.visiblePassword,
           prefixIcon: const Icon(Icons.lock_outline_rounded),
-          obscureText: !_isVisible,
+          obscureText: !_visible,
           suffixIcon: IconButton(
             icon: Icon(
-              _isVisible
+              _visible
                   ? Icons.visibility_outlined
                   : Icons.visibility_off_outlined,
             ),
-            onPressed: () => setState(() => _isVisible = !_isVisible),
+            onPressed: () => setState(() => _visible = !_visible),
           ),
           validator: FormBuilderValidators.compose([
             FormBuilderValidators.required(errorText: 'Password is required'),
@@ -64,8 +60,7 @@ class _SignInState extends State<SignIn> {
 
         // Sign In Button
         Obx(() {
-          final isLoading = controller.isLoading.value;
-
+          final isLoading = octrl.isLoading.value;
           return CustomButton(
             enableShadow: true,
             icon: isLoading ? LoadingAnimated() : Icons.login_rounded,
@@ -78,7 +73,7 @@ class _SignInState extends State<SignIn> {
                     if (state == null || !state.saveAndValidate()) return;
 
                     final data = state.value;
-                    await controller.login(data['email'], data['password']);
+                    await octrl.login(data['email'], data['password']);
                   },
           );
         }),
@@ -90,8 +85,8 @@ class _SignInState extends State<SignIn> {
 
   @override
   void dispose() {
-    _isVisible = false;
-    pController.dispose();
+    _visible = false;
+    _input.dispose();
     super.dispose();
   }
 }

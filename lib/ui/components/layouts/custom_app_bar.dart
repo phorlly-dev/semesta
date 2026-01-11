@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class NavBarLayer extends StatelessWidget implements PreferredSizeWidget {
+class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget? start, middle, end;
   final Color? bgColor;
   final double? height;
   final PreferredSizeWidget? bottom;
-  const NavBarLayer({
+  const CustomAppBar({
     super.key,
     this.start,
     this.middle,

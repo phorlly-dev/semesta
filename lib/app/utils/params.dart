@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/core/models/feed.dart';
 
-class RouteParams {
-  final String name, path;
-  RouteParams({required this.name, required this.path});
-}
-
 class ReplyParams {
   final int id;
   final String label;
@@ -28,4 +23,20 @@ class CountState {
   final String key;
   final int value;
   const CountState(this.key, this.value);
+}
+
+class RouteNode {
+  final String path;
+  final String name;
+
+  const RouteNode(this.path, this.name);
+
+  RouteNode child(String subpath, String subname) {
+    assert(
+      !subpath.startsWith('/'),
+      'Child route must be relative. Got:: $subpath',
+    );
+
+    return RouteNode('$path/$subpath', '$name.$subname');
+  }
 }

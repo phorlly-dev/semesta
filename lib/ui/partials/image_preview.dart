@@ -5,7 +5,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:semesta/app/functions/option_modal.dart';
 import 'package:semesta/ui/components/layouts/_layout_page.dart';
-import 'package:semesta/ui/components/layouts/nav_bar_layer.dart';
+import 'package:semesta/ui/components/layouts/custom_app_bar.dart';
 
 class ImagePreview extends StatefulWidget {
   final List<String> images;
@@ -57,7 +57,7 @@ class _ImagePreviewState extends State<ImagePreview> {
       ),
       child: LayoutPage(
         header: toggle
-            ? NavBarLayer(
+            ? CustomAppBar(
                 start: IconButton(
                   onPressed: () => context.pop(),
                   icon: Icon(Icons.close_rounded, color: Colors.white),
@@ -70,7 +70,7 @@ class _ImagePreviewState extends State<ImagePreview> {
                 ),
                 bgColor: Colors.transparent,
               )
-            : NavBarLayer(
+            : CustomAppBar(
                 bgColor: Colors.transparent,
                 start: SizedBox.shrink(),
               ),

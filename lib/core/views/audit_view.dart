@@ -1,29 +1,31 @@
+import 'package:flutter/foundation.dart';
 import 'package:semesta/core/models/author.dart';
 import 'package:semesta/core/models/feed.dart';
-import 'package:semesta/core/views/feed_view.dart';
-import 'package:semesta/core/views/helper.dart';
+import 'package:semesta/core/models/reaction.dart';
+import 'package:semesta/core/views/class_helper.dart';
 
 class AuthedView implements HasAttributes {
   final Author author;
-  const AuthedView(this.author);
+  final Reaction action;
+  const AuthedView(this.author, this.action);
 
   @override
-  String get currentId => author.id;
+  DateTime? get created => action.createdAt;
 
   @override
-  DateTime? get created => author.createdAt;
+  String get currentId => action.currentId;
 
   @override
-  String get targetId => author.uname;
+  String get targetId => action.targetId;
 }
 
-class StatusView {
+class StatusView with ChangeNotifier {
   final Author author;
   final Author? actor;
   final bool authed;
-  final bool iFollow;
+  bool iFollow;
   final bool theyFollow;
-  const StatusView({
+  StatusView({
     required this.author,
     this.authed = false,
     this.iFollow = false,
@@ -46,44 +48,66 @@ class StatusView {
       theyFollow: theyFollow ?? this.theyFollow,
     );
   }
+
+  void toggle() {
+    iFollow = !iFollow;
+    notifyListeners();
+  }
 }
 
-class ActionsView {
+class ActionsView with ChangeNotifier {
   final String pid;
+  final Feed feed;
   final ActionTarget target;
 
-  final bool favorited;
-  final bool bookmarked;
-  final bool reposted;
+  bool favorited;
+  bool bookmarked;
+  bool reposted;
 
-  final int favorites;
-  final int bookmarks;
-  final int reposts;
+  int favorites;
+  int bookmarks;
+  int reposts;
+
   final int views;
   final int comments;
   final int shares;
 
-  const ActionsView({
+  ActionsView({
     required this.pid,
+    required this.feed,
     required this.target,
-    required this.favorited,
-    required this.bookmarked,
-    required this.reposted,
-    required this.favorites,
-    required this.bookmarks,
-    required this.reposts,
-    required this.views,
-    required this.comments,
-    required this.shares,
+    this.views = 0,
+    this.shares = 0,
+    this.reposts = 0,
+    this.comments = 0,
+    this.favorites = 0,
+    this.bookmarks = 0,
+    this.reposted = false,
+    this.favorited = false,
+    this.bookmarked = false,
   });
+
+  void toggleBookmark() {
+    bookmarked = !bookmarked;
+    bookmarked ? bookmarks++ : bookmarks--;
+    notifyListeners();
+  }
+
+  void toggleFavorite() {
+    favorited = !favorited;
+    favorited ? favorites++ : favorites--;
+    notifyListeners();
+  }
+
+  void toggleRepost() {
+    reposted = !reposted;
+    reposted ? reposts++ : reposts--;
+    notifyListeners();
+  }
 }
 
-List<FeedView> mapToFeed(
-  List<Feed> feeds, {
-  String? uid,
-  FeedKind type = FeedKind.post,
-}) {
-  return feeds.map((feed) {
-    return FeedView.from(feed, type: type, uid: uid);
-  }).toList();
+class RepostView {
+  final bool authed;
+  final String uid, name;
+  const RepostView({this.authed = false, this.uid = '', this.name = ''});
 }

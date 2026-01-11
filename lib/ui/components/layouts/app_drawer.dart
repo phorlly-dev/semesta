@@ -1,23 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:semesta/app/routes/routes.dart';
 import 'package:semesta/app/functions/theme_manager.dart';
-import 'package:semesta/core/controllers/auth_controller.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/ui/components/users/user_info.dart';
 import 'package:semesta/ui/widgets/action_count.dart';
 import 'package:semesta/ui/widgets/animated.dart';
 import 'package:semesta/ui/widgets/avatar_animation.dart';
 
-class SideBarLayer extends StatelessWidget {
+class AppDrawer extends StatelessWidget {
   final String name, userId;
   final String username;
   final String avatarUrl;
   final int following;
   final int followers;
 
-  const SideBarLayer({
+  const AppDrawer({
     super.key,
     required this.name,
     required this.username,
@@ -30,8 +28,6 @@ class SideBarLayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final route = Routes();
-
     return Drawer(
       backgroundColor: theme.scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
@@ -113,7 +109,7 @@ class SideBarLayer extends StatelessWidget {
                       onTap: () {
                         context.pushNamed(
                           route.friendship.name,
-                          pathParameters: {'id': userId},
+                          pathParameters: {id: userId},
                           queryParameters: {'name': name, 'index': '0'},
                         );
                         context.pop();
@@ -148,7 +144,7 @@ class SideBarLayer extends StatelessWidget {
                   'Bookmarks',
                   onTap: () {
                     context.pushNamed(
-                      route.userBookmark.name,
+                      route.bookmark.name,
                       pathParameters: {'id': userId},
                     );
                     context.pop();
@@ -192,7 +188,7 @@ class SideBarLayer extends StatelessWidget {
             ),
             trailing: IconButton(
               tooltip: 'Logout',
-              onPressed: () => Get.find<AuthController>().logout(),
+              onPressed: () => octrl.logout(),
               color: theme.colorScheme.error,
               icon: const Icon(Icons.logout, size: 24),
             ),
@@ -233,6 +229,7 @@ class SideBarLayer extends StatelessWidget {
     );
   }
 
-  Widget _buildSubItem(String title) =>
-      ListTile(title: Text(title), onTap: () {});
+  Widget _buildSubItem(String title) {
+    return ListTile(title: Text(title), onTap: () {});
+  }
 }

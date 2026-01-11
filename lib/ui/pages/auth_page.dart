@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
-import 'package:semesta/app/functions/format.dart';
-import 'package:semesta/core/controllers/auth_controller.dart';
+import 'package:semesta/app/functions/format_helper.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/ui/components/auth/auth_foooter.dart';
 import 'package:semesta/ui/components/auth/auth_header.dart';
 import 'package:semesta/ui/components/auth/sign_in.dart';
@@ -13,79 +13,73 @@ import 'package:semesta/ui/widgets/custom_button.dart';
 import 'package:semesta/ui/widgets/data_form.dart';
 
 class AuthPage extends StatefulWidget {
-  final AuthController controller;
-
-  const AuthPage({super.key, required this.controller});
+  const AuthPage({super.key});
 
   @override
   State<AuthPage> createState() => _AuthPageState();
 }
 
 class _AuthPageState extends State<AuthPage> {
-  final _formKey = GlobalKey<FormBuilderState>();
   var _isSignUp = false;
+  final _formKey = GlobalKey<FormBuilderState>();
 
   @override
   Widget build(BuildContext context) {
-    final controller = widget.controller;
+    return Obx(() {
+      final isLoading = octrl.isLoading.value;
+      return Stack(
+        children: [
+          LayoutPage(
+            content: DataForm(
+              formKey: _formKey,
+              autovalidate: AutovalidateMode.onUserInteraction,
+              children: [
+                // Logo/Title
+                AuthHeader(isCreate: _isSignUp),
+                if (!_isSignUp) const SizedBox(height: 12),
 
-    return Stack(
-      children: [
-        LayoutPage(
-          content: DataForm(
-            formKey: _formKey,
-            autovalidate: AutovalidateMode.onUserInteraction,
-            children: [
-              // Logo/Title
-              AuthHeader(isCreate: _isSignUp),
-              if (!_isSignUp) const SizedBox(height: 12),
+                //Input Fields
+                _isSignUp ? SignUp(_formKey) : SignIn(_formKey),
 
-              //Input Fields
-              _isSignUp
-                  ? SignUp(controller: controller, formKey: _formKey)
-                  : SignIn(controller: controller, formKey: _formKey),
+                // Forgot Password
+                // if (!_isSignUp)
+                //   Align(
+                //     alignment: Alignment.centerRight,
+                //     child: TextButton(
+                //       onPressed: () {},
+                //       child: Text(
+                //         'Forgot Password?',
+                //         style: TextStyle(
+                //           color: const Color(0xFF4A9EFF),
+                //           fontSize: 14,
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                if (!_isSignUp) _buildButtons(),
 
-              // Forgot Password
-              // if (!_isSignUp)
-              //   Align(
-              //     alignment: Alignment.centerRight,
-              //     child: TextButton(
-              //       onPressed: () {},
-              //       child: Text(
-              //         'Forgot Password?',
-              //         style: TextStyle(
-              //           color: const Color(0xFF4A9EFF),
-              //           fontSize: 14,
-              //         ),
-              //       ),
-              //     ),
-              //   ),
-              if (!_isSignUp) _buildButtons(controller),
-
-              // Toggle Sign In/Up
-              AuthFoooter(
-                isCreate: _isSignUp,
-                onPressed: () => setState(() {
-                  _isSignUp = !_isSignUp;
-                  _formKey.currentState?.reset();
-                }),
-              ),
-            ],
+                // Toggle Sign In/Up
+                AuthFoooter(
+                  isCreate: _isSignUp,
+                  onPressed: () => setState(() {
+                    _isSignUp = !_isSignUp;
+                    _formKey.currentState?.reset();
+                  }),
+                ),
+              ],
+            ),
           ),
-        ),
 
-        // ---- overlay ----
-        Obx(() {
-          final isLoading = controller.isLoading.value;
-          return isLoading
-              ? BlockOverlay(title: _isSignUp ? 'Signing Up' : 'Signing In')
-              : SizedBox.shrink();
-        }),
-      ],
-    );
+          // ---- overlay ----
+          isLoading
+              ? BlockOverlay(_isSignUp ? 'Signing Up' : 'Signing In')
+              : SizedBox.shrink(),
+        ],
+      );
+    });
   }
 
-  Widget _buildButtons(AuthController controller) {
+  Widget _buildButtons() {
     return Wrap(
       children: [
         // Divider

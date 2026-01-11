@@ -1,22 +1,28 @@
 import 'dart:async';
 import 'package:get/get.dart';
+import 'package:semesta/app/functions/custom_toast.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/core/controllers/post_controller.dart';
 import 'package:semesta/core/controllers/user_controller.dart';
-import 'package:semesta/core/repositories/post_repository.dart';
-import 'package:semesta/core/views/helper.dart';
+import 'package:semesta/core/views/class_helper.dart';
+import 'package:semesta/core/views/utils_helper.dart';
 
 class ActionController extends GetxController {
   ///Playload
   final pCtrl = Get.put(PostController());
-  PostRepository get repo => pCtrl.repo;
   UserController get uCtrl => pCtrl.uCtrl;
 
   String get currentUid => pCtrl.currentUid;
   bool isCurrentUser(String uid) => pCtrl.isCurrentUser(uid);
+  String get _hKey => getKey();
+  String get _pKey => getKey(uid: currentUid, screen: Screen.post);
+  String get _fKey => getKey(uid: currentUid, screen: Screen.favorite);
+  String get _bKey => getKey(uid: currentUid, screen: Screen.bookmark);
+  String get _cKey => getKey(uid: currentUid, screen: Screen.comment);
 
   Future<void> toggleFollow(String uid, bool active) async {
     await uCtrl.toggleFollow(uid);
-    if (!active) pCtrl.metaFor('home:following').dirty = true;
+    if (!active) pCtrl.metaFor(getKey(screen: Screen.following)).dirty = true;
   }
 
   Future<void> toggleFavorite(
@@ -24,17 +30,13 @@ class ActionController extends GetxController {
     String pid, {
     bool active = false,
   }) async {
-    await repo.toggleFavorite(target, currentUid);
+    await prepo.toggleFavorite(target, currentUid);
     if (active) {
-      final rid = buildRowId(
-        pid: pid,
-        uid: currentUid,
-        kind: FeedKind.favorite,
-      );
-      pCtrl.clearFor('profile:$currentUid:favorites', rid);
-      pCtrl.metaFor('profile:$currentUid:posts').dirty = true;
+      final rid = getRowId(pid: pid, uid: currentUid, kind: FeedKind.favorite);
+      pCtrl.clearFor(_fKey, rid);
+      pCtrl.metaFor(_pKey).dirty = true;
     } else {
-      pCtrl.metaFor('profile:$currentUid:favorites').dirty = true;
+      pCtrl.metaFor(_fKey).dirty = true;
     }
   }
 
@@ -43,9 +45,14 @@ class ActionController extends GetxController {
     String pid, {
     bool active = false,
   }) async {
-    await repo.toggleBookmark(target, currentUid);
-    final rid = buildRowId(pid: pid, uid: currentUid, kind: FeedKind.bookmark);
-    if (active) pCtrl.clearFor('user:$currentUid:bookmarks', rid);
+    await prepo.toggleBookmark(target, currentUid);
+    final rid = getRowId(pid: pid, uid: currentUid, kind: FeedKind.bookmark);
+    if (active) {
+      pCtrl.clearFor(_bKey, rid);
+      CustomToast.warning('Removed from Bookmaks', title: 'Bookmaks');
+    } else {
+      CustomToast.info('Added to Bookmaks', title: 'Bookmaks');
+    }
   }
 
   Future<void> toggleRepost(
@@ -53,15 +60,20 @@ class ActionController extends GetxController {
     String pid, {
     bool active = false,
   }) async {
-    await repo.toggleRepost(target, currentUid);
-    pCtrl.metaFor('profile:$currentUid:favorites').dirty = true;
-    pCtrl.metaFor('profile:$currentUid:comments').dirty = true;
+    await prepo.toggleRepost(target, currentUid);
+    pCtrl.metaFor(_fKey).dirty = true;
+    pCtrl.metaFor(_cKey).dirty = true;
 
-    if (!active) {
-      pCtrl.addRepostToTabs('profile:$currentUid:posts', pid);
+    if (active) {
+      final rid = getRowId(pid: pid, uid: currentUid, kind: FeedKind.repost);
+      pCtrl.clearFor(_hKey, rid);
+      pCtrl.clearFor(_pKey, rid);
+      pCtrl.clearFor(_cKey, rid);
+      CustomToast.warning('Removed from Posts', title: 'Reposts');
     } else {
-      final rid = buildRowId(pid: pid, uid: currentUid, kind: FeedKind.repost);
-      pCtrl.clearFor('profile:$currentUid:posts', rid);
+      pCtrl.addRepostToTabs(_pKey, pid);
+      pCtrl.addRepostToTabs(_cKey, pid);
+      CustomToast.info('Added to Posts', title: 'Reposts');
     }
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:semesta/app/functions/format.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 
 class RadioGroupInput<T> extends StatelessWidget {
   final String name;

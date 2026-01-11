@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/app/utils/type_def.dart';
 import 'package:semesta/ui/widgets/avatar_animation.dart';
 import 'package:semesta/ui/components/globals/media_preview.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
@@ -10,8 +9,8 @@ class PostEditor extends StatelessWidget {
   final String? label;
   final List<AssetEntity> assets;
   final TextEditingController content;
-  final PropsCallback<String, void>? onChanged;
-  final PropsCallback<int, void>? onRemove;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<int>? onRemove;
   const PostEditor({
     super.key,
     required this.avatar,
@@ -30,9 +29,9 @@ class PostEditor extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start, // 🔥 important
           children: [
-            AvatarAnimation(imageUrl: avatar, size: 42),
+            AvatarAnimation(imageUrl: avatar, size: 40),
 
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
 
             Expanded(
               child: Column(
@@ -53,6 +52,11 @@ class PostEditor extends StatelessWidget {
                     ),
                     onChanged: onChanged,
                   ),
+
+                  if (assets.length == 1) ...[
+                    SizedBox(height: 8),
+                    MediaPreview(assets: assets, onRemove: onRemove),
+                  ],
                 ],
               ),
             ),
@@ -60,11 +64,12 @@ class PostEditor extends StatelessWidget {
         ),
 
         // ---- Media preview ----
-        MediaPreview(assets: assets, onRemove: onRemove),
+        if (assets.length > 1) MediaPreview(assets: assets, onRemove: onRemove),
 
         if (bottom != null) ...[
+          if (assets.isNotEmpty) SizedBox(height: 6),
           Padding(
-            padding: const EdgeInsets.only(left: 58, right: 8),
+            padding: const EdgeInsets.only(left: 58, right: 6),
             child: bottom!,
           ),
         ],

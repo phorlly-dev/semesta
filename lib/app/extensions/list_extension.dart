@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
 import 'package:semesta/app/functions/custom_toast.dart';
-import 'package:semesta/app/functions/format.dart';
 import 'package:semesta/app/utils/cached_helper.dart';
-import 'package:semesta/core/views/helper.dart';
+import 'package:semesta/core/views/generic_helper.dart';
+import 'package:semesta/core/views/class_helper.dart';
 
 extension Lists<T> on List<T> {
   List<List<T>> chunked(int size) {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:semesta/app/extensions/controller_extension.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/core/mixins/repo_mixin.dart';
-import 'package:semesta/core/controllers/post_controller.dart';
 import 'package:semesta/core/views/feed_view.dart';
+import 'package:semesta/core/views/utils_helper.dart';
 import 'package:semesta/ui/components/globals/cached_tab.dart';
 import 'package:semesta/ui/components/globals/live_feed.dart';
 
@@ -13,24 +13,23 @@ class PostsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<PostController>();
+    final key = getKey(uid: uid, screen: Screen.post);
     return CachedTab<FeedView>(
-      autoLoad: false,
-      controller: controller,
-      cache: controller.stateFor('profile:$uid:posts'),
+      controller: pctrl,
+      cache: pctrl.stateFor(key),
       emptyMessage: "There's no posts yet.",
-      onInitial: () => controller.combinePosts(uid),
-      onMore: () => controller.combinePosts(uid, QueryMode.next),
+      onInitial: () => pctrl.combinePosts(uid),
+      onMore: () => pctrl.combinePosts(uid, QueryMode.next),
       onRefresh: () {
-        final meta = controller.metaFor('profile:$uid:posts');
+        final meta = pctrl.metaFor(key);
         if (meta.dirty) {
-          controller.stateFor('profile:$uid:posts').clear();
+          pctrl.stateFor(key).clear();
           meta.dirty = false;
         }
 
-        return controller.combinePosts(uid, QueryMode.refresh);
+        return pctrl.combinePosts(uid, QueryMode.refresh);
       },
-      itemBuilder: (item) => LiveFeed(feed: item, me: true),
+      itemBuilder: (item) => LiveFeed(feed: item, primary: false),
     );
   }
 }

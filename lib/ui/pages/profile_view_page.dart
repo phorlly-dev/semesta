@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:semesta/app/extensions/controller_extension.dart';
 import 'package:semesta/app/extensions/list_extension.dart';
-import 'package:semesta/app/utils/params.dart';
-import 'package:semesta/core/controllers/post_controller.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/core/mixins/repo_mixin.dart';
-import 'package:semesta/core/views/helper.dart';
+import 'package:semesta/core/views/utils_helper.dart';
 import 'package:semesta/ui/components/users/account_profile.dart';
 import 'package:semesta/ui/partials/favorites_tab.dart';
 import 'package:semesta/ui/partials/media_tab.dart';
 import 'package:semesta/ui/components/layouts/_layout_page.dart';
 import 'package:semesta/ui/partials/posts_tab.dart';
 import 'package:semesta/ui/partials/comments_tab.dart';
+import 'package:semesta/ui/widgets/block_overlay.dart';
 
 class ProfileViewPage extends StatefulWidget {
   final String uid;
@@ -23,86 +23,87 @@ class ProfileViewPage extends StatefulWidget {
 }
 
 class _ProfileViewPageState extends State<ProfileViewPage> {
-  final _ctrl = Get.find<PostController>();
-  CountState _state = CountState('posts', 0);
+  int _idx = 0;
+  String get _uid => widget.uid;
+  String get _pKey => getKey(uid: _uid, screen: Screen.post);
+  String get _rKey => getKey(uid: _uid, screen: Screen.comment);
+  String get _fKey => getKey(uid: _uid, screen: Screen.favorite);
+  String get _mKey => getKey(uid: _uid, screen: Screen.media);
 
   @override
   void initState() {
-    _loadInit();
-    super.initState();
-  }
-
-  void _loadInit() {
-    // Use addPostFrameCallback instead of microtask for better timing
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
-      _ctrl.combinePosts(widget.uid).then((value) {
-        final state = _ctrl.stateFor('profile:${widget.uid}:posts');
-        state.set(value);
-        setState(() => _state = countState(state.length));
-      });
-
-      _ctrl.loadUserMedia(widget.uid).then((value) {
-        _ctrl.stateFor('profile:${widget.uid}:media').set(value);
-      });
-
-      _ctrl.loadUserFavorites(widget.uid).then((value) {
-        _ctrl.stateFor('profile:${widget.uid}:favorites').set(value);
-      });
+    pctrl.combineFeeds(_uid).then((value) {
+      pctrl.stateFor(_rKey).set(value);
     });
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutPage(
-      content: AccountProfile(
-        uid: widget.uid,
-        state: _state,
-        authed: widget.authed,
+    return Obx(() {
+      final pCount = pctrl.stateFor(_rKey).length;
+      final mCount = pctrl.stateFor(_mKey).length;
+      final fCount = pctrl.stateFor(_fKey).length;
+      final isLoading = pctrl.isLoading.value;
+
+      return Stack(
         children: [
-          PostsTab(uid: widget.uid),
-          CommentsTab(uid: widget.uid),
-          MediaTab(uid: widget.uid),
-          if (widget.authed) FavoritesTab(uid: widget.uid),
+          LayoutPage(
+            content: AccountProfile(
+              uid: _uid,
+              initIndex: _idx,
+              authed: widget.authed,
+              postCount: pCount,
+              mediaCount: mCount,
+              favoriteCount: fCount,
+              children: [
+                PostsTab(uid: _uid),
+                CommentsTab(uid: _uid),
+                MediaTab(uid: _uid),
+                if (widget.authed) FavoritesTab(uid: _uid),
+              ],
+              onTap: (idx) {
+                setState(() => _idx = idx);
+
+                switch (idx) {
+                  case 1:
+                    final meta = pctrl.metaFor(_rKey);
+                    if (meta.dirty) {
+                      pctrl.combineFeeds(_uid, QueryMode.refresh).then((value) {
+                        pctrl.stateFor(_rKey).set(value);
+                        meta.dirty = false;
+                      });
+                    }
+                    break;
+
+                  case 3:
+                    final meta = pctrl.metaFor(_fKey);
+                    if (meta.dirty) {
+                      pctrl.loadUserFavorites(_uid, QueryMode.refresh).then((
+                        value,
+                      ) {
+                        pctrl.stateFor(_fKey).set(value);
+                        meta.dirty = false;
+                      });
+                    }
+                    break;
+                  default:
+                    final meta = pctrl.metaFor(_pKey);
+                    if (meta.dirty) {
+                      pctrl.combinePosts(_uid, QueryMode.refresh).then((value) {
+                        pctrl.stateFor(_pKey).set(value);
+                        meta.dirty = false;
+                      });
+                    }
+                }
+              },
+            ),
+          ),
+
+          // ---- overlay ----
+          isLoading ? BlockOverlay('Processing') : SizedBox.shrink(),
         ],
-        onTap: (idx) {
-          switch (idx) {
-            case 2:
-              final state = _ctrl.stateFor('profile:${widget.uid}:media');
-              setState(() {
-                _state = countState(state.length, KindTab.media);
-              });
-            case 3:
-              final meta = _ctrl.metaFor('profile:${widget.uid}:favorites');
-              final state = _ctrl.stateFor('profile:${widget.uid}:favorites');
-              setState(() {
-                _state = countState(state.length, KindTab.favorites);
-              });
-
-              if (meta.dirty) {
-                _ctrl.loadUserFavorites(widget.uid, QueryMode.refresh).then((
-                  value,
-                ) {
-                  state.set(value);
-                  meta.dirty = false;
-                });
-              }
-              break;
-            default:
-              final meta = _ctrl.metaFor('profile:${widget.uid}:posts');
-              final state = _ctrl.stateFor('profile:${widget.uid}:posts');
-              setState(() => _state = countState(state.length));
-
-              if (meta.dirty) {
-                _ctrl.combinePosts(widget.uid, QueryMode.refresh).then((value) {
-                  state.set(value);
-                  meta.dirty = false;
-                });
-              }
-          }
-        },
-      ),
-    );
+      );
+    });
   }
 }

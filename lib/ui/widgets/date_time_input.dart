@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:semesta/app/functions/format.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 
 class DateTimeInput extends StatelessWidget {
   final InputType type;

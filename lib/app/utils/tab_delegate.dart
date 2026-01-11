@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/ui/widgets/custom_tab_bar.dart';
+import 'package:semesta/ui/components/layouts/custom_tab_bar.dart';
 
 class TabDelegate extends SliverPersistentHeaderDelegate {
   final CustomTabBar _tabBar;

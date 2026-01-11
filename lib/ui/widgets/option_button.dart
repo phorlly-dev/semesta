@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:semesta/app/functions/format.dart';
+import 'package:semesta/app/functions/format_helper.dart';
 
 class OptionButton extends StatelessWidget {
   final dynamic icon;

@@ -1,61 +1,31 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:semesta/app/functions/format.dart';
 import 'package:semesta/app/functions/logger.dart';
-import 'package:semesta/core/mixins/repo_mixin.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/app/utils/type_def.dart';
+import 'package:semesta/core/mixins/repo_mixin.dart';
 import 'package:semesta/core/models/reaction.dart';
 import 'package:semesta/core/repositories/generic_repository.dart';
+import 'package:semesta/core/views/utils_helper.dart';
 
 abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
-  Stream<T> stream$(String doc) {
-    assert(doc.isNotEmpty, 'Document ID must not be empty');
+  /// Add a new document
+  Future<String> store(T model) async {
+    final docRef = collection(path).doc();
+    final newModel = (model as dynamic).copy(id: docRef.id);
+    await docRef.set(to(newModel));
 
-    return collection(path)
-        .doc(doc)
-        .snapshots()
-        .map<T>((e) {
-          if (!e.exists) throw StateError('Document does not exist');
-
-          return from(e.data()!, e.id);
-        })
-        .handleError((error) {
-          // Log error or provide fallback
-          HandleLogger.error('Failed to stream data $doc', message: error);
-        });
+    return docRef.id;
   }
 
-  Stream<Doc<AsMap>> liveStream(String doc) {
-    return collection(path).doc(doc).snapshots();
+  /// Update an existing document
+  Future<void> modify(String id, AsMap data) {
+    return collection(path).doc(id).update(data);
   }
 
-  Stream<bool> has$(String docPath) {
-    return document(docPath).snapshots().map((d) => d.exists);
-  }
-
-  Future<void> toggleCount(
-    String doc, {
-    String? col,
-    String key = 'posts',
-    int delta = 1,
-  }) async {
-    final ref = collection(col ?? path).doc(doc);
-    try {
-      await db.runTransaction((txn) async {
-        final snap = await txn.get(ref);
-        if (!snap.exists) return;
-
-        final value = (snap.data()?['${key}_count'] ?? 0) as num;
-        if (value + delta < 0) return;
-
-        txn.update(ref, {'${key}_count': value + delta});
-      });
-    } catch (e, s) {
-      HandleLogger.error('Failed to toggle $key', message: e, stack: s);
-      rethrow;
-    }
-  }
+  /// Delete a document
+  Future<void> destroy(String id) => collection(path).doc(id).delete();
 
   /// [sdoc] - Source document ID (e.g., user ID)
   /// [edoc] - Edge/target document ID (e.g., post ID)
@@ -64,12 +34,13 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
   Future<void> toggle(
     String sdoc,
     String edoc, {
-    String key = 'favorites',
-    String subcol = 'favorites',
+    String key = favorites,
+    String subcol = favorites,
+    FeedKind kind = FeedKind.favorite,
   }) async {
     final doc = collection(path).doc(sdoc);
     final edgeRef = doc.collection(subcol).doc(edoc);
-    final countField = '${key}_count';
+    final countField = countKey(key);
 
     try {
       await db.runTransaction((txn) async {
@@ -90,13 +61,15 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
           txn.update(doc, {countField: math.max(0, currentCount - 1)});
         } else {
           // Add reaction
-          final reactionData = Reaction(
-            currentId: sdoc,
+          final reaction = Reaction(
+            kind: kind,
+            exist: true,
             targetId: edoc,
             createdAt: now,
+            currentId: sdoc,
           ).to();
 
-          txn.set(edgeRef, reactionData);
+          txn.set(edgeRef, reaction);
           txn.update(doc, {countField: currentCount + 1});
         }
       });
@@ -126,17 +99,14 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
     String sdoc,
     String bdoc,
     String edoc, {
-    String key = 'favorites',
-    String inSubcol = 'comments',
-    String subcol = 'favorites',
+    String key = favorites,
+    String subcol = favorites,
+    String inSubcol = comments,
+    FeedKind kind = FeedKind.favorite,
   }) async {
-    final doc = collection(path).doc(sdoc);
-    final nestedRef = doc
-        .collection(inSubcol)
-        .doc(bdoc)
-        .collection(subcol)
-        .doc(edoc);
-    final countField = '${key}_count';
+    final doc = collection(path).doc(sdoc).collection(inSubcol).doc(bdoc);
+    final nestedRef = doc.collection(subcol).doc(edoc);
+    final countField = countKey(key);
 
     try {
       await db.runTransaction((txn) async {
@@ -158,15 +128,16 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
             ..update(doc, {countField: math.max(0, currentCount - 1)});
         } else {
           // Add nested reaction
-          final reactionData = NestedReaction(
-            currentId: sdoc,
+          final reaction = Reaction(
+            kind: kind,
+            exist: true,
+            currentId: bdoc,
             targetId: edoc,
-            betweenId: bdoc,
             createdAt: now,
           ).to();
 
           txn
-            ..set(nestedRef, reactionData)
+            ..set(nestedRef, reaction)
             ..update(doc, {countField: currentCount + 1});
         }
       });
@@ -184,77 +155,5 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
       );
       rethrow;
     }
-  }
-
-  Future<List<Reaction>> reactions(
-    String col,
-    String doc, {
-    String key = 'target_id',
-    int limit = 30,
-  }) {
-    assert(
-      col.isNotEmpty && doc.isNotEmpty,
-      'Collection and Document ID must not be empty',
-    );
-
-    return subcollection(col)
-        .where(key, isEqualTo: doc)
-        .orderBy('created_at', descending: true)
-        .limit(limit)
-        .get()
-        .then((value) {
-          return value.docs.map((d) => Reaction.from(d.data())).toList();
-        })
-        .catchError((error) {
-          // Log error or provide fallback
-          HandleLogger.error('Failed to list to actions', message: error);
-
-          return <Reaction>[];
-        });
-  }
-
-  Stream<List<Reaction>> liveReactions$(
-    String col,
-    String doc, {
-    String key = 'target_id',
-    int limit = 30,
-  }) {
-    assert(
-      col.isNotEmpty && doc.isNotEmpty,
-      'Collection and Document ID must not be empty',
-    );
-
-    return subcollection(col)
-        .where(key, isEqualTo: doc)
-        .orderBy('created_at', descending: true)
-        .limit(limit)
-        .snapshots()
-        .map((snapshot) {
-          return snapshot.docs.map((doc) => Reaction.from(doc.data())).toList();
-        })
-        .handleError((error) {
-          // Log error or provide fallback
-          HandleLogger.error('Failed to list to actions', message: error);
-
-          return <Reaction>[];
-        });
-  }
-
-  Future<List<T>> getInOrder(
-    AsList values, {
-    int limit = 20,
-    QueryMode mode = QueryMode.normal,
-  }) async {
-    if (values.isEmpty) return [];
-
-    final snap = await collection(path)
-        .where(FieldPath.documentId, whereIn: values)
-        .limit(mode == QueryMode.refresh ? 100 : limit)
-        .get();
-
-    final map = {for (var d in snap.docs) d.id: from(d.data(), d.id)};
-
-    // Rebuild list in ACTION order
-    return values.where(map.containsKey).map((id) => map[id]!).toList();
   }
 }

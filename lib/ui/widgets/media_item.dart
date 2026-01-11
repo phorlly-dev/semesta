@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:semesta/app/routes/routes.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/core/models/media.dart';
 import 'package:semesta/ui/widgets/custom_image.dart';
 import 'package:semesta/ui/widgets/custom_video_player.dart';
@@ -33,7 +33,7 @@ class MediaItem extends StatelessWidget {
               image: url,
               onTap: () async {
                 await context.pushNamed(
-                  Routes().imagesPreview.name,
+                  route.media.name,
                   pathParameters: {'id': id},
                   queryParameters: {'index': initIndex.toString()},
                 );

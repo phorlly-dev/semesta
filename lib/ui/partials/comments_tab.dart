@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:semesta/core/controllers/post_controller.dart';
+import 'package:semesta/app/extensions/controller_extension.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/core/mixins/repo_mixin.dart';
 import 'package:semesta/core/views/feed_view.dart';
+import 'package:semesta/core/views/utils_helper.dart';
 import 'package:semesta/ui/components/globals/cached_tab.dart';
 import 'package:semesta/ui/components/globals/live_feed.dart';
 
@@ -12,16 +13,15 @@ class CommentsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<PostController>();
     return CachedTab<FeedView>(
-      controller: controller,
-      cache: controller.stateFor('profile:$uid:comments'),
+      controller: pctrl,
+      cache: pctrl.stateFor(getKey(uid: uid, screen: Screen.comment)),
       emptyMessage: "There's no replies yet.",
-      onInitial: () => controller.loadUserComments(uid),
-      onMore: () => controller.loadUserComments(uid, QueryMode.next),
-      onRefresh: () => controller.loadUserComments(uid, QueryMode.refresh),
+      onInitial: () => pctrl.combineFeeds(uid),
+      onMore: () => pctrl.combineFeeds(uid, QueryMode.next),
+      onRefresh: () => pctrl.combineFeeds(uid, QueryMode.refresh),
       itemBuilder: (item) {
-        return LiveFeed(feed: item.copy(uid: uid), me: true);
+        return LiveFeed(feed: item, primary: false);
       },
     );
   }

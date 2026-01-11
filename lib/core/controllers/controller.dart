@@ -6,13 +6,14 @@ import 'package:semesta/core/mixins/pager_mixin.dart';
 import 'package:semesta/app/utils/type_def.dart';
 
 abstract class IController<T> extends GetxController with PagerMixin<T> {
+  final isLoading = false.obs;
   final RxString hasError = ''.obs;
   final RxString message = ''.obs;
 
   /// A reusable async handler for try/catch/finally logic.
   Future<void> handleAsync({
     required FutureCallback<void> callback,
-    ErrorCallback<void>? onError,
+    ErrorsCallback<void>? onError,
     PropsCallback<bool, void>? onFinal,
   }) async {
     // 1. Set loading state to true *before* the operation starts.
@@ -26,10 +27,10 @@ abstract class IController<T> extends GetxController with PagerMixin<T> {
       await callback();
 
       // 4. Consolidate error handling to catch all errors and exceptions.
-    } catch (e, stack) {
-      if (onError != null) onError(e);
+    } catch (e, s) {
+      if (onError != null) onError(e, s);
       hasError.value = e.toString();
-      HandleLogger.error('Operation Failed on $T', message: e, stack: stack);
+      HandleLogger.error('Operation Failed on $T', message: e, stack: s);
     } finally {
       // 5. This now correctly runs *after* the async operation is done.
       isLoading.value = false;
@@ -39,14 +40,14 @@ abstract class IController<T> extends GetxController with PagerMixin<T> {
 
   Future<void> tryCatch({
     required FutureCallback<void> callback,
-    ErrorCallback<void>? onError,
+    ErrorsCallback<void>? onError,
     PropsCallback<bool, void>? onFinal,
   }) async {
     try {
       await callback();
-    } catch (e, stack) {
-      onError?.call(e);
-      HandleLogger.error('Operation Failed on $T', message: e, stack: stack);
+    } catch (e, s) {
+      onError?.call(e, s);
+      HandleLogger.error('Operation Failed on $T', message: e, stack: s);
     } finally {
       onFinal?.call(false);
     }

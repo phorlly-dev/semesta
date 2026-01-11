@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/app/functions/format.dart';
+import 'package:semesta/app/functions/format_helper.dart';
 import 'package:semesta/ui/widgets/animated.dart';
 
 class DisplayName extends StatelessWidget {
@@ -32,23 +32,28 @@ class Username extends StatelessWidget {
   final String data;
   final Color? color;
   final int maxChars;
+  final VoidCallback? onTap;
   const Username({
     super.key,
     required this.data,
     this.color,
     this.maxChars = 12,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return Text(
-      '@${limitText(data, maxChars)}',
-      style: TextStyle(
-        fontSize: 15,
-        overflow: TextOverflow.ellipsis,
-        fontWeight: FontWeight.w500,
-        color: color ?? colors.secondary,
+    return Animated(
+      onTap: onTap,
+      child: Text(
+        '@${limitText(data, maxChars)}',
+        style: TextStyle(
+          fontSize: 16,
+          overflow: TextOverflow.ellipsis,
+          color: color ?? colors.secondary,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
@@ -96,16 +101,13 @@ class Bio extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(top: 3),
-      child: Text(
-        data,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 16,
-          color: color ?? colors.onSurface.withValues(alpha: 0.7),
-        ),
+    return Text(
+      data,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: 16,
+        color: color ?? colors.onSurface.withValues(alpha: 0.7),
       ),
     );
   }

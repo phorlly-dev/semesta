@@ -1,7 +1,11 @@
+import 'package:semesta/app/functions/logger.dart';
+import 'package:semesta/app/utils/type_def.dart';
+import 'package:semesta/core/views/generic_helper.dart';
+import 'package:semesta/core/mixins/repo_mixin.dart';
 import 'package:semesta/core/models/reaction.dart';
 import 'package:semesta/core/models/feed.dart';
 import 'package:semesta/core/repositories/repository.dart';
-import 'package:semesta/core/views/helper.dart';
+import 'package:semesta/core/views/class_helper.dart';
 
 mixin PostMixin on IRepository<Feed> {
   ///Read Data from DB
@@ -35,64 +39,98 @@ mixin PostMixin on IRepository<Feed> {
     }
   }
 
-  Future<void> toggleFavorite(ActionTarget target, String uid) async {
-    switch (target) {
-      case FeedTarget(:final pid):
-        await toggle(pid, uid);
-        break;
-
-      case CommentTarget(:final pid, :final cid):
-        await subtoggle(pid, cid, uid);
-        break;
-    }
+  Future<List<Reaction>> getBookmarks(String uid, [int limit = 30]) {
+    return getReactions(
+      limit: limit,
+      col: bookmarks,
+      conditions: {targetId: uid},
+    );
   }
 
-  Future<void> toggleRepost(ActionTarget target, String uid) async {
-    switch (target) {
-      case FeedTarget(:final pid):
-        await toggle(pid, uid, subcol: reposts, key: reposts);
-        break;
-
-      case CommentTarget(:final pid, :final cid):
-        await subtoggle(pid, cid, uid, subcol: reposts, key: reposts);
-        break;
-    }
+  Future<List<Reaction>> getFavorites(String uid, [int limit = 30]) {
+    return getReactions(
+      limit: limit,
+      col: favorites,
+      conditions: {targetId: uid},
+    );
   }
 
-  Future<void> toggleBookmark(ActionTarget target, String uid) async {
-    switch (target) {
-      case FeedTarget(:final pid):
-        await toggle(pid, uid, key: bookmarks, subcol: bookmarks);
-        break;
-
-      case CommentTarget(:final pid, :final cid):
-        await subtoggle(pid, cid, uid, key: bookmarks, subcol: bookmarks);
-        break;
-    }
+  Future<List<Reaction>> getFollowing(String uid, [int limit = 30]) {
+    return getReactions(
+      limit: limit,
+      col: following,
+      conditions: {currentId: uid},
+    );
   }
 
-  Future<List<Reaction>> loadReposts(String uid, {int limit = 30}) {
-    return reactions(reposts, uid, limit: limit);
+  Future<List<Reaction>> getReposts(dynamic value, [int limit = 30]) {
+    return getReactions(
+      col: reposts,
+      limit: limit,
+      conditions: {targetId: value},
+    );
   }
 
-  Future<List<Reaction>> loadBookmarks(String uid, {int limit = 30}) {
-    return reactions(bookmarks, uid, limit: limit);
+  Future<List<Feed>> getComments(
+    dynamic value, {
+    int limit = 20,
+    QueryMode mode = QueryMode.normal,
+  }) => getInGrouped(conditions: {userId: value}, limit: limit, mode: mode);
+
+  Future<List<Feed>> getPosts(
+    dynamic value, {
+    int limit = 20,
+    QueryMode mode = QueryMode.normal,
+    AsList visible = const [],
+  }) {
+    return prepo.queryAdvanced(
+      mode: mode,
+      limit: limit,
+      conditions: {
+        userId: value,
+        type: [post, quote],
+        visibility: [public, following, ...visible],
+      },
+    );
   }
 
-  Future<List<Reaction>> loadFavorites(String uid, {int limit = 30}) {
-    return reactions(favorites, uid, limit: limit);
+  Future<List<Feed>> getForYou({
+    int limit = 20,
+    QueryMode mode = QueryMode.normal,
+  }) async {
+    final posts = await prepo.queryAdvanced(
+      mode: mode,
+      conditions: {
+        type: [post, quote],
+        visibility: public,
+      },
+    );
+
+    if (posts.isEmpty) return const [];
+
+    return posts.toList();
   }
 
-  Future<void> clearAllBookmarks(String uid) async {
-    final query = await collection(users).doc(uid).collection(bookmarks).get();
+  Future<List<Reaction>> getForYouActions({
+    int limit = 30,
+    bool descending = true,
+    String orderKey = made,
+  }) {
+    return subcollection(reposts)
+        .limit(limit)
+        .orderBy(orderKey, descending: descending)
+        .get()
+        .then((value) {
+          return value.docs.map((doc) => Reaction.from(doc.data())).toList();
+        })
+        .catchError((error, stackTrace) {
+          HandleLogger.error(
+            'Failed to fetch reposts',
+            message: error,
+            stack: stackTrace,
+          );
 
-    if (query.docs.isEmpty) return;
-
-    final batch = db.batch();
-    for (final doc in query.docs) {
-      batch.delete(doc.reference);
-    }
-
-    await batch.commit();
+          return <Reaction>[];
+        });
   }
 }

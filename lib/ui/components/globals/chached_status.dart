@@ -1,100 +1,123 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/app/functions/reply_option.dart';
-import 'package:semesta/app/utils/type_def.dart';
+import 'package:semesta/app/utils/comment_connector.dart';
 import 'package:semesta/core/models/feed.dart';
 import 'package:semesta/core/models/author.dart';
 import 'package:semesta/ui/components/globals/expandable_text.dart';
 import 'package:semesta/ui/components/users/user_info.dart';
-import 'package:semesta/ui/widgets/animated.dart';
 import 'package:semesta/ui/widgets/avatar_animation.dart';
 
 class ChachedStatus extends StatelessWidget {
   final Feed model;
   final Author author;
+  final bool primary;
+  final Widget? status;
   final VoidCallback? onProfile, onMenu, onDetail;
-  final PropsCallback<String, void>? onExpend;
+  final ValueChanged<String>? onTag;
   const ChachedStatus({
     super.key,
     required this.model,
     required this.author,
     this.onProfile,
     this.onMenu,
+    this.onTag,
     this.onDetail,
-    this.onExpend,
+    this.primary = false,
+    this.status,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final icon = ReplyOption(context).mapToIcon(model.visible);
+    final dividerColor = Theme.of(context).dividerColor.withValues(alpha: 0.5);
+
+    // In a real scenario, these offsets would likely be calculated
+    // via GlobalKeys or based on the list index.
+    final start = Offset(20, 52); // Relative to Stack top-left
+    final end = Offset(20, 496);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 2, 0, 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          // LEFT AVATAR
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: AvatarAnimation(
-              imageUrl: author.avatar,
-              size: 40,
-              onTap: onProfile,
+          // 1. The Connector Line (Background Layer)
+          if (primary)
+            Positioned.fill(
+              child: CustomPaint(
+                painter: CommentConnector(
+                  startPoint: start,
+                  endPoint: end,
+                  lineColor: dividerColor,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
 
-          // RIGHT CONTENT
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                InkWell(
+          // 2. The Main Content Row
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: AvatarAnimation(
+                  imageUrl: author.avatar,
+                  size: 40,
+                  onTap: onProfile,
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              Expanded(
+                child: InkWell(
                   onTap: onDetail,
-                  child: Row(
+                  radius: 32,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Animated(
-                        onTap: onProfile,
-                        child: DisplayName(data: author.name),
-                      ),
+                      Row(
+                        children: [
+                          DisplayName(data: author.name),
 
-                      if (author.verified) ...[
-                        const SizedBox(width: 4),
-                        Icon(Icons.verified, size: 14, color: colors.primary),
-                      ],
+                          if (author.verified) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.verified,
+                              size: 14,
+                              color: colors.primary,
+                            ),
+                          ],
+                          const SizedBox(width: 6),
 
-                      const SizedBox(width: 6),
+                          Status(icon: icon, created: model.createdAt),
+                          const Spacer(),
 
-                      // Username(data: user.username),
-                      Status(icon: icon, created: model.createdAt),
-
-                      const Spacer(),
-
-                      // 👇 lightweight menu button
-                      InkWell(
-                        borderRadius: BorderRadius.circular(20),
-                        onTap: onMenu,
-                        child: Padding(
-                          padding: EdgeInsets.all(4),
-                          child: Icon(
-                            Icons.more_vert_outlined,
-                            size: 20,
-                            color: colors.secondary,
+                          InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: onMenu,
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.more_vert_outlined,
+                                size: 20,
+                                color: colors.secondary,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
+                      ?status,
+
+                      if (model.content.isNotEmpty)
+                        ExpandableText(
+                          text: model.content,
+                          trimLength: 120,
+                          onTagTap: onTag,
+                        ),
                     ],
                   ),
                 ),
-
-                if (model.content.isNotEmpty)
-                  ExpandableText(
-                    text: model.content,
-                    trimLength: 120,
-                    onTagTap: onExpend,
-                  ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),

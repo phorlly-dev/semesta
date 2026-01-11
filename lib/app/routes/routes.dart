@@ -1,51 +1,17 @@
 import 'package:semesta/core/mixins/router_mixin.dart';
 import 'package:semesta/app/utils/params.dart';
 
-class Routes with RouterMixin {
-  //pages inside
-  RouteParams get home => RouteParams(path: convert('home'), name: 'home');
-  RouteParams get explore =>
-      RouteParams(path: convert('explore'), name: 'explore');
-  RouteParams get reel => RouteParams(path: convert('reel'), name: 'reel');
-  RouteParams get notify =>
-      RouteParams(path: convert('notify'), name: 'notify');
-  RouteParams get messsage =>
-      RouteParams(path: convert('messsage'), name: 'messsage');
+class Routes with RouterMixin, UserRoutes, PostRoutes {
+  // root (absolute)
+  RouteNode get home => const RouteNode('/home', 'home');
+  RouteNode get explore => const RouteNode('/explore', 'explore');
+  RouteNode get reel => const RouteNode('/reel', 'reel');
+  RouteNode get notify => const RouteNode('/notify', 'notify');
+  RouteNode get messsage => const RouteNode('/messsage', 'messsage');
 
-  //pages outside
-  RouteParams get splash =>
-      RouteParams(path: convert('splash'), name: 'splash');
-  RouteParams get auth => RouteParams(path: convert('auth'), name: 'auth');
-
-  RouteParams get userBookmark =>
-      RouteParams(path: convert('users/:id/bookmark'), name: 'posts.bookmark');
-  RouteParams get profile =>
-      RouteParams(path: convert('users/:id/profile'), name: 'users.profile');
-  RouteParams get avatarPreview => RouteParams(
-    path: convert('users/avatar/:id/preview'),
-    name: 'users.avatar.preview',
-  );
-  RouteParams get friendship => RouteParams(
-    path: convert('users/:id/friendship'),
-    name: 'users.friendship',
-  );
-
-  RouteParams get createPost =>
-      RouteParams(path: convert('posts/create'), name: 'posts.create');
-  RouteParams get replyPost =>
-      RouteParams(path: convert('posts/:id/reply'), name: 'posts.reply');
-  RouteParams get repost =>
-      RouteParams(path: convert('posts/:id/repost'), name: 'posts.repost');
-  RouteParams get videoPreview => RouteParams(
-    path: convert('posts/videos/:id/preview'),
-    name: 'posts.videos.preview',
-  );
-  RouteParams get imagesPreview => RouteParams(
-    path: convert('posts/images/:id/previews'),
-    name: 'posts.images.preview',
-  );
-  RouteParams get postDatails =>
-      RouteParams(path: convert('posts/:id/detail'), name: 'posts.detail');
+  //Outside
+  RouteNode get splash => const RouteNode('/splash', 'splash');
+  RouteNode get auth => const RouteNode('/auth', 'auth');
 
   //path menu
   List<String> get paths => [
@@ -64,6 +30,7 @@ class Routes with RouterMixin {
     messsage.name,
   ];
 
-  int getIndexFromLocation(String location) =>
-      paths.indexWhere((p) => location.startsWith(p));
+  int getIndexFromLocation(String location) {
+    return paths.indexWhere((p) => location.startsWith(p));
+  }
 }

@@ -1,23 +1,55 @@
 import 'dart:async';
 import 'package:semesta/app/functions/custom_toast.dart';
 import 'package:semesta/app/functions/logger.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/app/utils/type_def.dart';
 import 'package:semesta/core/controllers/feed_controller.dart';
 import 'package:semesta/core/models/feed.dart';
+import 'package:semesta/core/views/feed_view.dart';
+import 'package:semesta/core/views/utils_helper.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class PostController extends IFeedController {
+  void addRepostToTabs(String key, String pid) {
+    final state = stateFor(key);
+
+    final rowId = getRowId(pid: pid, kind: FeedKind.repost, uid: currentUid);
+    if (state.any((e) => e.currentId == rowId)) return;
+
+    final post = dataMapping[pid];
+    if (post == null) return;
+
+    state.insert(
+      0,
+      FeedView(rid: rowId, uid: currentUid, feed: post, created: now),
+    );
+
+    state.refresh();
+  }
+
+  void clearFor(String key, String rid) {
+    final state = stateFor(key);
+
+    state.removeWhere((s) => s.currentId == rid);
+    state.refresh(); // notify RxList
+  }
+
+  void invalidate(String key) {
+    stateFor(key).clear(); // same RxList instance => Obx rebuild
+    metaFor(key).dirty = true; // next switch triggers refill
+  }
+
   Future<void> save(Feed model, List<AssetEntity> files) async {
     await handleAsync(
       callback: () async {
         final user = currentUser;
-        final media = await repo.uploadMedia(currentUid, files.toList());
+        final media = await prepo.uploadMedia(currentUid, files.toList());
         final data = model.copy(media: media, uid: user.id);
 
-        await repo.insert(data);
+        await prepo.insert(data);
         CustomToast.info('Posted.!');
       },
-      onError: (err) => CustomToast.error(err.toString()),
+      onError: (err, stx) => CustomToast.error(err.toString()),
     );
   }
 
@@ -25,7 +57,7 @@ class PostController extends IFeedController {
     if (pid.isEmpty) return;
     await handleAsync(
       callback: () async {
-        await repo.modify(pid, data);
+        await prepo.modify(pid, data);
         CustomToast.info('Post updated.!');
       },
     );
@@ -33,17 +65,17 @@ class PostController extends IFeedController {
 
   Future<void> remove(String pid, String uid) async {
     if (pid.isEmpty || uid.isEmpty) return;
-    await tryCatch(
+    await handleAsync(
       callback: () async {
         final post = dataMapping[pid]!;
         if (post.media.isNotEmpty) {
           for (final m in post.media) {
             try {
-              await repo.deleteFile(m.path);
+              await prepo.deleteFile(m.path);
 
               final path = m.thumbnails['path'].toString();
               if (m.thumbnails.isNotEmpty && path.isNotEmpty) {
-                await repo.deleteFile(path);
+                await prepo.deleteFile(path);
               }
             } catch (e) {
               HandleLogger.error(
@@ -54,8 +86,7 @@ class PostController extends IFeedController {
           }
         }
 
-        await repo.destroy(pid);
-        await repo.toggleCount(uid, col: 'users', delta: -1);
+        await prepo.destroy(pid);
         CustomToast.success('Post deleted.!');
       },
     );
@@ -63,9 +94,10 @@ class PostController extends IFeedController {
 
   Future<void> clearAllBookmarks() async {
     if (currentUid.isEmpty) return;
-    await tryCatch(
+    await handleAsync(
       callback: () async {
-        await repo.clearAllBookmarks(currentUid);
+        await prepo.clearAllBookmarks(currentUid);
+        invalidate(getKey(uid: currentUid, screen: Screen.bookmark));
         CustomToast.success('All bookmarks cleared');
       },
     );

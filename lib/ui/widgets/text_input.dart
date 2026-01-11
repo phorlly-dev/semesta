@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:semesta/app/functions/format.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/app/utils/type_def.dart';
 
 class TextInput extends StatelessWidget {

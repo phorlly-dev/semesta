@@ -3,7 +3,7 @@ import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class MediaPreview extends StatelessWidget {
   final List<AssetEntity> assets;
-  final void Function(int index)? onRemove;
+  final ValueChanged<int>? onRemove;
 
   const MediaPreview({super.key, required this.assets, this.onRemove});
 
@@ -23,38 +23,35 @@ class MediaPreview extends StatelessWidget {
   // === One image full preview ===
   Widget _buildSingle(BuildContext context) {
     final asset = assets.first;
-    return Padding(
-      padding: const EdgeInsets.only(left: 58, top: 12, right: 8),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          children: [
-            AspectRatio(
-              aspectRatio: .76,
-              child: AssetEntityImage(asset, fit: BoxFit.cover),
-            ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Stack(
+        children: [
+          AspectRatio(
+            aspectRatio: .76,
+            child: AssetEntityImage(asset, fit: BoxFit.cover),
+          ),
 
-            // Show play icon overlay if it's a video
-            if (asset.type == AssetType.video)
-              const Positioned.fill(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.play_circle_fill,
-                    color: Colors.white,
-                    size: 42,
-                  ),
+          // Show play icon overlay if it's a video
+          if (asset.type == AssetType.video)
+            const Positioned.fill(
+              child: Align(
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.play_circle_fill,
+                  color: Colors.white,
+                  size: 42,
                 ),
               ),
+            ),
 
-            if (onRemove != null)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: _removeButton(() => onRemove?.call(0)),
-              ),
-          ],
-        ),
+          if (onRemove != null)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: _removeButton(() => onRemove?.call(0)),
+            ),
+        ],
       ),
     );
   }
@@ -64,7 +61,7 @@ class MediaPreview extends StatelessWidget {
     return SizedBox(
       height: 210,
       child: ListView.separated(
-        padding: EdgeInsets.only(left: 58, top: 12, bottom: 12),
+        padding: EdgeInsets.only(left: 58, top: 6, bottom: 6),
         scrollDirection: Axis.horizontal,
         itemCount: assets.length,
         separatorBuilder: (ctx, idx) => const SizedBox(width: 8),

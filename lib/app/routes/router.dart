@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:semesta/app/routes/router_refresh_stream.dart';
 import 'package:semesta/app/routes/routes.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/app/utils/transition_page.dart';
-import 'package:semesta/core/controllers/auth_controller.dart';
 import 'package:semesta/ui/pages/create_post_page.dart';
 import 'package:semesta/ui/pages/friendship_view_page.dart';
 import 'package:semesta/ui/pages/image_preview_page.dart';
@@ -24,9 +23,8 @@ import 'package:semesta/ui/pages/splash_page.dart';
 import 'package:semesta/ui/screens/reels_screen.dart';
 
 class AppRouter extends Routes {
-  final _auth = Get.find<AuthController>();
-  static final appReady = ValueNotifier<bool>(false);
   final rootNavKey = GlobalKey<NavigatorState>();
+  static final appReady = ValueNotifier<bool>(false);
 
   GoRouter get router => GoRouter(
     debugLogDiagnostics: true,
@@ -34,14 +32,14 @@ class AppRouter extends Routes {
     initialLocation: splash.path,
     refreshListenable: RouterRefreshStream(
       debounceStream(
-        _auth.currentUser.stream,
+        octrl.currentUser.stream,
         const Duration(milliseconds: 200),
       ),
       appReady,
     ),
     redirect: (context, state) {
       final goingTo = state.matchedLocation;
-      final isLoggedIn = _auth.isLoggedIn;
+      final isLoggedIn = octrl.isLoggedIn;
       final isReady = appReady.value;
 
       // 1️⃣ Always go to Splash until appReady is true
@@ -67,13 +65,13 @@ class AppRouter extends Routes {
     },
     routes: [
       goRoute(splash, builder: (ctx, sts) => SplashPage()),
-      goRoute(auth, builder: (ctx, sts) => AuthPage(controller: _auth)),
+      goRoute(auth, builder: (ctx, sts) => const AuthPage()),
 
       // Shell (tabs)
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppLayout(child: shell),
         branches: [
-          branch(home, child: HomeScreen()),
+          branch(home, child: const HomeScreen()),
           branch(reel, child: const ReelsScreen()),
           branch(explore, child: const ExploreScreen()),
           branch(notify, child: const NotificationsScreen()),
@@ -88,7 +86,7 @@ class AppRouter extends Routes {
           final uid = state.pathParameters['id'];
           final authed = state.uri.queryParameters['self'];
           if (uid == null) {
-            throw Exception('Invalid user ID in post: $uid');
+            throw StateError('Invalid user ID in post: $uid');
           }
 
           return TransitionPage(
@@ -100,20 +98,23 @@ class AppRouter extends Routes {
         },
       ),
       goRoute(
-        userBookmark,
+        bookmark,
         pageBuilder: (context, state) {
           final uid = state.pathParameters['id'];
           if (uid == null) {
-            throw Exception('Invalid user ID in post: $uid');
+            throw StateError('Invalid user ID in post: $uid');
           }
 
           return TransitionPage(child: BookmarkViewsPage(uid: uid));
         },
       ),
       goRoute(
-        avatarPreview,
+        avatar,
         pageBuilder: (context, state) {
-          final uid = state.pathParameters['id']!;
+          final uid = state.pathParameters['id'];
+          if (uid == null) {
+            throw StateError('Invalid user ID in post: $uid');
+          }
 
           return TransitionPage(
             child: AvatarPreviewPage(uid: uid),
@@ -122,16 +123,16 @@ class AppRouter extends Routes {
         },
       ),
       goRoute(
-        createPost,
+        create,
         pageBuilder: (context, state) =>
             TransitionPage(child: CreatePostPage(), fullscreenDialog: true),
       ),
       goRoute(
-        replyPost,
+        comment,
         pageBuilder: (context, state) {
           final pid = state.pathParameters['id'];
           if (pid == null) {
-            throw Exception('Invalid post ID: $pid');
+            throw StateError('Invalid post ID: $pid');
           }
 
           return TransitionPage(
@@ -145,7 +146,7 @@ class AppRouter extends Routes {
         pageBuilder: (context, state) {
           final pid = state.pathParameters['id'];
           if (pid == null) {
-            throw Exception('Invalid post ID: $pid');
+            throw StateError('Invalid post ID: $pid');
           }
 
           return TransitionPage(
@@ -155,7 +156,7 @@ class AppRouter extends Routes {
         },
       ),
       goRoute(
-        imagesPreview,
+        media,
         pageBuilder: (context, state) {
           final pid = state.pathParameters['id'];
           final idx = int.parse(state.uri.queryParameters['index'] ?? '0');
@@ -182,6 +183,7 @@ class AppRouter extends Routes {
           );
         },
       ),
+
       // goRoute(
       //   postDatails,
       //   pageBuilder: (context, state) {

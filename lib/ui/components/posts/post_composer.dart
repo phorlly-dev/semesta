@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/app/utils/type_def.dart';
 import 'package:semesta/core/models/feed.dart';
 import 'package:semesta/core/views/audit_view.dart';
 import 'package:semesta/ui/components/posts/post_editor.dart';
-import 'package:semesta/ui/components/posts/reply_editor.dart';
+import 'package:semesta/ui/components/posts/comment_editor.dart';
 import 'package:semesta/ui/components/posts/repost_editor.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
@@ -14,8 +13,8 @@ class PostComposer extends StatelessWidget {
   final StatusView audit;
   final String? label;
   final bool isReply;
-  final PropsCallback<String, void>? onChanged;
-  final PropsCallback<int, void>? onRemove;
+  final ValueChanged<int>? onRemove;
+  final ValueChanged<String>? onChanged;
   const PostComposer({
     super.key,
     required this.assets,
@@ -37,7 +36,7 @@ class PostComposer extends StatelessWidget {
         child: Column(
           children: [
             if ((parent != null && audit.actor != null) && isReply)
-              ReplyEditor(
+              CommentEditor(
                 avatar: audit.author.avatar,
                 content: content,
                 post: parent!,

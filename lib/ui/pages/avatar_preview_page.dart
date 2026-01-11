@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:semesta/core/controllers/user_controller.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/ui/partials/image_preview.dart';
 import 'package:semesta/ui/widgets/data_binder.dart';
 
@@ -10,9 +10,8 @@ class AvatarPreviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<UserController>();
     return Obx(() {
-      final data = controller.dataMapping[uid];
+      final data = uctrl.dataMapping[uid];
       final avatar = data?.avatar ?? '';
 
       return DataBinder(

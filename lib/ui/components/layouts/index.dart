@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:semesta/app/extensions/controller_extension.dart';
-import 'package:semesta/app/routes/routes.dart';
-import 'package:semesta/app/utils/scroll_helper.dart';
-import 'package:semesta/core/controllers/post_controller.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/ui/components/layouts/_layout_page.dart';
-import 'package:semesta/ui/components/layouts/side_bar_layer.dart';
+import 'package:semesta/ui/components/layouts/app_drawer.dart';
 
 class AppLayout extends StatelessWidget {
   final Widget child;
@@ -14,21 +12,18 @@ class AppLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final routes = Routes();
     final theme = Theme.of(context);
     final location = GoRouterState.of(context).matchedLocation;
-    final index = routes.getIndexFromLocation(location);
-    final scroller = Get.find<ScrollHelper>();
-    final controller = Get.find<PostController>();
+    final index = route.getIndexFromLocation(location);
 
     return Obx(() {
-      final user = controller.currentUser;
-      final isVisible = scroller.isVisible.value;
-      final curIdx = scroller.currentIndex.value;
-      final curScroller = scroller.scrollControllers[curIdx];
+      final user = pctrl.currentUser;
+      final isVisible = dctrl.isVisible.value;
+      final curIdx = dctrl.currentIndex.value;
+      final curScroller = dctrl.scrollControllers[curIdx];
 
       return LayoutPage(
-        menu: SideBarLayer(
+        menu: AppDrawer(
           userId: user.id,
           name: user.name,
           username: user.uname,
@@ -53,25 +48,25 @@ class AppLayout extends StatelessWidget {
                   ),
                   onTap: (idx) async {
                     if (curScroller.hasClients && idx == index) {
-                      scroller.jump;
+                      dctrl.jump;
 
                       switch (idx) {
                         case 0:
                           break;
                         default:
-                          if (!controller.isAnyLoading) {
+                          if (!pctrl.anyLoading) {
                             if (curIdx == 0) {
-                              await controller.refreshPost();
+                              await pctrl.refreshPost();
                             } else {
-                              await controller.refreshFollowing();
+                              await pctrl.refreshFollowing();
                             }
                           }
                       }
                     }
 
-                    if (context.mounted) context.go(routes.paths[idx]);
+                    if (context.mounted) context.go(route.paths[idx]);
                   },
-                  items: routes.items,
+                  items: route.items,
                   type: BottomNavigationBarType.shifting,
                 )
               : null,
@@ -84,7 +79,7 @@ class AppLayout extends StatelessWidget {
                   duration: const Duration(milliseconds: 250),
                   opacity: isVisible ? 1 : 0,
                   child: FloatingActionButton(
-                    onPressed: () => context.push(Routes().createPost.path),
+                    onPressed: () => context.push(route.create.path),
                     backgroundColor: const Color(0xFF1D9BF0),
                     shape: const CircleBorder(),
                     elevation: 4,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:semesta/core/controllers/post_controller.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/core/models/media.dart';
 import 'package:semesta/ui/partials/image_preview.dart';
 import 'package:semesta/ui/widgets/data_binder.dart';
@@ -12,10 +12,8 @@ class ImagePreviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<PostController>();
-
     return Obx(() {
-      final data = controller.dataMapping[pid];
+      final data = pctrl.dataMapping[pid];
       final mediaList = data?.media;
 
       return DataBinder(

@@ -1,55 +1,56 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
-import 'package:semesta/app/functions/custom_bottom_sheet.dart';
-import 'package:semesta/app/functions/custom_modal.dart';
+import 'package:semesta/app/utils/custom_bottom_sheet.dart';
+import 'package:semesta/app/utils/custom_modal.dart';
 import 'package:semesta/app/functions/reply_option.dart';
-import 'package:semesta/app/routes/routes.dart';
-import 'package:semesta/core/controllers/action_controller.dart';
-import 'package:semesta/core/controllers/post_controller.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/core/models/feed.dart';
 import 'package:semesta/core/views/audit_view.dart';
-import 'package:semesta/core/views/helper.dart';
+import 'package:semesta/core/views/class_helper.dart';
 import 'package:semesta/ui/widgets/option_button.dart';
-
-const unfollow =
-    'Their posts will no longer show up in your home timeline. You can still view their profile, unless their posts are proteted.';
 
 class OptionModal {
   final BuildContext context;
-  ColorScheme get colors => Theme.of(context).colorScheme;
-
-  final _routes = Routes();
-  // final _files = GenericRepository();
-  final _controller = Get.find<PostController>();
-  final _actCtrl = Get.find<ActionController>();
-
   OptionModal(this.context);
 
+  ColorScheme get colors => Theme.of(context).colorScheme;
+
   void anotherOptions(
-    Feed post, {
+    Feed post,
+    ActionTarget target, {
     bool iFollow = false,
     required String name,
     bool active = false,
+    bool primary = true,
+    required StatusView status,
   }) {
     CustomBottomSheet(
       context,
       children: [
+        if (primary)
+          OptionButton(
+            icon: Icons.person,
+            label: 'Go to Profile',
+            onTap: () {
+              context.pushNamed(
+                route.profile.name,
+                pathParameters: {'id': post.uid},
+                queryParameters: {'self': 'false'},
+              );
+            },
+          ),
+
         OptionButton(
           icon: active ? Icons.bookmark_remove_outlined : Icons.bookmark_border,
           label: active ? 'Unbookmark' : 'Bookmark',
           onTap: () async {
-            await _actCtrl.toggleBookmark(
-              FeedTarget(post.id),
-              post.id,
-              active: active,
-            );
+            await actrl.toggleBookmark(target, post.id, active: active);
           },
         ),
 
         OptionButton(
           icon: iFollow ? Icons.person_remove_alt_1 : Icons.person_add,
-          label: iFollow ? 'Unfollow' : 'Follow',
+          label: iFollow ? 'Unfollow $name' : 'Follow $name',
           onTap: () async {
             if (iFollow) {
               CustomModal(
@@ -58,14 +59,16 @@ class OptionModal {
                 children: [Text(unfollow)],
                 onConfirm: () async {
                   context.pop();
-                  await _actCtrl.toggleFollow(post.uid, iFollow);
+                  status.toggle();
+                  await actrl.toggleFollow(post.uid, iFollow);
                 },
                 label: 'Unfollow',
                 icon: Icons.person_remove_sharp,
                 color: colors.primary,
               );
             } else {
-              await _actCtrl.toggleFollow(post.uid, iFollow);
+              status.toggle();
+              await actrl.toggleFollow(post.uid, iFollow);
             }
           },
         ),
@@ -94,21 +97,21 @@ class OptionModal {
   }
 
   void currentOptions(
-    Feed post, {
-    Visible option = Visible.everyone,
-    bool me = false,
+    Feed post,
+    ActionTarget target, {
+    bool primary = true,
     bool active = false,
   }) {
     CustomBottomSheet(
       context,
       children: [
-        if (!me)
+        if (primary)
           OptionButton(
             icon: Icons.person,
             label: 'Go to Profile',
             onTap: () {
               context.pushNamed(
-                _routes.profile.name,
+                route.profile.name,
                 pathParameters: {'id': post.uid},
                 queryParameters: {'self': 'true'},
               );
@@ -119,15 +122,11 @@ class OptionModal {
           icon: active ? Icons.bookmark_remove_outlined : Icons.bookmark_border,
           label: active ? 'Unbookmark' : 'Bookmark',
           onTap: () async {
-            await _actCtrl.toggleBookmark(
-              FeedTarget(post.id),
-              post.id,
-              active: active,
-            );
+            await actrl.toggleBookmark(target, post.id, active: active);
           },
         ),
 
-        if (me)
+        if (!primary)
           OptionButton(
             icon: Icons.edit_square,
             label: 'Edit Post',
@@ -142,15 +141,15 @@ class OptionModal {
           onTap: () {
             final show = ReplyOption(context);
             show.showModal(
-              selected: show.mapVisibleToId(option),
+              selected: show.mapVisibleToId(post.visible),
               onSelected: (id, opt) async {
-                await _controller.saveChange(post.id, {'visible': opt.name});
+                await pctrl.saveChange(post.id, {'visible': opt.name});
               },
             );
           },
         ),
 
-        if (me)
+        if (!primary)
           OptionButton(
             icon: Icons.delete_outline,
             label: 'Delete post',
@@ -166,7 +165,7 @@ class OptionModal {
                 ],
                 onConfirm: () async {
                   context.pop();
-                  await _controller.remove(post.id, post.uid);
+                  await pctrl.remove(post.id, post.uid);
                 },
                 color: colors.error,
               );
@@ -183,8 +182,9 @@ class OptionModal {
         OptionButton(
           icon: Icons.autorenew_rounded,
           label: vm.reposted ? 'Undo Repost' : 'Repost',
-          onTap: () async {
-            await _actCtrl.toggleRepost(vm.target, vm.pid, active: vm.reposted);
+          onTap: () {
+            actrl.toggleRepost(vm.target, vm.pid, active: vm.reposted);
+            vm.toggleRepost();
           },
         ),
 
@@ -193,7 +193,7 @@ class OptionModal {
           label: 'Quote',
           onTap: () async {
             await context.pushNamed(
-              _routes.repost.name,
+              route.repost.name,
               pathParameters: {'id': vm.pid},
             );
           },

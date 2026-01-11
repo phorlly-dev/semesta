@@ -4,6 +4,8 @@ import 'package:toastification/toastification.dart';
 enum ToastType { success, info, warning, error }
 
 class CustomToast {
+  CustomToast._();
+
   static void _show({
     required String message,
     String? title,

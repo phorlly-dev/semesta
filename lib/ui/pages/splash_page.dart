@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:semesta/app/bindings/post_bindings.dart';
-import 'package:semesta/app/functions/format.dart';
+import 'package:semesta/app/bindings/repository_binding.dart';
+import 'package:semesta/app/functions/format_helper.dart';
 import 'package:semesta/app/routes/router.dart';
 import 'package:semesta/ui/components/layouts/_layout_page.dart';
 import 'package:semesta/ui/widgets/custom_image.dart';
@@ -22,9 +23,10 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _initApp() async {
+    PostBindings().dependencies();
+    RepositoryBinding().dependencies();
     await Future.delayed(Duration(seconds: 2));
     AppRouter.appReady.value = true;
-    PostBindings().dependencies();
     // await analytics.logAppOpen();
   }
 

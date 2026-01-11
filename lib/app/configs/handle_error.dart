@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:semesta/app/functions/logger.dart';
+import 'package:semesta/app/utils/type_def.dart';
 
 class HandleError {
-  final void Function() callback;
-  final void Function(Object error, StackTrace stack)? onError;
+  final VoidCallback callback;
+  final ErrorsCallback<void>? onError;
 
   HandleError({required this.callback, this.onError}) {
     runZonedGuarded(

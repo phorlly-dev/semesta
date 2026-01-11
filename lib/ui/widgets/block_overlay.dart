@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/ui/widgets/loading_animated.dart';
 
 class BlockOverlay extends StatelessWidget {
   final String title;
-  const BlockOverlay({super.key, required this.title});
+  const BlockOverlay(this.title, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +16,7 @@ class BlockOverlay extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: Colors.white),
+            LoadingAnimated(color: Colors.white, cupertino: true),
             SizedBox(height: 16),
             Text(
               '$title...',

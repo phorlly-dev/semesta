@@ -4,15 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:semesta/app/extensions/controller_extension.dart';
 import 'package:semesta/app/functions/post_action.dart';
 import 'package:semesta/app/functions/reply_option.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/app/utils/params.dart';
-import 'package:semesta/core/controllers/post_controller.dart';
 import 'package:semesta/core/models/feed.dart';
-import 'package:semesta/core/repositories/generic_repository.dart';
 import 'package:semesta/core/views/audit_view.dart';
 import 'package:semesta/ui/components/posts/post_composer.dart';
 import 'package:semesta/ui/widgets/actions_grouped.dart';
 import 'package:semesta/ui/components/layouts/_layout_page.dart';
-import 'package:semesta/ui/components/layouts/nav_bar_layer.dart';
+import 'package:semesta/ui/components/layouts/custom_app_bar.dart';
 import 'package:semesta/ui/widgets/block_overlay.dart';
 import 'package:semesta/ui/widgets/break_section.dart';
 import 'package:semesta/ui/widgets/custom_text_button.dart';
@@ -27,8 +26,6 @@ class GenericComposer extends StatefulWidget {
 }
 
 class _GenericComposerState extends State<GenericComposer> {
-  final _controller = Get.find<PostController>();
-  final _func = GenericRepository();
   final _textContent = TextEditingController();
   late PostAction _action;
 
@@ -49,40 +46,40 @@ class _GenericComposerState extends State<GenericComposer> {
 
   Future<void> _submit() async {
     final text = _textContent.text.trim();
-    final files = _func.assets.toList();
+    final files = grepo.assets.toList();
     final parent = widget.parent;
 
     _action.onSubmit(
       onPost: () async {
         final post = Feed(content: text, visible: canReply.option);
 
-        await _controller.save(post, files);
+        await pctrl.save(post, files);
         if (mounted) context.pop();
-        await _controller.refreshPost();
+        await pctrl.refreshPost();
       },
       onQuote: () async {
         final post = Feed(
           content: text,
           visible: canReply.option,
           pid: parent?.id ?? '',
-          type: Post.quote,
+          type: Create.quote,
         );
 
-        await _controller.save(post, files);
+        await pctrl.save(post, files);
         if (mounted) context.pop();
-        await _controller.refreshPost();
+        await pctrl.refreshPost();
       },
       onReply: () async {
         final post = Feed(
           content: text,
           visible: canReply.option,
           pid: parent?.id ?? '',
-          type: Post.comment,
+          type: Create.comment,
         );
 
-        await _controller.save(post, files);
+        await pctrl.save(post, files);
         if (mounted) context.pop();
-        await _controller.refreshPost();
+        await pctrl.refreshPost();
       },
     );
   }
@@ -90,8 +87,8 @@ class _GenericComposerState extends State<GenericComposer> {
   @override
   void dispose() {
     _textContent.dispose();
-    _func.assets.clear();
-    _controller.message.value = '';
+    grepo.assets.clear();
+    pctrl.message.value = '';
     super.dispose();
   }
 
@@ -102,11 +99,11 @@ class _GenericComposerState extends State<GenericComposer> {
     final options = ReplyOption(context);
 
     return Obx(() {
-      final author = _controller.currentUser;
-      final actor = _controller.uCtrl.dataMapping[widget.parent?.uid ?? ''];
-      final isLoading = _controller.isLoading.value;
-      final content = _controller.message.value;
-      final files = _func.assets;
+      final author = pctrl.currentUser;
+      final actor = pctrl.uCtrl.dataMapping[widget.parent?.uid ?? ''];
+      final isLoading = pctrl.isLoading.value;
+      final content = pctrl.message.value;
+      final files = grepo.assets;
 
       // ✅ hide or disable button if text + files empty
       final hasContent = content.isNotEmpty || files.isNotEmpty;
@@ -116,7 +113,7 @@ class _GenericComposerState extends State<GenericComposer> {
       return Stack(
         children: [
           LayoutPage(
-            header: NavBarLayer(
+            header: CustomAppBar(
               middle: Text(_action.getHeaderTitle()),
               end: Container(
                 margin: EdgeInsets.only(right: 12),
@@ -141,7 +138,7 @@ class _GenericComposerState extends State<GenericComposer> {
               onRemove: (index) => files.removeAt(index),
               isReply: isReply,
               onChanged: (value) {
-                _controller.message.value = value;
+                pctrl.message.value = value;
               },
             ),
 
@@ -187,15 +184,15 @@ class _GenericComposerState extends State<GenericComposer> {
                 BreakSection(bold: .3, height: 1),
 
                 ActionsGrouped(
-                  onCamera: () => _func.fromCamera(context),
-                  onMedia: () => _func.fromMedia(context),
+                  onCamera: () => grepo.fromCamera(context),
+                  onMedia: () => grepo.fromMedia(context),
                 ),
               ],
             ),
           ),
 
           // ---- overlay ----
-          isLoading ? BlockOverlay(title: 'Posting') : SizedBox.shrink(),
+          isLoading ? BlockOverlay('Posting') : SizedBox.shrink(),
         ],
       );
     });

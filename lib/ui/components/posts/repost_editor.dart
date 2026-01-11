@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/app/functions/format.dart';
-import 'package:semesta/app/utils/type_def.dart';
+import 'package:semesta/app/functions/format_helper.dart';
 import 'package:semesta/core/models/author.dart';
 import 'package:semesta/core/models/feed.dart';
 import 'package:semesta/ui/widgets/media_display.dart';
@@ -15,8 +14,8 @@ class RepostEditor extends StatelessWidget {
   final Feed post;
   final Author actor;
   final TextEditingController content;
-  final PropsCallback<String, void>? onChanged;
-  final PropsCallback<int, void>? onRemove;
+  final ValueChanged<int>? onRemove;
+  final ValueChanged<String>? onChanged;
   final List<AssetEntity> assets;
   const RepostEditor({
     super.key,
@@ -77,6 +76,7 @@ class RepostEditor extends StatelessWidget {
                     limitText(post.content, 100),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 2,
+                    style: TextStyle(fontSize: 15),
                   ),
                 ],
               ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/app/functions/custom_bottom_sheet.dart';
+import 'package:semesta/app/utils/custom_bottom_sheet.dart';
 import 'package:semesta/app/utils/params.dart';
 import 'package:semesta/core/models/feed.dart';
 import 'package:semesta/ui/widgets/option_button.dart';

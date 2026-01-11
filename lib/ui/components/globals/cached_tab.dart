@@ -4,7 +4,7 @@ import 'package:semesta/app/extensions/list_extension.dart';
 import 'package:semesta/app/functions/custom_toast.dart';
 import 'package:semesta/app/utils/cached_helper.dart';
 import 'package:semesta/core/mixins/pager_mixin.dart';
-import 'package:semesta/core/views/helper.dart';
+import 'package:semesta/core/views/class_helper.dart';
 import 'package:semesta/ui/components/globals/items_builder.dart';
 
 typedef LoadFn<T> = Future<List<T>> Function();
@@ -45,9 +45,7 @@ class CachedTab<T extends HasAttributes> extends StatefulWidget {
 class _CachedTabState<T extends HasAttributes> extends State<CachedTab<T>> {
   @override
   void initState() {
-    if (widget.autoLoad) {
-      _loadInit();
-    }
+    if (widget.autoLoad) _loadInit();
     super.initState();
   }
 
@@ -75,7 +73,9 @@ class _CachedTabState<T extends HasAttributes> extends State<CachedTab<T>> {
   Future<void> _handleRefresh() async {
     await widget.controller.loadLatest(
       fetch: widget.onRefresh,
-      apply: (items) => widget.cache.set(items),
+      apply: (items) => widget.cache
+        ..clear()
+        ..set(items),
       onError: () => _showError('Failed to refresh'),
     );
   }
@@ -99,8 +99,8 @@ class _CachedTabState<T extends HasAttributes> extends State<CachedTab<T>> {
 
         // State
         isGrid: widget.isGrid,
-        isLoading: ctrl.isAnyLoading,
-        isLoadingNext: ctrl.isLoadingMore.value,
+        isLoading: ctrl.anyLoading,
+        isLoadingNext: ctrl.loadingMore.value,
 
         // Data
         counter: items.length,

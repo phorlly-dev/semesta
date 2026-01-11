@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:semesta/app/functions/custom_toast.dart';
-import 'package:semesta/core/views/helper.dart';
+import 'package:semesta/core/views/class_helper.dart';
 
 class CachedState<T> extends RxList<T> {}
 

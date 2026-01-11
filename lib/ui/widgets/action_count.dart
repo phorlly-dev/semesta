@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/app/functions/format.dart';
+import 'package:semesta/app/functions/format_helper.dart';
 import 'package:semesta/ui/widgets/animated.dart';
 
 class ActionCount extends StatelessWidget {

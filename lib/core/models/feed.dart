@@ -1,9 +1,9 @@
-import 'package:semesta/app/functions/helpers.dart';
+import 'package:semesta/app/functions/func_helper.dart';
 import 'package:semesta/app/utils/type_def.dart';
 import 'package:semesta/core/models/media.dart';
 import 'package:semesta/core/models/model.dart';
 
-enum Post { post, comment, quote }
+enum Create { post, comment, quote }
 
 enum Visible { everyone, verified, following, mentioned }
 
@@ -14,7 +14,7 @@ class Feed extends Model<Feed> {
   final String location;
   final List<Media> media;
 
-  final Post type;
+  final Create type;
   final String pid;
   final Visible visible;
 
@@ -40,7 +40,7 @@ class Feed extends Model<Feed> {
     this.visible = Visible.everyone,
     this.hashtags = const [],
     this.mentions = const [],
-    this.type = Post.post,
+    this.type = Create.post,
     this.pid = '',
     this.edited = false,
     this.removed = false,
@@ -69,7 +69,7 @@ class Feed extends Model<Feed> {
     int? repostsCount,
     int? bookmarksCount,
     int? sharesCount,
-    Post? type,
+    Create? type,
     bool? edited,
     bool? removed,
     String? pid,
@@ -146,9 +146,9 @@ class Feed extends Model<Feed> {
         (e) => e.name == map['visible'],
         orElse: () => Visible.everyone,
       ),
-      type: Post.values.firstWhere(
+      type: Create.values.firstWhere(
         (e) => e.name == map['type'],
-        orElse: () => Post.post,
+        orElse: () => Create.post,
       ),
       createdAt: Model.createOrUpdate(map),
       updatedAt: Model.createOrUpdate(map, false),

@@ -1,5 +1,5 @@
-import 'package:get/get.dart';
 import 'package:semesta/app/extensions/extension.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/app/utils/type_def.dart';
 
 String setImage(String path, [bool isIcon = false]) =>
@@ -30,10 +30,6 @@ String timeAgo(DateTime? date) {
   return '${(diff.inDays / 365).floor()}y';
 }
 
-DateTime get now => DateTime.now();
-
-String toCapitalize(String? name) => name?.capitalize ?? '';
-
 String formatCount(int count) {
   String formatted;
   if (count >= 1000000000) {
@@ -58,7 +54,7 @@ String formatCount(int count) {
 
 int toInt(AsMap data) => data.toString().toInt;
 
-String limitText(String text, [int maxChars = 12]) {
+String limitText(String text, [int maxChars = 24]) {
   if (text.length <= maxChars) return text;
 
   return '${text.substring(0, maxChars)}... ';

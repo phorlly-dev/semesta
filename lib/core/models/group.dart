@@ -1,4 +1,4 @@
-import 'package:semesta/app/functions/helpers.dart';
+import 'package:semesta/app/functions/func_helper.dart';
 import 'package:semesta/app/utils/type_def.dart';
 import 'package:semesta/core/models/model.dart';
 

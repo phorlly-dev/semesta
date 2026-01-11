@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/app/utils/type_def.dart';
 import 'package:semesta/ui/components/layouts/_layout_page.dart';
-import 'package:semesta/ui/components/layouts/nav_bar_layer.dart';
+import 'package:semesta/ui/components/layouts/custom_app_bar.dart';
 import 'package:semesta/ui/widgets/avatar_animation.dart';
-import 'package:semesta/ui/widgets/custom_tab_bar.dart';
+import 'package:semesta/ui/components/layouts/custom_tab_bar.dart';
 
 class HomeLayout extends StatefulWidget {
   final bool isVisible;
   final String avatar;
-  final PropsCallback<int, void>? onTap;
+  final ValueChanged<int>? onTap;
   final VoidCallback? onLogo;
   final List<Widget> children;
   const HomeLayout({
@@ -41,17 +41,11 @@ class _HomeLayoutState extends State<HomeLayout>
   }
 
   @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return LayoutPage(
       header: widget.isVisible
-          ? NavBarLayer(
+          ? CustomAppBar(
               height: 92,
               start: Padding(
                 padding: const EdgeInsets.all(2.0),
@@ -85,5 +79,11 @@ class _HomeLayoutState extends State<HomeLayout>
         children: widget.children,
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 }

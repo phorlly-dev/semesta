@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/app/utils/type_def.dart';
 
 class CustomTabBar extends StatelessWidget implements PreferredSizeWidget {
   final TabController controller;
   final List<Widget> tabs;
-  final PropsCallback<int, void>? onTap;
+  final ValueChanged<int>? onTap;
   final bool isScrollable;
   final TabAlignment? tabAlignment;
   const CustomTabBar({

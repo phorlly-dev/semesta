@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:semesta/app/functions/logger.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/app/utils/type_def.dart';
+import 'package:semesta/core/models/reaction.dart';
 import 'package:semesta/core/repositories/generic_repository.dart';
 
 enum QueryMode { normal, next, refresh }
@@ -15,15 +17,6 @@ mixin RepoMixin<T> on GenericRepository {
   /// Convert Firestore doc -> model
   T from(AsMap map, String id);
 
-  /// Add a new document
-  Future<String> store(T model) async {
-    final docRef = collection(path).doc();
-    final newModel = (model as dynamic).copy(id: docRef.id);
-    await docRef.set(to(newModel));
-
-    return docRef.id;
-  }
-
   /// Get document by ID
   Future<T?> show(String id) async {
     final doc = await collection(path).doc(id).get();
@@ -32,19 +25,11 @@ mixin RepoMixin<T> on GenericRepository {
     return from(doc.data()!, doc.id);
   }
 
-  /// Update an existing document
-  Future<void> modify(String id, AsMap data) {
-    return collection(path).doc(id).update(data);
-  }
-
-  /// Delete a document
-  Future<void> destroy(String id) => collection(path).doc(id).delete();
-
   /// Get all documents (basic)
   Future<List<T>> index({
     int limit = 20,
     bool descending = true,
-    String orderKey = 'created_at',
+    String orderKey = made,
     QueryMode mode = QueryMode.normal,
   }) {
     return collection(path)
@@ -65,14 +50,40 @@ mixin RepoMixin<T> on GenericRepository {
         });
   }
 
+  /// Get all documents (anvanced)
+  Future<List<T>> subindex({
+    int limit = 20,
+    String col = comments,
+    bool descending = true,
+    String orderKey = made,
+    QueryMode mode = QueryMode.normal,
+  }) {
+    return subcollection(col)
+        .orderBy(orderKey, descending: descending)
+        .limit(mode == QueryMode.refresh ? 100 : limit)
+        .get()
+        .then((value) {
+          return value.docs.map((doc) => from(doc.data(), doc.id)).toList();
+        })
+        .catchError((error, stackTrace) {
+          HandleLogger.error(
+            'Failed to fetch all subdocuments',
+            message: error,
+            stack: stackTrace,
+          );
+
+          return <T>[];
+        });
+  }
+
   /// Flexible query builder with optional filtering, ordering, and pagination
   Future<List<T>> query({
     String? key,
     Object? value,
-    Iterable<Object>? values,
-    String orderKey = 'created_at',
-    bool descending = true,
     int limit = 20,
+    String orderKey = made,
+    bool descending = true,
+    Iterable<Object>? values,
     QueryMode mode = QueryMode.normal,
   }) async {
     Query<AsMap> query = collection(path)
@@ -81,9 +92,9 @@ mixin RepoMixin<T> on GenericRepository {
 
     // Apply filters
     if (value != null) {
-      query = query.where(key ?? 'id', isEqualTo: value);
+      query = query.where(key ?? id, isEqualTo: value);
     } else if (values != null && values.isNotEmpty) {
-      query = query.where(key ?? 'uid', whereIn: values);
+      query = query.where(key ?? userId, whereIn: values);
     }
 
     // Execute query
@@ -93,10 +104,10 @@ mixin RepoMixin<T> on GenericRepository {
 
   /// Advanced query with multiple conditions
   Future<List<T>> queryAdvanced({
-    required AsMap conditions,
-    String orderKey = 'created_at',
-    bool descending = true,
     int limit = 20,
+    String orderKey = made,
+    bool descending = true,
+    required AsMap conditions,
     QueryMode mode = QueryMode.normal,
   }) async {
     Query<AsMap> query = collection(path)
@@ -116,6 +127,33 @@ mixin RepoMixin<T> on GenericRepository {
     return snapshot.docs.map((doc) => from(doc.data(), doc.id)).toList();
   }
 
+  Stream<T> stream$(String doc) {
+    assert(doc.isNotEmpty, 'Document ID must not be empty');
+
+    return collection(path)
+        .doc(doc)
+        .snapshots()
+        .map<T>((e) {
+          if (!e.exists) throw StateError('Document does not exist');
+
+          return from(e.data()!, e.id);
+        })
+        .handleError((error) {
+          // Log error or provide fallback
+          HandleLogger.error('Failed to stream data $doc', message: error);
+
+          throw error;
+        });
+  }
+
+  Stream<Doc<AsMap>> liveStream(String doc) {
+    return collection(path).doc(doc).snapshots();
+  }
+
+  Stream<bool> has$(String docPath) {
+    return document(docPath).snapshots().map((d) => d.exists);
+  }
+
   CollectionReference<AsMap> collection(String col) => db.collection(col);
   Query<AsMap> subcollection(String col) {
     assert(col.isNotEmpty, 'Collection must not be empty');
@@ -125,5 +163,111 @@ mixin RepoMixin<T> on GenericRepository {
   DocumentReference<AsMap> document(String docPath) {
     assert(!docPath.contains('//'));
     return db.doc(docPath);
+  }
+
+  Future<List<T>> getInOrder(
+    AsList values, {
+    int limit = 20,
+    QueryMode mode = QueryMode.normal,
+  }) async {
+    if (values.isEmpty) return [];
+
+    final snap = await collection(path)
+        .where(FieldPath.documentId, whereIn: values)
+        .limit(mode == QueryMode.refresh ? 100 : limit)
+        .get();
+
+    final map = {for (var d in snap.docs) d.id: from(d.data(), d.id)};
+
+    // Rebuild list in ACTION order
+    return values.where(map.containsKey).map((id) => map[id]!).toList();
+  }
+
+  Future<List<T>> getInSuborder(
+    AsList values, {
+    int limit = 20,
+    String key = id,
+    String col = comments,
+    QueryMode mode = QueryMode.normal,
+  }) async {
+    if (values.isEmpty) return [];
+
+    final snap = await subcollection(col)
+        .where(key, whereIn: values)
+        .limit(mode == QueryMode.refresh ? 100 : limit)
+        .get();
+
+    final map = {for (var d in snap.docs) d.id: from(d.data(), d.id)};
+
+    // Rebuild list in ACTION order
+    return values.where(map.containsKey).map((id) => map[id]!).toList();
+  }
+
+  Future<List<Reaction>> getReactions({
+    int limit = 30,
+    String orderKey = made,
+    String col = followers,
+    bool descending = true,
+    required AsMap conditions,
+  }) {
+    assert(col.isNotEmpty, 'Collection and Document ID must not be empty');
+
+    Query<AsMap> query = subcollection(
+      col,
+    ).orderBy(orderKey, descending: descending).limit(limit);
+
+    // Apply multiple where conditions
+    conditions.forEach((key, value) {
+      if (value is List) {
+        query = query.where(key, whereIn: value);
+      } else {
+        query = query.where(key, isEqualTo: value);
+      }
+    });
+
+    return query
+        .get()
+        .then((value) {
+          return value.docs.map((d) => Reaction.from(d.data())).toList();
+        })
+        .catchError((error) {
+          // Log error or provide fallback
+          HandleLogger.error('Failed to list to actions', message: error);
+
+          return <Reaction>[];
+        });
+  }
+
+  Future<List<T>> getInGrouped({
+    int limit = 20,
+    String col = comments,
+    String orderKey = made,
+    bool descending = true,
+    required AsMap conditions,
+    QueryMode mode = QueryMode.normal,
+  }) {
+    assert(col.isNotEmpty, 'Collection and Document ID must not be empty');
+
+    Query<AsMap> query = subcollection(col)
+        .orderBy(orderKey, descending: descending)
+        .limit(mode == QueryMode.refresh ? 100 : limit);
+
+    // Apply multiple where conditions
+    conditions.forEach((key, value) {
+      if (value is List) {
+        query = query.where(key, whereIn: value);
+      } else {
+        query = query.where(key, isEqualTo: value);
+      }
+    });
+
+    return query
+        .get()
+        .then((value) => value.docs.map((e) => from(e.data(), e.id)).toList())
+        .catchError((e, s) {
+          HandleLogger.error('Failed to load $T', message: e, stack: s);
+
+          return <T>[];
+        });
   }
 }

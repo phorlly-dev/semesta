@@ -1,17 +1,17 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:semesta/core/views/generic_helper.dart';
 import 'package:semesta/core/mixins/repo_mixin.dart';
 import 'package:semesta/app/utils/cached_helper.dart';
 import 'package:semesta/core/controllers/auth_controller.dart';
 import 'package:semesta/core/controllers/controller.dart';
 import 'package:semesta/core/models/author.dart';
-import 'package:semesta/core/repositories/user_repository.dart';
 import 'package:semesta/core/views/audit_view.dart';
+import 'package:semesta/core/views/utils_helper.dart';
 
 class UserController extends IController<AuthedView> {
   StreamSubscription? _userSub, _currentUserSub;
-  final _repo = UserRepository();
   final _loggedUser = Get.put(AuthController()).currentUser;
 
   final currentUid = ''.obs;
@@ -37,7 +37,7 @@ class UserController extends IController<AuthedView> {
       currentUid.value = '';
     } else {
       // Logged in → fetch new data
-      _currentUserSub = _repo.stream$(firebaseUser.uid).listen((u) {
+      _currentUserSub = urepo.stream$(firebaseUser.uid).listen((u) {
         currentUid.value = u.id;
         currentUser.value = u;
       });
@@ -45,7 +45,7 @@ class UserController extends IController<AuthedView> {
   }
 
   Future<void> loadInfo() async {
-    final data = await _repo.index(limit: 100);
+    final data = await urepo.index(limit: 100);
     if (data.isEmpty) return;
 
     for (final u in data) {
@@ -57,35 +57,37 @@ class UserController extends IController<AuthedView> {
     final uid = currentUid.value;
     if (uid.isEmpty || targetId.isEmpty) return;
 
-    await _repo.toggleFollow(uid, targetId);
+    await urepo.toggleFollow(uid, targetId);
   }
 
   void listenToUser(String uid) {
-    _userSub = _repo.stream$(uid).listen((u) => dataMapping[uid] = u);
+    _userSub = urepo.stream$(uid).listen((u) => dataMapping[uid] = u);
   }
 
   Future<List<AuthedView>> loadUserFollowing(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {
-    final actions = await _repo.getFollowing(uid);
+    final actions = await urepo.getFollowing(uid);
     final ids = actions.map((a) => a.targetId).toList();
-    if (ids.isEmpty) return const [];
+    final users = await urepo.getInOrder(ids, mode: mode);
 
-    final users = await _repo.getInOrder(ids, mode: mode);
-    return users.map((u) => AuthedView(u)).toList();
+    if (users.isEmpty) return const [];
+
+    return mapToFollow(users, actions, (value) => value.targetId);
   }
 
   Future<List<AuthedView>> loadUserFollowers(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {
-    final actions = await _repo.getFollowers(uid);
+    final actions = await urepo.getFollowers(uid);
     final ids = actions.map((a) => a.currentId).toList();
-    if (ids.isEmpty) return const [];
+    final users = await urepo.getInOrder(ids, mode: mode);
 
-    final users = await _repo.getInOrder(ids, mode: mode);
-    return users.map((u) => AuthedView(u)).toList();
+    if (users.isEmpty) return const [];
+
+    return mapToFollow(users, actions, (value) => value.currentId);
   }
 
   @override

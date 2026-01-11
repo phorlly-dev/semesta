@@ -1,5 +1,5 @@
 import 'package:logger/logger.dart';
-import 'package:semesta/app/functions/format.dart';
+import 'package:semesta/app/functions/format_helper.dart';
 
 enum LogType { error, warning, track, info, debug }
 
