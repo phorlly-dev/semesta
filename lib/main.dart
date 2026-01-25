@@ -1,3 +1,3 @@
-import 'package:semesta/app/configs/config.dart';
+import 'package:semesta/config/config.dart';
 
 void main() => AppConfigure.init();

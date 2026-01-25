@@ -1,0 +1,34 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+
+class DataForm extends StatelessWidget {
+  final double spacing;
+  final List<Widget> children;
+  final AutovalidateMode? autovalidate;
+  final GlobalKey<FormBuilderState> _formKey;
+  const DataForm(
+    this._formKey, {
+    super.key,
+    required this.children,
+    this.spacing = 8,
+    this.autovalidate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.all(24.0),
+      child: FormBuilder(
+        key: _formKey,
+        autovalidateMode: autovalidate,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: spacing,
+          children: children,
+        ),
+      ),
+    );
+  }
+}
