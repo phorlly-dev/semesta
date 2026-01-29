@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/src/components/layout/_layout_page.dart';
 import 'package:semesta/src/components/layout/custom_app_bar.dart';
@@ -42,32 +43,29 @@ class _HomeLayoutState extends State<HomeLayout>
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return LayoutPage(
       header: widget.isVisible
           ? CustomAppBar(
               height: 92,
-              start: Padding(
+              start: AvatarAnimation(
+                widget.avatar,
+                size: 32,
                 padding: const EdgeInsets.all(4.0),
-                child: AvatarAnimation(
-                  widget.avatar,
-                  size: 32,
-                  onTap: () => Scaffold.of(context).openDrawer(),
-                ),
+                onTap: () => Scaffold.of(context).openDrawer(),
               ),
               middle: GestureDetector(
                 onTap: widget.onLogo,
                 child: Text(
                   'Semesta',
                   style: TextStyle(
-                    color: colors.primary,
+                    color: context.colors.primary,
                     fontWeight: FontWeight.w700,
                     fontSize: 20,
                   ),
                 ),
               ),
               end: IconButton(
-                color: colors.outline,
+                color: context.colors.outline,
                 onPressed: () {},
                 icon: Icon(Icons.search, size: 26),
               ),

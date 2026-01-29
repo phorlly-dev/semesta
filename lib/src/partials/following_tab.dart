@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
-import 'package:semesta/public/helpers/audit_view.dart';
 import 'package:semesta/src/components/user/follow_tile.dart';
 import 'package:semesta/src/components/global/cached_tab.dart';
 
@@ -11,7 +10,7 @@ class FollowingTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CachedTab<AuthedView>(
+    return CachedTab(
       controller: uctrl,
       cache: uctrl.stateFor('follow:$_uid:following'),
       emptyMessage: "There's no followings yet.",

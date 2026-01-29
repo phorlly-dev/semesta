@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
-import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/src/components/global/cached_tab.dart';
-import 'package:semesta/src/components/global/live_feed.dart';
+import 'package:semesta/src/components/global/live_feed_refernece.dart';
 
 class PostsTab extends StatelessWidget {
   final String _uid;
@@ -14,22 +13,23 @@ class PostsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final key = getKey(id: _uid, screen: Screen.post);
-    return CachedTab<FeedView>(
+    final state = pctrl.stateFor(key);
+    return CachedTab(
       controller: pctrl,
-      cache: pctrl.stateFor(key),
+      cache: state,
       emptyMessage: "There's no posts yet.",
       onInitial: () => pctrl.combinePosts(_uid),
       onMore: () => pctrl.combinePosts(_uid, QueryMode.next),
       onRefresh: () {
         final meta = pctrl.metaFor(key);
         if (meta.dirty) {
-          pctrl.stateFor(key).clear();
+          state.clear();
           meta.dirty = false;
         }
 
         return pctrl.combinePosts(_uid, QueryMode.refresh);
       },
-      builder: (item) => LiveFeed(item, primary: false),
+      builder: (item) => LiveFeedRefernece(item, profiled: true),
     );
   }
 }

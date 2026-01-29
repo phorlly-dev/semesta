@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/extensions/extension.dart';
-import 'package:semesta/public/functions/option_modal.dart';
-import 'package:semesta/public/functions/visible_option.dart';
 import 'package:semesta/public/helpers/audit_view.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
+import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/public/utils/comment_connector.dart';
 import 'package:semesta/src/components/global/expandable_text.dart';
-import 'package:semesta/src/components/global/media_gallery.dart';
 import 'package:semesta/src/components/user/user_info.dart';
 import 'package:semesta/src/widgets/sub/avatar_animation.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class StatusBar extends StatelessWidget {
   final Feed _model;
+  final String? uid;
   final StatusView _status;
   final Widget? reference;
   final ActionTarget target;
@@ -29,137 +30,123 @@ class StatusBar extends StatelessWidget {
     this.saved = false,
     this.profiled = false,
     required this.target,
-    this.start = 52,
-    this.end = 496,
+    this.start = 50,
+    this.end = 360,
+    this.uid,
   });
 
   @override
   Widget build(BuildContext context) {
-    final options = OptionModal(context);
-    final colors = Theme.of(context).colorScheme;
-    final icon = VisibleOption(context).mapToIcon(_model.visible);
-    final dividerColor = Theme.of(context).dividerColor.withValues(alpha: 0.5);
-
     final author = _status.author;
     final authed = _status.authed;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 6, 4, 0),
-      child: Stack(
-        children: [
-          // 1. The Connector Line (Background Layer)
-          if (primary)
-            Positioned.fill(
-              child: CustomPaint(
-                painter: CommentConnector(
-                  startPoint: Offset(18, start),
-                  endPoint: Offset(18, end.h),
-                  lineColor: dividerColor,
-                ),
+    return Stack(
+      children: [
+        // 1. The Connector Line (Background Layer)
+        if (primary)
+          Positioned.fill(
+            child: CustomPaint(
+              painter: CommentConnector(
+                startPoint: Offset(16, start),
+                endPoint: Offset(16, end.h),
+                lineColor: context.dividerColor,
               ),
             ),
+          ),
 
-          // 2. The Main Content Row
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: AvatarAnimation(
-                  author.avatar,
-                  onTap: () async {
-                    if (profiled) return;
-                    await context.openProfile(author.id, authed);
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
+        // 2. The Main Content Row
+        DirectionX(
+          padding: const EdgeInsets.only(left: 12, right: 8),
+          children: [
+            AvatarAnimation(
+              author.avatar,
+              padding: const EdgeInsets.only(top: 6),
+              onTap: () async {
+                if (profiled && !canNavigateTo(author.id, uid)) {
+                  return;
+                }
 
-              Expanded(
-                child: InkWell(
-                  radius: 32,
-                  onTap: () async {
-                    await context.openById(route.detail, _model.id);
-                  },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AnimatedBuilder(
-                        animation: _status,
-                        builder: (_, child) => Row(
-                          children: [
-                            DisplayName(author.name),
-                            const SizedBox(width: 6),
+                await context.openProfile(author.id, authed);
+              },
+            ),
+            const SizedBox(width: 8),
 
-                            Username(author.uname),
-                            if (author.verified) ...[
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.verified,
-                                size: 14,
-                                color: colors.primary,
-                              ),
-                            ],
-                            const SizedBox(width: 6),
-                            Status(icon: icon, created: _model.createdAt),
+            Expanded(
+              child: InkWell(
+                radius: 32,
+                child: DirectionY(
+                  children: [
+                    AnimatedBuilder(
+                      animation: _status,
+                      builder: (_, child) => DirectionX(
+                        children: [
+                          DisplayName(author.name),
+                          const SizedBox(width: 6),
 
-                            const Spacer(),
-                            InkWell(
-                              borderRadius: BorderRadius.circular(20),
-                              child: Padding(
-                                padding: const EdgeInsets.all(4),
-                                child: Icon(
-                                  Icons.more_vert_outlined,
-                                  size: 20,
-                                  color: colors.secondary,
-                                ),
-                              ),
-                              onTap: () {
-                                if (authed) {
-                                  options.currentOptions(
-                                    _model,
-                                    target,
-                                    active: saved,
-                                    primary: primary,
-                                  );
-                                } else {
-                                  options.anotherOptions(
-                                    _model,
-                                    target,
-                                    status: _status,
-                                    primary: primary,
-                                    name: author.name,
-                                    iFollow: _status.iFollow,
-                                    active: saved,
-                                  );
-                                }
-                              },
+                          Username(author.uname),
+                          if (author.verified) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.verified,
+                              size: 14,
+                              color: context.primaryColor,
                             ),
                           ],
-                        ),
+
+                          const SizedBox(width: 8),
+                          Status(
+                            icon: context.tap.mapToIcon(_model.visible),
+                            created: _model.createdAt,
+                          ),
+
+                          const Spacer(),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            child: Icon(
+                              Icons.more_vert_outlined,
+                              size: 20,
+                              color: context.secondaryColor,
+                            ),
+                            onTap: () {
+                              if (authed) {
+                                context.open.currentOptions(
+                                  _model,
+                                  target,
+                                  active: saved,
+                                  profiled: profiled,
+                                );
+                              } else {
+                                context.open.anotherOptions(
+                                  _model,
+                                  target,
+                                  status: _status,
+                                  profiled: profiled,
+                                  name: author.name,
+                                  iFollow: _status.iFollow,
+                                  active: saved,
+                                );
+                              }
+                            },
+                          ),
+                        ],
                       ),
+                    ),
 
-                      ?reference,
-                      if (_model.title.isNotEmpty) ...[
-                        ExpandableText(_model.title),
-                        const SizedBox(height: 8),
-                      ],
-
-                      if (_model.media.length == 1)
-                        MediaGallery(
-                          media: _model.media,
-                          id: _model.id,
-                          start: 0,
-                          end: 6,
-                        ),
+                    ?reference,
+                    if (_model.title.isNotEmpty) ...[
+                      ExpandableText(_model.title),
+                      const SizedBox(height: 8),
                     ],
-                  ),
+                  ],
                 ),
+                onTap: () async {
+                  await context.openById(route.detail, _model.id);
+                },
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

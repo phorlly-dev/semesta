@@ -5,8 +5,7 @@ import 'package:semesta/public/utils/type_def.dart';
 
 class HandleError {
   final VoidCallback callback;
-  final ErrorsCallback<void>? onError;
-
+  final FnP2<Object, StackTrace, void>? onError;
   HandleError({required this.callback, this.onError}) {
     runZonedGuarded(
       callback,

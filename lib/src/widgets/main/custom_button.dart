@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/src/widgets/main/animated.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
 
 class CustomButton extends StatelessWidget {
   final dynamic icon;
@@ -52,7 +53,7 @@ class CustomButton extends StatelessWidget {
         child: Material(
           color: color,
           borderRadius: radius,
-          child: Row(
+          child: DirectionX(
             mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

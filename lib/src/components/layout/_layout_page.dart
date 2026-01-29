@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/public/extensions/extension.dart';
 
 class LayoutPage extends StatelessWidget {
   final Widget? menu, content, button, footer, popup;
-  final Color? bgColor;
+  final Color? color;
   final PreferredSizeWidget? header;
   const LayoutPage({
     super.key,
@@ -11,14 +12,14 @@ class LayoutPage extends StatelessWidget {
     this.button,
     this.header,
     this.footer,
-    this.bgColor,
+    this.color,
     this.popup,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: color ?? context.defaultColor,
       appBar: header,
       drawer: menu == null ? null : SafeArea(child: menu!),
       body: SafeArea(child: content ?? SizedBox.shrink()),

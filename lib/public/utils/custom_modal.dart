@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class CustomModal<T> {
   final BuildContext _context;
@@ -23,42 +25,33 @@ class CustomModal<T> {
     this.color,
     this.label = 'Yes',
   }) {
-    final formKey = GlobalKey<FormState>();
-    final col = Theme.of(_context).hintColor;
-
     showDialog<T>(
       context: _context,
       fullscreenDialog: isFull,
       barrierDismissible: isHide,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title, textAlign: TextAlign.center),
-          content: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: size,
-                children: children,
-              ),
-            ),
+      builder: (context) => AlertDialog(
+        title: Text(title, textAlign: TextAlign.center),
+        content: SingleChildScrollView(
+          child: Form(
+            key: GlobalKey<FormState>(),
+            child: DirectionY(mainAxisSize: size, children: children),
           ),
-          actions: [
-            TextButton.icon(
-              onPressed: () => context.pop(),
-              icon: Icon(Icons.close, color: col),
-              label: Text('Cancel', style: TextStyle(color: col)),
-            ),
-            TextButton.icon(
-              onPressed: onConfirm,
-              icon: Icon(icon, color: color),
-              label: Text(label, style: TextStyle(color: color)),
-            ),
-          ],
-          actionsAlignment: MainAxisAlignment.center,
-          alignment: Alignment.center,
-        );
-      },
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () => context.pop(),
+            icon: Icon(Icons.close, color: context.hintColor),
+            label: Text('Cancel', style: TextStyle(color: context.hintColor)),
+          ),
+          TextButton.icon(
+            onPressed: onConfirm,
+            icon: Icon(icon, color: color),
+            label: Text(label, style: TextStyle(color: color)),
+          ),
+        ],
+        alignment: Alignment.center,
+        actionsAlignment: MainAxisAlignment.center,
+      ),
     );
   }
 }

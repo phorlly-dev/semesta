@@ -22,14 +22,13 @@ class ImagePreviewPage extends StatelessWidget {
         message: 'No media available',
         child: ImagePreview(
           mediaList?.map<String>((e) {
-                if (e.type == MediaType.image) {
-                  return e.display;
-                } else {
-                  return e.thumbnails['url'];
-                }
+                return e.type == MediaType.image
+                    ? e.display
+                    : e.thumbnails['url'];
               }).toList() ??
               const [],
-          initialIndex: index,
+          id: _pid,
+          initIndex: index,
         ),
       );
     });

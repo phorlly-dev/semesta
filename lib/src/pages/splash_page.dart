@@ -5,6 +5,7 @@ import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/routes/router.dart';
 import 'package:semesta/src/components/layout/_layout_page.dart';
 import 'package:semesta/src/widgets/main/custom_image.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 import 'package:semesta/src/widgets/sub/loading_animated.dart';
 
 class SplashPage extends StatefulWidget {
@@ -35,9 +36,10 @@ class _SplashPageState extends State<SplashPage> {
         child: AnimatedOpacity(
           opacity: 1.0,
           duration: Duration(milliseconds: 600),
-          child: Column(
+          child: DirectionY(
             spacing: 16,
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               CustomImage('logo.png'.asImage(true), height: 120.h),
               Text(

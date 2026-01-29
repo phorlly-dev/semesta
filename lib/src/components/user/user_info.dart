@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/src/widgets/main/animated.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
 
 class DisplayName extends StatelessWidget {
   final String _data;
@@ -10,14 +11,13 @@ class DisplayName extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return Text(
       _data.limitText(maxChars),
       style: TextStyle(
         fontSize: 16,
         overflow: TextOverflow.ellipsis,
         fontWeight: FontWeight.w600,
-        color: color ?? colors.onSurface,
+        color: color ?? context.colors.onSurface,
       ),
     );
   }
@@ -45,7 +45,7 @@ class Username extends StatelessWidget {
         style: TextStyle(
           fontSize: 16,
           overflow: TextOverflow.ellipsis,
-          color: color ?? Theme.of(context).colorScheme.secondary,
+          color: color ?? context.secondaryColor,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -68,19 +68,23 @@ class Status extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Row(
+    return DirectionX(
+      crossAxisAlignment: CrossAxisAlignment.center,
       spacing: 4.2,
       children: [
-        if (!hasIcon) Icon(Icons.circle, size: 3.2, color: colors.secondary),
+        if (!hasIcon)
+          Icon(Icons.circle, size: 3.2, color: context.secondaryColor),
         Text(
           created.toAgo,
-          style: TextStyle(fontSize: 14.6, color: color ?? colors.secondary),
+          style: TextStyle(
+            fontSize: 14.6,
+            color: color ?? context.secondaryColor,
+          ),
         ),
 
         if (hasIcon) ...[
-          Icon(Icons.circle, size: 3.2, color: colors.secondary),
-          Icon(icon, size: 12, color: colors.primary),
+          Icon(Icons.circle, size: 3.2, color: context.secondaryColor),
+          Icon(icon, size: 12, color: context.primaryColor),
         ],
       ],
     );
@@ -94,14 +98,13 @@ class Bio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return Text(
       _data,
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
         fontSize: 16,
-        color: color ?? colors.onSurface.withValues(alpha: 0.7),
+        color: color ?? context.colors.onSurface.withValues(alpha: 0.7),
       ),
     );
   }
@@ -112,22 +115,19 @@ class FollowYouBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(left: 42),
-      child: Row(
-        spacing: 8,
-        children: [
-          Icon(Icons.person, color: theme.hintColor),
-          Text(
-            'Follows you',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w500,
-              color: theme.hintColor,
-            ),
+    return DirectionX(
+      spacing: 8,
+      padding: const EdgeInsets.only(left: 30),
+      children: [
+        Icon(Icons.person, color: context.hintColor),
+        Text(
+          'Follows you',
+          style: context.text.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+            color: context.hintColor,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

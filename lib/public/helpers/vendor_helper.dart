@@ -31,7 +31,7 @@ List<FeedView> mapFollowActions(
 List<AuthedView> mapToFollow(
   List<Author> users,
   List<Reaction> reactions,
-  PropsCallback<Reaction, String> selector,
+  FnP<Reaction, String> selector,
 ) {
   return users
       .map((user) {
@@ -67,7 +67,7 @@ List<FeedView> mapToFeed(List<Feed> feeds, [String? uid]) {
               created: post.createdAt,
               actor: uctrl.dataMapping[post.uid],
               parent: pctrl.dataMapping[post.pid],
-              rid: getRowId(kind: FeedKind.quoted, pid: post.id),
+              rid: getRowId(kind: FeedKind.replied, pid: post.id),
             );
 
           default:
@@ -85,10 +85,8 @@ List<FeedView> mapToFeed(List<Feed> feeds, [String? uid]) {
 
 Map<String, Reaction> followActions(
   List<Reaction> actions,
-  PropsCallback<Reaction, String> selector,
+  FnP<Reaction, String> selector,
 ) => {for (final action in actions) selector(action): action};
 
-AsList getKeys(
-  List<Reaction> actions,
-  PropsCallback<Reaction, String> selector,
-) => actions.map(selector).toSet().toList();
+AsList getKeys(List<Reaction> actions, FnP<Reaction, String> selector) =>
+    actions.map(selector).toSet().toList();

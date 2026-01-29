@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:get/get.dart';
 import 'package:semesta/public/helpers/cached_helper.dart';
+import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/public/helpers/vendor_helper.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
 import 'package:semesta/app/models/reaction.dart';
@@ -11,6 +12,7 @@ import 'package:semesta/app/models/author.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
 mixin ControllerMixin on IController<FeedView> {
   final dataMapping = <String, Feed>{}.obs;
@@ -40,13 +42,13 @@ mixin ControllerMixin on IController<FeedView> {
   StreamSubscription? _postSub, _commentSub;
   void listenToPost(String pid) {
     if (dataMapping.containsKey(pid)) return;
-    _postSub = prepo.stream$(pid).listen((p) => dataMapping[pid] = p);
+    _postSub = prepo.sync$(pid).listen((p) => dataMapping[pid] = p);
   }
 
-  void listenTComment(String cid, String pid) {
+  void listenToComment(String cid, String pid) {
     if (dataMapping.containsKey(cid)) return;
     _commentSub = prepo
-        .stream$('$pid/$comments/$cid')
+        .sync$('$pid/$comments/$cid')
         .listen((p) => dataMapping[cid] = p);
   }
 
@@ -63,7 +65,20 @@ mixin ControllerMixin on IController<FeedView> {
     }
   }
 
-  Future<List<Feed>> getSubcombined(
+  final _seen = <String>{};
+  void markViewed(ActionTarget target) {
+    final key = getkey(target);
+    if (_seen.contains(key)) return;
+
+    _seen.add(key);
+
+    Future.delayed(
+      const Duration(seconds: 2),
+      () => prepo.incrementView(target),
+    );
+  }
+
+  Wait<List<Feed>> getSubcombined(
     List<Reaction> actions, [
     QueryMode mode = QueryMode.normal,
   ]) async {
@@ -77,7 +92,7 @@ mixin ControllerMixin on IController<FeedView> {
     return merged;
   }
 
-  Future<List<Feed>> getCombined(
+  Wait<List<Feed>> getCombined(
     List<Reaction> actions, [
     QueryMode mode = QueryMode.normal,
   ]) async {
@@ -91,12 +106,12 @@ mixin ControllerMixin on IController<FeedView> {
     return merged;
   }
 
-  Future<List<Feed>> getMerged(
+  Wait<List<Feed>> getMerged(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {
     final merged = [
-      ...await prepo.getPosts(uid, mode: mode, visible: ['mentioned']),
+      ...await prepo.getPosts(uid, mode: mode),
       ...await prepo.getComments(uid, mode: mode),
     ].toList();
 

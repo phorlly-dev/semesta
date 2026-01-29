@@ -6,6 +6,8 @@ import 'package:semesta/src/components/composer/post_editor.dart';
 import 'package:semesta/src/components/user/user_info.dart';
 import 'package:semesta/src/widgets/main/media_display.dart';
 import 'package:semesta/src/widgets/sub/avatar_animation.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class RepostEditor extends StatelessWidget {
@@ -38,62 +40,63 @@ class RepostEditor extends StatelessWidget {
       onChanged: onChanged,
       assets: assets,
       onRemove: onRemove,
-      bottom: Container(
+      bottom: DirectionY(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.grey.shade300),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DirectionY(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            children: [
+              DirectionX(
                 children: [
-                  Row(
-                    children: [
-                      AvatarAnimation(actor.avatar, size: 32),
-
-                      const SizedBox(width: 8),
-                      DisplayName(actor.name),
-
-                      const Spacer(),
-                      Text(
-                        post.createdAt.toAgo,
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  AvatarAnimation(
+                    actor.avatar,
+                    size: 32,
+                    padding: EdgeInsets.only(top: 2),
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(width: 8),
+                  DisplayName(actor.name),
 
-                  // Content
+                  const SizedBox(width: 6),
+                  Username(actor.uname),
+
+                  const Spacer(),
                   Text(
-                    post.title.limitText(100),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
-                    style: TextStyle(fontSize: 15),
+                    post.createdAt.toAgo,
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
-            ),
 
-            if (post.media.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              MediaDisplay(
-                post.media[0],
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(8),
-                  bottomRight: Radius.circular(8),
-                ),
+              const SizedBox(height: 8),
+
+              // Content
+              Text(
+                post.title.limitText(100),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+                style: TextStyle(fontSize: 15),
               ),
             ],
+          ),
+
+          if (post.media.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            MediaDisplay(
+              post.media[0],
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(8),
+                bottomRight: Radius.circular(8),
+              ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

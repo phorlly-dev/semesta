@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
+import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/components/layout/_layout_page.dart';
 import 'package:semesta/src/components/layout/app_drawer.dart';
@@ -12,9 +13,7 @@ class AppLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final location = GoRouterState.of(context).matchedLocation;
-    final index = route.getIndexFromLocation(location);
+    final index = route.getIndexFromLocation(context.location);
 
     return Obx(() {
       final user = pctrl.currentUser;
@@ -26,19 +25,15 @@ class AppLayout extends StatelessWidget {
         menu: AppDrawer(user),
         content: _child,
         footer: AnimatedSlide(
-          duration: const Duration(milliseconds: 250),
+          duration: const Duration(milliseconds: 260),
           offset: Offset.zero,
           child: isVisible
               ? BottomNavigationBar(
                   elevation: 6,
                   currentIndex: index,
-                  backgroundColor:
-                      theme.bottomNavigationBarTheme.backgroundColor ??
-                      theme.scaffoldBackgroundColor,
-                  selectedItemColor: theme.colorScheme.primary,
-                  unselectedItemColor: theme.iconTheme.color?.withValues(
-                    alpha: 0.6,
-                  ),
+                  selectedItemColor: context.primaryColor,
+                  backgroundColor: context.navigatColor ?? context.defaultColor,
+                  unselectedItemColor: context.iconColor?.withValues(alpha: .6),
                   onTap: (idx) async {
                     if (curScroller.hasClients && idx == index) {
                       dctrl.jump;
@@ -49,9 +44,9 @@ class AppLayout extends StatelessWidget {
                         default:
                           if (!pctrl.anyLoading) {
                             if (curIdx == 0) {
-                              await pctrl.refreshPost();
+                              await pctrl.refreshPost;
                             } else {
-                              await pctrl.refreshFollowing();
+                              await pctrl.refreshFollowing;
                             }
                           }
                       }
@@ -66,10 +61,10 @@ class AppLayout extends StatelessWidget {
         ),
         button: index == 2
             ? AnimatedSlide(
-                duration: const Duration(milliseconds: 250),
+                duration: const Duration(milliseconds: 260),
                 offset: isVisible ? Offset.zero : const Offset(0, 2),
                 child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 250),
+                  duration: const Duration(milliseconds: 260),
                   opacity: isVisible ? 1 : 0,
                   child: FloatingActionButton(
                     onPressed: () => context.push(route.create.path),

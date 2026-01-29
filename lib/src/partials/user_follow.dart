@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/utils/scroll_aware_app_bar.dart';
 import 'package:semesta/public/utils/tab_delegate.dart';
+import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/src/components/layout/custom_tab_bar.dart';
 
 class UserFollow extends StatefulWidget {
@@ -13,7 +15,7 @@ class UserFollow extends StatefulWidget {
     super.key,
     this.onTap,
     this.initIndex = 0,
-    required this.children,
+    this.children = const [],
   });
 
   @override
@@ -24,7 +26,7 @@ class _UserFollowState extends State<UserFollow>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  List<String> get _tabs => ['Followers', 'Following'];
+  AsList get _tabs => ['Followers', 'Following'];
   CustomTabBar get _tabBar => CustomTabBar(
     controller: _tabController,
     tabs: _tabs.map((tab) => Tab(text: tab)).toList(),
@@ -43,7 +45,6 @@ class _UserFollowState extends State<UserFollow>
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return NestedScrollView(
       headerSliverBuilder: (_, innerBox) => [
         ScrollAwareAppBar(
@@ -56,13 +57,13 @@ class _UserFollowState extends State<UserFollow>
               IconButton(
                 onPressed: () {},
                 icon: Icon(Icons.person_add_alt_1_outlined),
-                color: colors.outline,
+                color: context.outlineColor,
               ),
             ],
             elevation: 0,
             scrolledUnderElevation: 0,
             toolbarHeight: visible ? kToolbarHeight : 0,
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            backgroundColor: context.defaultColor,
             surfaceTintColor: Colors.transparent,
           ),
         ),

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/public/extensions/extension.dart';
 
 class BreakSection extends StatelessWidget {
   final double height, bold;
   final double opacity;
+  final Color? color;
   const BreakSection({
     super.key,
     this.height = 8,
     this.bold = .8,
     this.opacity = .32,
+    this.color,
   });
 
   @override
@@ -15,7 +18,7 @@ class BreakSection extends StatelessWidget {
     return Divider(
       height: height,
       thickness: bold,
-      color: Theme.of(context).dividerColor.withValues(alpha: opacity),
+      color: color ?? context.dividerColor.withValues(alpha: opacity),
     );
   }
 }

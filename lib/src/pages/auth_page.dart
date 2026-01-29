@@ -10,6 +10,8 @@ import 'package:semesta/src/components/layout/_layout_page.dart';
 import 'package:semesta/src/widgets/sub/block_overlay.dart';
 import 'package:semesta/src/widgets/main/custom_button.dart';
 import 'package:semesta/src/widgets/main/data_form.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -37,7 +39,7 @@ class _AuthPageState extends State<AuthPage> {
                 if (!_isSignUp) const SizedBox(height: 12),
 
                 //Input Fields
-                _isSignUp ? SignUp(fkey) : SignIn(fkey),
+                _isSignUp ? SignUp(fkey) : SignIn(fkey, isLoading: isLoading),
 
                 // Forgot Password
                 // if (!_isSignUp)
@@ -69,19 +71,18 @@ class _AuthPageState extends State<AuthPage> {
           ),
 
           // ---- overlay ----
-          isLoading
-              ? BlockOverlay(_isSignUp ? 'Signing Up' : 'Signing In')
-              : SizedBox.shrink(),
+          if (isLoading) BlockOverlay(_isSignUp ? 'Signing Up' : 'Signing In'),
         ],
       );
     });
   }
 
   Widget _buildButtons() {
-    return Wrap(
+    return DirectionY(
+      mainAxisSize: MainAxisSize.min,
       children: [
         // Divider
-        Row(
+        DirectionX(
           children: [
             Expanded(child: Divider(color: Colors.grey[700])),
             Padding(

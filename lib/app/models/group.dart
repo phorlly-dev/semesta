@@ -7,7 +7,6 @@ class Group extends Model<Group> {
   final String cid;
   final String note;
   final bool privacy;
-
   const Group({
     this.cid = '',
     this.note = '',
@@ -60,14 +59,11 @@ class Group extends Model<Group> {
   }
 
   @override
-  AsMap to() {
-    final data = {
-      ...general,
-      'logo': logo,
-      'privacy': privacy,
-      'note': note,
-      'cid': cid,
-    };
-    return Model.convertJsonKeys(data);
-  }
+  AsMap to() => Model.convertJsonKeys({
+    ...general,
+    'logo': logo,
+    'privacy': privacy,
+    'note': note,
+    'cid': cid,
+  });
 }

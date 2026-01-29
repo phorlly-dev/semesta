@@ -69,15 +69,12 @@ class Notification extends Model<Notification> {
   }
 
   @override
-  AsMap to() {
-    final data = {
-      ...general,
-      'pid': pid,
-      'reciever': reciever,
-      'sender': sender,
-      'type': type.name,
-      'readed': readed,
-    };
-    return Model.convertJsonKeys(data);
-  }
+  AsMap to() => Model.convertJsonKeys({
+    ...general,
+    'pid': pid,
+    'reciever': reciever,
+    'sender': sender,
+    'type': type.name,
+    'readed': readed,
+  });
 }

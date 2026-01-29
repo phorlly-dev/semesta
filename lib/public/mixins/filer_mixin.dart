@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
 import 'package:semesta/public/functions/logger.dart';
 import 'package:semesta/app/services/firebase_service.dart';
+import 'package:semesta/public/utils/type_def.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:wechat_camera_picker/wechat_camera_picker.dart'
@@ -13,7 +14,7 @@ import 'package:wechat_camera_picker/wechat_camera_picker.dart'
 
 mixin FilerMixin on FirebaseService {
   /// Pick one or multiple files (image, video, etc.)
-  Future<List<File>?> pickFiles({
+  Wait<List<File>?> pickFiles({
     List<String>? allowedExtensions,
     bool allowMultiple = false,
   }) async {
@@ -39,7 +40,7 @@ mixin FilerMixin on FirebaseService {
   }
 
   /// Pick a single image file
-  Future<File?> pickImage() async {
+  Wait<File?> pickImage() async {
     final files = await pickFiles(
       allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
     );
@@ -48,7 +49,7 @@ mixin FilerMixin on FirebaseService {
   }
 
   /// Pick a single video file
-  Future<File?> pickVideo() async {
+  Wait<File?> pickVideo() async {
     final files = await pickFiles(
       allowedExtensions: ['mp4', 'mov', 'avi', 'mkv'],
     );
@@ -56,7 +57,7 @@ mixin FilerMixin on FirebaseService {
     return files?.first;
   }
 
-  Future<File?> genThumbnail(File videoFile) async {
+  Wait<File?> genThumbnail(File videoFile) async {
     final tempDir = await getTemporaryDirectory();
     final path = await VideoThumbnail.thumbnailFile(
       video: videoFile.path,
@@ -72,7 +73,7 @@ mixin FilerMixin on FirebaseService {
     return File(path);
   }
 
-  Future<AssetEntity?> pickFromCamera(BuildContext context) async {
+  Wait<AssetEntity?> pickFromCamera(BuildContext context) async {
     try {
       // Check permissions first
       final hasPermission = await requestPermissions();
@@ -118,7 +119,7 @@ mixin FilerMixin on FirebaseService {
     }
   }
 
-  Future<bool> requestPermissions() async {
+  Wait<bool> requestPermissions() async {
     if (await Permission.photos.isGranted) return true;
 
     final result = await [Permission.photos, Permission.videos].request();
@@ -126,7 +127,7 @@ mixin FilerMixin on FirebaseService {
     return result.values.every((status) => status.isGranted);
   }
 
-  Future<List<AssetEntity>> pickMedia(
+  Wait<List<AssetEntity>> pickMedia(
     BuildContext context, {
     int max = 10,
   }) async {
@@ -138,7 +139,7 @@ mixin FilerMixin on FirebaseService {
 
       if (assets == null || assets.isEmpty) return [];
 
-      // final media = await Future.wait(assets.map((a) async => await a.file));
+      // final media = await Wait.wait(assets.map((a) async => await a.file));
 
       return assets;
     } else {

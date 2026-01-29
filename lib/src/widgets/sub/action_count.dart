@@ -9,6 +9,7 @@ class ActionCount extends StatelessWidget {
   final VoidCallback? onTap;
   final double space;
   final Color? color;
+  final bool detailed;
   const ActionCount(
     this._value, {
     super.key,
@@ -16,11 +17,11 @@ class ActionCount extends StatelessWidget {
     this.onTap,
     this.space = 4.6,
     this.color,
+    this.detailed = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     final state = countState(_value, kind);
 
     return Animated(
@@ -29,16 +30,16 @@ class ActionCount extends StatelessWidget {
         spacing: space,
         children: [
           Text(
-            state.value.toCount,
+            detailed ? state.value.toString() : state.value.countable,
             style: TextStyle(
               fontWeight: FontWeight.w900,
-              color: colors.secondary,
+              color: context.secondaryColor,
             ),
           ),
           Text(
             state.key,
             style: TextStyle(
-              color: color ?? colors.outline,
+              color: color ?? context.outlineColor,
               fontWeight: FontWeight.w600,
             ),
           ),

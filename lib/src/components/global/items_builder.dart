@@ -10,26 +10,26 @@ class ItemsBuilder extends StatefulWidget {
   final int counter;
   final IndexedWidgetBuilder builder;
   final bool isLoading, isLoadingNext, isEmpty, isGrid, isBreak;
-  final FutureCallback<void>? onRefresh;
+  final Fn<void>? onRefresh;
   final ScrollController? scroller;
   final VoidCallback onMore;
   final VoidCallback? onRetry;
   final String? message, hasError;
   const ItemsBuilder({
     super.key,
-    required this.counter,
-    required this.builder,
+    this.isGrid = false,
+    this.isBreak = false,
+    this.isEmpty = false,
+    this.isLoading = false,
+    this.isLoadingNext = false,
+    this.onRetry,
     this.scroller,
     this.onRefresh,
-    this.isLoading = false,
-    this.isEmpty = false,
     this.message,
-    this.isLoadingNext = false,
-    required this.onMore,
-    this.isGrid = false,
-    this.onRetry,
     this.hasError,
-    this.isBreak = false,
+    required this.onMore,
+    required this.counter,
+    required this.builder,
   });
 
   @override

@@ -8,40 +8,44 @@ class AvatarAnimation extends StatelessWidget {
   final double size;
   final bool isNetwork;
   final VoidCallback? onTap;
+  final EdgeInsetsGeometry? padding;
   const AvatarAnimation(
     this._imageUrl, {
     super.key,
     this.size = 36,
     this.onTap,
     this.isNetwork = false,
+    this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
-    final double radius = size * 0.5;
-    return Animated(
-      onTap: onTap,
-      child: CircleAvatar(
-        radius: radius,
-        backgroundImage: isNetwork
-            ? NetworkImage(
-                _imageUrl.isNotEmpty
-                    ? _imageUrl
-                    : 'https://i.pravatar.cc/150?img=8',
-              )
-            : null,
-        backgroundColor: Colors.transparent,
-        child: !isNetwork
-            ? ClipOval(
-                child: CustomImage(
+    return Container(
+      padding: padding,
+      child: Animated(
+        onTap: onTap,
+        child: CircleAvatar(
+          radius: size * 0.5,
+          backgroundImage: isNetwork
+              ? NetworkImage(
                   _imageUrl.isNotEmpty
                       ? _imageUrl
-                      : 'default.png'.asImage(true),
-                  width: size,
-                  height: size,
-                ),
-              )
-            : null,
+                      : 'https://i.pravatar.cc/150?img=8',
+                )
+              : null,
+          backgroundColor: Colors.transparent,
+          child: !isNetwork
+              ? ClipOval(
+                  child: CustomImage(
+                    _imageUrl.isNotEmpty
+                        ? _imageUrl
+                        : 'default.png'.asImage(true),
+                    width: size,
+                    height: size,
+                  ),
+                )
+              : null,
+        ),
       ),
     );
   }

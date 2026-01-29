@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_utils/src/extensions/export.dart';
 import 'package:semesta/public/utils/share_storage.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
 class ThemeManager with ChangeNotifier {
   static const _key = "app_theme_mode";
@@ -12,7 +14,7 @@ class ThemeManager with ChangeNotifier {
     _loadTheme();
   }
 
-  Future<void> _loadTheme() async {
+  Wait<void> _loadTheme() async {
     final stored = _prefs.getStorage(_key);
 
     if (stored == 'light') {
@@ -27,12 +29,9 @@ class ThemeManager with ChangeNotifier {
   }
 
   void toggleTheme(BuildContext context) async {
-    // What is currently rendered?
-    final isDarkNow = Theme.of(context).brightness == Brightness.dark;
-
     if (_themeMode == ThemeMode.system) {
       // Switch to the opposite of what you see now
-      _themeMode = isDarkNow ? ThemeMode.light : ThemeMode.dark;
+      _themeMode = context.isDarkMode ? ThemeMode.light : ThemeMode.dark;
     } else {
       // Flip between explicit light/dark
       _themeMode = (_themeMode == ThemeMode.dark)

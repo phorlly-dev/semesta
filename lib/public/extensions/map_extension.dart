@@ -21,7 +21,7 @@ extension MapListX<T> on RxMap<String, List<T>> {
   List<T> ensure(String key) => this[key] ?? const [];
 
   /// Remove item by condition
-  void removeFrom(String key, PropsCallback<T, bool> fn) {
+  void removeFrom(String key, FnP<T, bool> fn) {
     this[key] = ensure(key).where((x) => !fn(x)).toList();
     refresh();
   }

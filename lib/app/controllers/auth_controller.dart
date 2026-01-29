@@ -8,6 +8,7 @@ import 'package:semesta/public/functions/custom_toast.dart';
 import 'package:semesta/public/functions/logger.dart';
 import 'package:semesta/app/models/author.dart';
 import 'package:semesta/app/repositories/auth_repository.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
 class AuthController extends GetxController {
   final _repo = AuthRepository();
@@ -22,7 +23,7 @@ class AuthController extends GetxController {
 
   bool get isLoggedIn => currentUser.value != null;
 
-  Future<void> login(String email, String password) async {
+  Wait<void> login(String email, String password) async {
     isLoading.value = true;
     try {
       final user = await _repo.signIn(email, password);
@@ -30,7 +31,7 @@ class AuthController extends GetxController {
       // Force currentUser refresh
       currentUser.value = user;
       CustomToast.success('Verify Successful');
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Wait.delayed(const Duration(milliseconds: 300));
       _bindAuthStream(); // ensure stream reconnected
     } on FirebaseAuthException catch (err) {
       CustomToast.error(handleError(err));
@@ -42,7 +43,7 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> register(
+  Wait<void> register(
     String email,
     String password,
     File file,
@@ -55,7 +56,7 @@ class AuthController extends GetxController {
       // Force currentUser refresh
       currentUser.value = user;
       CustomToast.info('Account Created');
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Wait.delayed(const Duration(milliseconds: 300));
       _bindAuthStream(); // ensure stream reconnected
     } on FirebaseAuthException catch (err) {
       CustomToast.error(handleError(err));
@@ -67,17 +68,17 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> loginWithGoogle() async => await _repo.signInWithGoogle();
+  Wait<void> loginWithGoogle() async => await _repo.signInWithGoogle();
 
-  // Future<void> loginWithFacebook() async => await _repo.signInWithFacebook();
+  // Wait<void> loginWithFacebook() async => await _repo.signInWithFacebook();
 
-  Future<void> logout() async {
+  Wait<void> logout() async {
     isLoading.value = true;
     try {
       await _repo.signOut();
       currentUser.value = null;
       CustomToast.warning('You have been signed out');
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Wait.delayed(const Duration(milliseconds: 300));
       _bindAuthStream();
     } on FirebaseAuthException catch (err) {
       HandleLogger.track('Firebase Auth Exception', message: err);

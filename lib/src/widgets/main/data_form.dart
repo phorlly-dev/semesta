@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class DataForm extends StatelessWidget {
   final double spacing;
@@ -22,7 +23,7 @@ class DataForm extends StatelessWidget {
       child: FormBuilder(
         key: _formKey,
         autovalidateMode: autovalidate,
-        child: Column(
+        child: DirectionY(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: spacing,

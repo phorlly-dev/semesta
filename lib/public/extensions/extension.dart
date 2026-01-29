@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jiffy/jiffy.dart';
+import 'package:provider/provider.dart';
+import 'package:semesta/public/functions/option_modal.dart';
+import 'package:semesta/public/functions/theme_manager.dart';
+import 'package:semesta/public/functions/visible_option.dart';
 import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
 extension DateTimeX on DateTime {
   String get timeAgo => _formated(this).fromNow();
@@ -90,7 +95,7 @@ extension DateTimeX2 on DateTime? {
 }
 
 extension IntegerX on int {
-  String get toCount {
+  String get countable {
     String formatted;
     if (this >= 1000000000) {
       formatted = (this / 1000000000).toStringAsFixed(1);
@@ -114,7 +119,7 @@ extension IntegerX on int {
 }
 
 extension BuildContextX on BuildContext {
-  Future<void> openProfile(String uid, bool yourself) async {
+  Wait<void> openProfile(String uid, bool yourself) async {
     await pushNamed(
       route.profile.name,
       pathParameters: {'id': uid},
@@ -122,11 +127,11 @@ extension BuildContextX on BuildContext {
     );
   }
 
-  Future<void> openById(RouteNode route, String id) async {
+  Wait<void> openById(RouteNode route, String id) async {
     await pushNamed(route.name, pathParameters: {'id': id});
   }
 
-  Future<void> openFollow(
+  Wait<void> openFollow(
     RouteNode route,
     String id, {
     String name = '',
@@ -139,11 +144,34 @@ extension BuildContextX on BuildContext {
     );
   }
 
-  Future<void> openPreview(RouteNode route, String id, [int idx = 0]) async {
+  Wait<void> openPreview(RouteNode route, String id, [int idx = 0]) async {
     await pushNamed(
       route.name,
       pathParameters: {'id': id},
       queryParameters: {'index': idx.toString()},
     );
   }
+
+  String get location => GoRouterState.of(this).matchedLocation;
+
+  ThemeData get theme => Theme.of(this);
+  TextTheme get text => theme.textTheme;
+  ColorScheme get colors => theme.colorScheme;
+  MediaQueryData get query => MediaQuery.of(this);
+
+  OptionModal get open => OptionModal(this);
+  VisibleOption get tap => VisibleOption(this);
+  void get toggleTheme => read<ThemeManager>().toggleTheme(this);
+
+  Color get hintColor => theme.hintColor;
+  Color get errorColor => colors.error;
+  Color get primaryColor => colors.primary;
+  Color get outlineColor => colors.outline;
+  Color get secondaryColor => colors.secondary;
+  Color get defaultColor => theme.scaffoldBackgroundColor;
+  Color get dividerColor => theme.dividerColor.withValues(alpha: 0.5);
+  Color? get navigatColor => theme.bottomNavigationBarTheme.backgroundColor;
+
+  double get width => MediaQuery.of(this).size.width;
+  double get height => MediaQuery.of(this).size.height;
 }

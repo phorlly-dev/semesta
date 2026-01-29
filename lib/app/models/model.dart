@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
+import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 /// A generic abstract base model for Firebase.
@@ -44,9 +45,9 @@ abstract class Model<T extends Model<T>> extends Equatable {
   static DateTime toDateTime(dynamic value) {
     if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
     if (value is Timestamp) return value.toDate();
-    if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
+    if (value is String) return DateTime.tryParse(value) ?? now;
 
-    return DateTime.now();
+    return now;
   }
 
   /// Convert DateTime or Firestore Timestamp → Firestore Timestamp
@@ -69,17 +70,15 @@ abstract class Model<T extends Model<T>> extends Equatable {
     if (value is Timestamp) return value.millisecondsSinceEpoch;
     if (value is DateTime) return value.millisecondsSinceEpoch;
 
-    return DateTime.now().millisecondsSinceEpoch;
+    return now.millisecondsSinceEpoch;
   }
 
   /// Convert DateTime or Timestamp to ISO-8601 string (for readable JSON)
-  static String? toIsoString(dynamic value) {
-    if (value == null) return null;
-
+  static String toIsoString(dynamic value) {
     if (value is Timestamp) return value.toDate().toIso8601String();
     if (value is DateTime) return value.toIso8601String();
 
-    return DateTime.now().toIso8601String();
+    return now.toIso8601String();
   }
 
   static AsMap convertJsonKeys(AsMap data, [bool toCamelCase = false]) {

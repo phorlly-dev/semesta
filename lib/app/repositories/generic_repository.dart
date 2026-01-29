@@ -7,6 +7,7 @@ import 'package:semesta/public/functions/custom_toast.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/app/models/media.dart';
 import 'package:semesta/app/services/storage_service.dart';
+import 'package:semesta/public/utils/type_def.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class GenericRepository extends IStorageService {
@@ -32,11 +33,11 @@ class GenericRepository extends IStorageService {
     return '$base$suffix';
   }
 
-  Future<bool> unameExists(String username) {
+  Wait<bool> unameExists(String username) {
     return isExists(unames, username);
   }
 
-  Future<String> getUniqueName(String name) async {
+  Wait<String> getUniqueName(String name) async {
     var username = getUname(name);
     while (await unameExists(username)) {
       username = getUname(name);
@@ -45,45 +46,43 @@ class GenericRepository extends IStorageService {
     return username;
   }
 
-  Future<bool> isExists(String col, String doc) async {
-    final docs = await db.collection(col).doc(doc).get();
-
-    return docs.exists;
+  Wait<bool> isExists(String col, String doc) {
+    return db.collection(col).doc(doc).get().then((value) => value.exists);
   }
 
-  Future<Media?> uploadProfile(String path, File file) async {
+  Wait<Media?> uploadProfile(String path, File file) async {
     return uploadFile(
-      file: file,
+      file,
       folderName: '$avatars/$path',
       fileName: genFileName('avatar', file: file),
     );
   }
 
-  Future<Media?> uploadImage(String path, File file) async {
+  Wait<Media?> uploadImage(String path, File file) async {
     return uploadFile(
-      file: file,
+      file,
       folderName: '$images/$path',
       fileName: genFileName('image', file: file),
     );
   }
 
-  Future<Media?> uploadThumbnail(String path, File file) async {
+  Wait<Media?> uploadThumbnail(String path, File file) async {
     return uploadFile(
-      file: file,
+      file,
       folderName: '$thumbnails/$path',
       fileName: genFileName('thumbnail', file: file),
     );
   }
 
-  Future<Media?> uploadVideo(String path, File file) async {
+  Wait<Media?> uploadVideo(String path, File file) async {
     return uploadFile(
-      file: file,
+      file,
       folderName: '$videos/$path',
       fileName: genFileName('video', file: file),
     );
   }
 
-  Future<Media?> uploadVideoWithThumbnail(String path, File videoFile) async {
+  Wait<Media?> uploadVideoWithThumbnail(String path, File videoFile) async {
     // 1. Gen thumbnail
     final thumbFile = await genThumbnail(videoFile);
     if (thumbFile == null) return null;
@@ -105,7 +104,7 @@ class GenericRepository extends IStorageService {
     );
   }
 
-  Future<List<Media>> uploadMedia(
+  Wait<List<Media>> uploadMedia(
     String path, [
     List<AssetEntity>? assets,
   ]) async {
@@ -142,7 +141,7 @@ class GenericRepository extends IStorageService {
     return medialist.toList();
   }
 
-  Future<void> fromPicture() async {
+  Wait<void> fromPicture() async {
     final image = await pickImage();
     if (image == null) return;
 
@@ -155,7 +154,7 @@ class GenericRepository extends IStorageService {
     file.value = image;
   }
 
-  Future<void> fromVideo() async {
+  Wait<void> fromVideo() async {
     final video = await pickVideo();
     if (video == null) return;
 
@@ -168,7 +167,7 @@ class GenericRepository extends IStorageService {
     file.value = video;
   }
 
-  Future<void> fromMedia(BuildContext context) async {
+  Wait<void> fromMedia(BuildContext context) async {
     final media = await pickMedia(context);
 
     if (media.isEmpty) return;
@@ -177,7 +176,7 @@ class GenericRepository extends IStorageService {
     if (isUnique(media, assets)) assets.addAll(media);
   }
 
-  Future<void> fromCamera(BuildContext context) async {
+  Wait<void> fromCamera(BuildContext context) async {
     final asset = await pickFromCamera(context);
 
     if (asset != null) assets.add(asset);

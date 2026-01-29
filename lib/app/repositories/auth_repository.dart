@@ -6,10 +6,11 @@ import 'package:semesta/public/functions/logger.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/app/models/author.dart';
 import 'package:semesta/app/repositories/user_repository.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
 class AuthRepository extends UserRepository {
   // ---------- SIGN UP ----------
-  Future<User?> signUp(
+  Wait<User?> signUp(
     String email,
     String password,
     File file,
@@ -33,7 +34,7 @@ class AuthRepository extends UserRepository {
   }
 
   // ---------- SIGN IN ----------
-  Future<User?> signIn(String email, String password) async {
+  Wait<User?> signIn(String email, String password) async {
     final response = await auth.signInWithEmailAndPassword(
       email: email,
       password: password,
@@ -59,7 +60,7 @@ class AuthRepository extends UserRepository {
     return author;
   }
 
-  Future<User?> signInWithGoogle() async {
+  Wait<User?> signInWithGoogle() async {
     try {
       // Trigger the authentication flow
       final googleUser = await gg.authenticate();
@@ -104,7 +105,7 @@ class AuthRepository extends UserRepository {
     return null;
   }
 
-  // Future<User?> signInWithFacebook() async {
+  // Wait<User?> signInWithFacebook() async {
   //   // Trigger the sign-in flow
   //   final result = await fb.login();
 
@@ -137,10 +138,10 @@ class AuthRepository extends UserRepository {
   //   }
   // }
 
-  Future<bool> exists(String child) async => isExists(users, child);
+  Wait<bool> exists(String child) async => isExists(users, child);
 
   // ---------- SIGN OUT ----------
-  Future<void> signOut() async {
+  Wait<void> signOut() async {
     await auth.signOut();
     // await google.signOut();
     // await facebook.logOut();

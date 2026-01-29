@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class ErrorView extends StatelessWidget {
   final VoidCallback? onRetry;
@@ -8,8 +9,9 @@ class ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
+      child: DirectionY(
         spacing: 12,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             message ?? 'Something when wrong!',

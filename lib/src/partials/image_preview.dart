@@ -1,16 +1,27 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
-import 'package:semesta/public/functions/option_modal.dart';
+import 'package:semesta/public/extensions/controller_extension.dart';
+import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/components/layout/_layout_page.dart';
-import 'package:semesta/src/components/layout/custom_app_bar.dart';
+import 'package:semesta/src/components/post/actions_bar.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
 
 class ImagePreview extends StatefulWidget {
+  final String id;
+  final int initIndex;
   final List<String> _images;
-  final int initialIndex;
-  const ImagePreview(this._images, {super.key, this.initialIndex = 0});
+  const ImagePreview(
+    this._images, {
+    super.key,
+    this.id = '',
+    this.initIndex = 0,
+  });
 
   @override
   State<ImagePreview> createState() => _ImagePreviewState();
@@ -19,14 +30,15 @@ class ImagePreview extends StatefulWidget {
 class _ImagePreviewState extends State<ImagePreview> {
   late final PageController _pageController;
   double _dragOffset = 0;
-  int currentIndex = 0;
-  bool toggle = true;
+  int _currentIndex = 0;
+  bool _toggle = true;
+  List<String> get _media => widget._images;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: widget.initialIndex);
-    currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initIndex);
+    _currentIndex = widget.initIndex;
   }
 
   void _onVerticalDragUpdate(DragUpdateDetails details) {
@@ -45,44 +57,26 @@ class _ImagePreviewState extends State<ImagePreview> {
 
   @override
   Widget build(BuildContext context) {
-    final options = OptionModal(context);
     final opacity = (1.0 - (_dragOffset.abs() / 300)).clamp(0.3, 1.0);
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
+    return AnnotatedRegion(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light, // Android
         statusBarBrightness: Brightness.dark, // iOS
       ),
       child: LayoutPage(
-        header: toggle
-            ? CustomAppBar(
-                start: IconButton(
-                  onPressed: () => context.pop(),
-                  icon: Icon(Icons.close_rounded, color: Colors.white),
-                ),
-                end: IconButton(
-                  onPressed: () {
-                    options.imageOptions(widget._images[currentIndex]);
-                  },
-                  icon: Icon(Icons.more_horiz_rounded, color: Colors.white),
-                ),
-                bgColor: Colors.transparent,
-              )
-            : CustomAppBar(
-                bgColor: Colors.transparent,
-                start: SizedBox.shrink(),
-              ),
-        bgColor: Colors.black.withValues(alpha: opacity),
+        color: Colors.black.withValues(alpha: opacity),
         content: GestureDetector(
           onVerticalDragUpdate: _onVerticalDragUpdate,
           onVerticalDragEnd: _onVerticalDragEnd,
-          onTap: () => setState(() => toggle = !toggle),
+          onTap: () => setState(() => _toggle = !_toggle),
           onLongPress: () {
-            options.imageOptions(widget._images[currentIndex]);
+            context.open.imageOptions(_media[_currentIndex]);
           },
           child: Stack(
             children: [
+              // Fullscreen media (background)
               Transform.translate(
                 offset: Offset(0, _dragOffset),
                 child: PhotoViewGallery.builder(
@@ -91,21 +85,19 @@ class _ImagePreviewState extends State<ImagePreview> {
                   backgroundDecoration: const BoxDecoration(
                     color: Colors.transparent,
                   ),
-                  itemCount: widget._images.length,
-                  builder: (context, index) => PhotoViewGalleryPageOptions(
-                    imageProvider: NetworkImage(widget._images[index]),
+                  itemCount: _media.length,
+                  builder: (_, index) => PhotoViewGalleryPageOptions(
+                    imageProvider: NetworkImage(_media[index]),
                     minScale: PhotoViewComputedScale.contained,
                     maxScale: PhotoViewComputedScale.covered * 2,
-                    heroAttributes: PhotoViewHeroAttributes(
-                      tag: widget._images[index],
-                    ),
+                    heroAttributes: PhotoViewHeroAttributes(tag: _media[index]),
                   ),
-                  onPageChanged: (i) => setState(() => currentIndex = i),
+                  onPageChanged: (i) => setState(() => _currentIndex = i),
                 ),
               ),
 
               // Index indicator (optional)
-              if (widget._images.length > 1)
+              if (_media.length > 1)
                 Positioned(
                   bottom: 24,
                   left: 0,
@@ -113,19 +105,87 @@ class _ImagePreviewState extends State<ImagePreview> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
-                      widget._images.length,
+                      _media.length,
                       (index) => Container(
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         width: 8,
                         height: 8,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: index == currentIndex
+                          color: index == _currentIndex
                               ? Colors.white
                               : Colors.white38,
                         ),
                       ),
                     ),
+                  ),
+                ),
+
+              //  Top floating app bar
+              if (_toggle)
+                SafeArea(
+                  child: DirectionX(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _CircleButton(
+                        Icons.close,
+                        onTap: () => Navigator.pop(context),
+                      ),
+                      _CircleButton(
+                        Icons.more_horiz,
+                        onTap: () {
+                          context.open.imageOptions(_media[_currentIndex]);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+              //  Bottom actions
+              if (_toggle)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: SafeArea(
+                    top: false,
+                    child: Obx(() {
+                      final data = pctrl.dataMapping[widget.id];
+                      if (data == null) return const SizedBox.shrink();
+
+                      return StreamBuilder(
+                        stream: actrl.actions$(data),
+                        builder: (_, snapshot) {
+                          if (!snapshot.hasData) return const SizedBox.shrink();
+
+                          return ClipRect(
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.35),
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(12),
+                                  ),
+                                ),
+                                child: ActionsBar(
+                                  snapshot.data!,
+                                  start: 24,
+                                  end: 24,
+                                  top: 24,
+                                  bottom: 32,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    }),
                   ),
                 ),
             ],
@@ -140,5 +200,27 @@ class _ImagePreviewState extends State<ImagePreview> {
     _pageController.dispose();
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
     super.dispose();
+  }
+}
+
+class _CircleButton extends StatelessWidget {
+  final IconData _icon;
+  final VoidCallback? onTap;
+  const _CircleButton(this._icon, {this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.4),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(_icon, color: Colors.white),
+      ),
+    );
   }
 }

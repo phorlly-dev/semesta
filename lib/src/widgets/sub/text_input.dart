@@ -7,7 +7,7 @@ class TextInput extends StatelessWidget {
   final String _name;
   final String? label, initValue;
   final Widget? prefixIcon, suffixIcon;
-  final StringCallback<String?>? validator;
+  final FnP<String?, String?>? validator;
   final TextInputType keyboardType;
   final bool readOnly, obscureText, autofocus;
   final int maxLines;

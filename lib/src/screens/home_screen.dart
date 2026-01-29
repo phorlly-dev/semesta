@@ -27,7 +27,7 @@ class HomeScreen extends StatelessWidget {
           if (idx == 1) {
             final meta = pctrl.metaFor('home:following');
             if (meta.dirty) {
-              await pctrl.refreshFollowing();
+              await pctrl.refreshFollowing;
               meta.dirty = false;
             }
           }

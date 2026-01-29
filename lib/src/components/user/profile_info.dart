@@ -12,6 +12,8 @@ import 'package:semesta/src/widgets/main/action_button.dart';
 import 'package:semesta/src/widgets/main/follow_button.dart';
 import 'package:semesta/src/widgets/sub/action_count.dart';
 import 'package:semesta/src/widgets/sub/custom_text_button.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class ProfileInfo extends StatelessWidget {
   final StatusView _status;
@@ -20,8 +22,6 @@ class ProfileInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     final user = _status.author;
     final iFollow = _status.iFollow;
     final theyFollow = _status.theyFollow;
@@ -31,10 +31,7 @@ class ProfileInfo extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         // White background for content
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 32, 12, 8),
-          child: _AuthorInfo(user, _state),
-        ),
+        _AuthorInfo(user, _state),
 
         // Edit / Follow button
         Positioned(
@@ -50,13 +47,13 @@ class ProfileInfo extends StatelessWidget {
                         title: 'Unfollow ${user.name}?',
                         children: [Text(unfollow)],
                         onConfirm: () async {
-                          context.pop();
                           _status.toggle();
+                          context.pop();
                           await actrl.toggleFollow(user.id, iFollow);
                         },
                         label: 'Unfollow',
                         icon: Icons.person_remove_sharp,
-                        color: colors.primary,
+                        color: context.primaryColor,
                       );
                     } else {
                       _status.toggle();
@@ -77,9 +74,8 @@ class _AuthorInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return DirectionY(
+      padding: const EdgeInsets.fromLTRB(16, 32, 12, 8),
       children: [
         DisplayName(_user.name, maxChars: 50),
         Username(_user.uname, maxChars: 60),
@@ -88,13 +84,13 @@ class _AuthorInfo extends StatelessWidget {
         if (_user.bio.isNotEmpty) Bio(_user.bio),
         SizedBox(height: _user.bio.isEmpty ? 0 : 6),
 
-        Row(
+        DirectionX(
           spacing: 6,
           children: [
             ActionButton(
               sizeIcon: 18,
               textSize: 14,
-              iconColor: colors.outline,
+              color: context.outlineColor,
               icon: Icons.batch_prediction_rounded,
               label: 'Born ${_user.dob!.toDate}',
             ),
@@ -102,7 +98,7 @@ class _AuthorInfo extends StatelessWidget {
             ActionButton(
               sizeIcon: 18,
               textSize: 14,
-              iconColor: colors.outline,
+              color: context.outlineColor,
               icon: Icons.calendar_month_outlined,
               label: 'Joined on ${_user.createdAt!.format('MMM yyyy')}',
             ),
@@ -110,7 +106,7 @@ class _AuthorInfo extends StatelessWidget {
         ),
 
         SizedBox(height: 6),
-        Row(
+        DirectionX(
           spacing: 12,
           children: [
             ActionCount(
@@ -139,7 +135,7 @@ class _AuthorInfo extends StatelessWidget {
               },
             ),
 
-            ActionCount(_state.value, kind: _state.kind),
+            if (_state.value > 0) ActionCount(_state.value, kind: _state.kind),
           ],
         ),
       ],

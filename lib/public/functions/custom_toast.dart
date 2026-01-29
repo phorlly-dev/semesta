@@ -6,8 +6,8 @@ enum ToastType { success, info, warning, error }
 class CustomToast {
   CustomToast._();
 
-  static void _show({
-    required String message,
+  static void _show(
+    String message, {
     String? title,
     ToastType type = ToastType.success,
     int autoCloseSeconds = 2,
@@ -51,28 +51,28 @@ class CustomToast {
 
   // Convenience shortcuts
   static void success(String msg, {String? title, int duration = 2}) => _show(
-    message: msg,
+    msg,
     title: title,
     type: ToastType.success,
     autoCloseSeconds: duration,
   );
 
   static void info(String msg, {String? title, int duration = 2}) => _show(
-    message: msg,
+    msg,
     title: title,
     type: ToastType.info,
     autoCloseSeconds: duration,
   );
 
   static void warning(String msg, {String? title, int duration = 2}) => _show(
-    message: msg,
+    msg,
     title: title,
     type: ToastType.warning,
     autoCloseSeconds: duration,
   );
 
   static void error(String msg, {String? title, int duration = 6}) => _show(
-    message: msg,
+    msg,
     title: title,
     type: ToastType.error,
     autoCloseSeconds: duration,

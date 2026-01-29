@@ -11,7 +11,7 @@ class AppStart extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       lazy: false,
-      create: (ctx) => ThemeManager(),
+      create: (_) => ThemeManager(),
       child: ScreenUtilInit(
         designSize: const Size(360, 800),
         minTextAdapt: true,

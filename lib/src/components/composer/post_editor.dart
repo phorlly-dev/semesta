@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/src/components/global/media_preview.dart';
 import 'package:semesta/src/widgets/sub/avatar_animation.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class PostEditor extends StatelessWidget {
@@ -24,17 +26,16 @@ class PostEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return DirectionY(
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start, // 🔥 important
+        DirectionX(
           children: [
-            AvatarAnimation(avatar, size: 40),
+            AvatarAnimation(avatar, padding: EdgeInsets.only(top: 2)),
 
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
 
             Expanded(
-              child: Column(
+              child: DirectionY(
                 children: [
                   TextField(
                     controller: content,
@@ -68,10 +69,7 @@ class PostEditor extends StatelessWidget {
 
         if (bottom != null) ...[
           if (assets.isNotEmpty) SizedBox(height: 6),
-          Padding(
-            padding: const EdgeInsets.only(left: 58, right: 6),
-            child: bottom!,
-          ),
+          Padding(padding: const EdgeInsets.only(left: 44), child: bottom!),
         ],
       ],
     );

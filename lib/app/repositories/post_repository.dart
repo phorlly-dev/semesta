@@ -8,7 +8,7 @@ import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
 
 class PostRepository extends IRepository<Feed> with PostMixin {
-  Future<void> insert(Feed model) async {
+  Wait<void> insert(Feed model) async {
     assert(model.uid.isNotEmpty);
 
     try {
@@ -25,8 +25,8 @@ class PostRepository extends IRepository<Feed> with PostMixin {
 
             final comment = model.copy(id: commentRef.id, pid: parentRef.id);
             txs
-              ..set(commentRef, comment.to())
-              ..update(parentRef, incrementStat(FeedKind.replied));
+                .set(commentRef, comment.to())
+                .update(parentRef, incrementStat(FeedKind.replied));
             break;
 
           // ─────────────────────────────────────────────
@@ -40,8 +40,8 @@ class PostRepository extends IRepository<Feed> with PostMixin {
 
             final quote = model.copy(id: quoteRef.id, pid: model.pid);
             txs
-              ..set(quoteRef, quote.to())
-              ..update(parentRef, incrementStat(FeedKind.quoted));
+                .set(quoteRef, quote.to())
+                .update(parentRef, incrementStat(FeedKind.quoted));
             break;
 
           // ─────────────────────────────────────────────
@@ -58,25 +58,25 @@ class PostRepository extends IRepository<Feed> with PostMixin {
     }
   }
 
-  Future<void> toggleFavorite(ActionTarget target, String uid) async {
+  Wait<void> toggleFavorite(ActionTarget target, String uid) async {
     switch (target) {
-      case FeedTarget(:final pid):
+      case ParentTarget(:final pid):
         await toggle(pid, uid);
         break;
 
-      case CommentTarget(:final pid, :final cid):
+      case ChildTarget(:final pid, :final cid):
         await subtoggle(pid, cid, uid);
         break;
     }
   }
 
-  Future<void> toggleRepost(ActionTarget target, String uid) async {
+  Wait<void> toggleRepost(ActionTarget target, String uid) async {
     switch (target) {
-      case FeedTarget(:final pid):
+      case ParentTarget(:final pid):
         await toggle(pid, uid, subcol: reposts, kind: FeedKind.reposted);
         break;
 
-      case CommentTarget(:final pid, :final cid):
+      case ChildTarget(:final pid, :final cid):
         await subtoggle(
           pid,
           cid,
@@ -88,15 +88,69 @@ class PostRepository extends IRepository<Feed> with PostMixin {
     }
   }
 
-  Future<void> toggleBookmark(ActionTarget target, String uid) async {
+  Wait<void> toggleBookmark(ActionTarget target, String uid) async {
     switch (target) {
-      case FeedTarget(:final pid):
+      case ParentTarget(:final pid):
         await toggle(pid, uid, subcol: bookmarks, kind: FeedKind.saved);
         break;
 
-      case CommentTarget(:final pid, :final cid):
+      case ChildTarget(:final pid, :final cid):
         await subtoggle(pid, cid, uid, subcol: bookmarks, kind: FeedKind.saved);
         break;
+    }
+  }
+
+  Wait<void> destroyPost(Feed post, [String col = comments]) async {
+    try {
+      await db.runTransaction((txs) async {
+        final ref = collection(path);
+        final id = post.id;
+        final pid = post.pid;
+
+        switch (post.type) {
+          case Create.quote:
+            txs
+                .delete(ref.doc(id))
+                .update(ref.doc(pid), incrementStat(FeedKind.quoted, -1));
+            break;
+
+          case Create.reply:
+            txs
+                .delete(ref.doc(pid).collection(col).doc(id))
+                .update(ref.doc(pid), incrementStat(FeedKind.replied, -1));
+            break;
+
+          default:
+            txs.delete(ref.doc(id));
+        }
+      });
+    } catch (e) {
+      // Log error or handle appropriately
+      HandleLogger.error('Failed to delete data: $e', message: e);
+      rethrow; // or handle gracefully
+    }
+  }
+
+  Wait<void> modifyPost(Feed post, AsMap data, [String col = comments]) async {
+    try {
+      await db.runTransaction((txs) async {
+        final ref = collection(path);
+        final id = post.id;
+        final pid = post.pid;
+
+        switch (post.type) {
+          case Create.reply:
+            txs.update(ref.doc(pid).collection(col).doc(id), data);
+            break;
+
+          default:
+            txs.update(ref.doc(id), data);
+        }
+      });
+    } catch (e) {
+      // Log error or handle appropriately
+      HandleLogger.error('Failed to update data: $e', message: e);
+      rethrow; // or handle gracefully
     }
   }
 

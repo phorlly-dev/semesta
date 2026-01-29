@@ -1,3 +1,4 @@
+import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/app/models/author.dart';
 import 'package:semesta/app/models/feed.dart';
@@ -118,6 +119,7 @@ enum Screen {
   following,
   bookmark,
   post,
+  quote,
   comment,
   media,
   favorite,
@@ -151,28 +153,25 @@ String getKey({String id = '', Screen screen = Screen.home}) {
   }
 }
 
-bool isComment(Feed f) => f.type == Create.reply && f.pid.isNotEmpty;
-String feedPath(Feed f) {
-  if (isComment(f)) {
-    return '${f.pid}/$comments/${f.id}';
-  }
+String feedPath(Feed f) => f.hasComment ? '${f.pid}/$comments/${f.id}' : f.id;
 
-  return f.id;
+ActionTarget getTarget(Feed f) {
+  return f.hasComment ? ChildTarget(f.pid, f.id) : ParentTarget(f.id);
 }
 
 String repostPath(ActionTarget target, String uid) {
   switch (target) {
-    case FeedTarget(:final pid):
+    case ParentTarget(:final pid):
       return '$pid/$reposts/$uid';
 
-    case CommentTarget(:final pid, :final cid):
+    case ChildTarget(:final pid, :final cid):
       return '$pid/$comments/$cid/$reposts/$uid';
   }
 }
 
-bool canNavigateTo(String targetUserId, [String? viewedProfileId]) {
-  if (viewedProfileId == null) return true;
-  return targetUserId != viewedProfileId;
+bool canNavigateTo(String targetUid, [String? viewedUid]) {
+  if (viewedUid == null) return true;
+  return targetUid != viewedUid;
 }
 
 Follow resolveState(bool iFollow, bool theyFollow) {
@@ -183,4 +182,11 @@ Follow resolveState(bool iFollow, bool theyFollow) {
   } else {
     return Follow.follow;
   }
+}
+
+String getkey(ActionTarget target) {
+  return switch (target) {
+    ParentTarget(:final pid) => 'p:$pid',
+    ChildTarget(:final pid, :final cid) => 'c:$pid:$cid',
+  };
 }

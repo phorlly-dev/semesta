@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class ExpandableText extends StatefulWidget {
   final String _text;
@@ -78,8 +79,7 @@ class _ExpandableTextState extends State<ExpandableText> {
   @override
   Widget build(BuildContext context) {
     Color textColor() {
-      final isDarkNow = Theme.of(context).brightness == Brightness.dark;
-      if (isDarkNow) {
+      if (context.isDarkMode) {
         return Colors.white;
       } else {
         return Colors.black87;

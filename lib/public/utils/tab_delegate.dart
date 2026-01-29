@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/src/components/layout/custom_tab_bar.dart';
 
 class TabDelegate extends SliverPersistentHeaderDelegate {
@@ -16,14 +17,11 @@ class TabDelegate extends SliverPersistentHeaderDelegate {
     BuildContext context,
     double shrinkOffset,
     bool overlapsContent,
-  ) {
-    final colors = Theme.of(context).scaffoldBackgroundColor;
-    return Material(
-      color: colors,
-      elevation: shrinkOffset > 0 ? 2 : 0,
-      child: _tabBar,
-    );
-  }
+  ) => Material(
+    color: context.defaultColor,
+    elevation: shrinkOffset > 0 ? 2 : 0,
+    child: _tabBar,
+  );
 
   @override
   bool shouldRebuild(TabDelegate oldDelegate) => false;

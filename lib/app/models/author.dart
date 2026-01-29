@@ -85,25 +85,22 @@ class Author extends Model<Author> {
   }
 
   @override
-  AsMap to() {
-    final data = {
-      ...general,
-      'name': name.trim(),
-      'avatar': avatar,
-      'gender': gender.name,
-      'dob': Model.toEpoch(dob),
-      'email': email?.trim(),
-      'bio': bio,
-      'banner': banner,
-      'follower': follower,
-      'following': following,
-      'verified': verified,
-      'location': location,
-      'uname': uname.trim().toLowerCase(),
-      'website': website,
-    };
-    return Model.convertJsonKeys(data);
-  }
+  AsMap to() => Model.convertJsonKeys({
+    ...general,
+    'name': name.trim(),
+    'avatar': avatar,
+    'gender': gender.name,
+    'dob': Model.toEpoch(dob),
+    'email': email?.trim(),
+    'bio': bio,
+    'banner': banner,
+    'follower': follower,
+    'following': following,
+    'verified': verified,
+    'location': location,
+    'uname': uname.trim().toLowerCase(),
+    'website': website,
+  });
 
   @override
   Author copy({

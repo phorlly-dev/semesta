@@ -4,23 +4,27 @@ import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/components/user/user_info.dart';
 import 'package:semesta/src/widgets/main/animated.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
 
 class ReferenceToPost extends StatelessWidget {
-  final String uid;
-  const ReferenceToPost({super.key, required this.uid});
+  final String _uid;
+  const ReferenceToPost(this._uid, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final data = uctrl.dataMapping[uid];
-      if (data == null) return const SizedBox.shrink();
-
-      return DisplayParent(
-        name: data.uname,
-        onTap: () async {
-          await context.openProfile(data.id, pctrl.isCurrentUser(data.id));
-        },
-      );
+      final data = uctrl.dataMapping[_uid];
+      return data == null
+          ? const SizedBox.shrink()
+          : DisplayParent(
+              name: data.uname,
+              onTap: () async {
+                await context.openProfile(
+                  data.id,
+                  pctrl.isCurrentUser(data.id),
+                );
+              },
+            );
     });
   }
 }
@@ -28,6 +32,7 @@ class ReferenceToPost extends StatelessWidget {
 class DisplayParent extends StatelessWidget {
   final String message, name;
   final bool commented;
+  final Color? color;
   final VoidCallback? onTap;
   const DisplayParent({
     super.key,
@@ -35,17 +40,26 @@ class DisplayParent extends StatelessWidget {
     required this.name,
     this.commented = true,
     this.onTap,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Row(
+    return DirectionX(
       spacing: 6,
+      padding: const EdgeInsets.only(bottom: 4),
       children: [
-        Text(message, style: TextStyle(color: colors.secondary)),
+        Text(
+          message,
+          style: TextStyle(color: context.secondaryColor, fontSize: 16),
+        ),
         if (commented)
-          Username(name, color: colors.primary, onTap: onTap, maxChars: 24)
+          Username(
+            name,
+            color: color ?? context.primaryColor,
+            onTap: onTap,
+            maxChars: 24,
+          )
         else
           Animated(
             onTap: onTap,
@@ -54,7 +68,7 @@ class DisplayParent extends StatelessWidget {
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: colors.secondary,
+                color: context.secondaryColor,
               ),
             ),
           ),

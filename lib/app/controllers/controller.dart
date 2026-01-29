@@ -11,10 +11,10 @@ abstract class IController<T> extends GetxController with PagerMixin<T> {
   final RxString message = ''.obs;
 
   /// A reusable async handler for try/catch/finally logic.
-  Future<void> handleAsync({
-    required FutureCallback<void> callback,
-    ErrorsCallback<void>? onError,
-    PropsCallback<bool, void>? onFinal,
+  Wait<void> handleAsync({
+    required Fn<void> callback,
+    FnP<bool, void>? onFinal,
+    FnP2<Object, StackTrace, void>? onError,
   }) async {
     // 1. Set loading state to true *before* the operation starts.
     isLoading.value = true;
@@ -38,10 +38,10 @@ abstract class IController<T> extends GetxController with PagerMixin<T> {
     }
   }
 
-  Future<void> tryCatch({
-    required FutureCallback<void> callback,
-    ErrorsCallback<void>? onError,
-    PropsCallback<bool, void>? onFinal,
+  Wait<void> tryCatch({
+    required Fn<void> callback,
+    FnP<bool, void>? onFinal,
+    FnP2<Object, StackTrace, void>? onError,
   }) async {
     try {
       await callback();

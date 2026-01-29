@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/public/extensions/extension.dart';
 
 class NoDataEntries extends StatelessWidget {
   final String _message;
@@ -6,11 +7,10 @@ class NoDataEntries extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
     return Center(
       child: Text(
         _message,
-        style: text.bodyLarge?.copyWith(fontWeight: FontWeight.w400),
+        style: context.text.bodyLarge?.copyWith(fontWeight: FontWeight.w400),
       ),
     );
   }

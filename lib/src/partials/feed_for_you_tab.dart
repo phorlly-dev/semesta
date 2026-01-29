@@ -9,7 +9,7 @@ import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/src/components/global/items_builder.dart';
-import 'package:semesta/src/components/global/live_feed.dart';
+import 'package:semesta/src/components/global/live_feed_threaded.dart';
 
 class FeedForYouTab extends StatefulWidget {
   final ScrollController _scroller;
@@ -20,8 +20,7 @@ class FeedForYouTab extends StatefulWidget {
 }
 
 class _FeedForYouTabState extends State<FeedForYouTab> {
-  final _key = getKey();
-  CachedState<FeedView> get _states => pctrl.stateFor(_key);
+  CachedState<FeedView> get _states => pctrl.stateFor(getKey());
 
   @override
   void initState() {
@@ -52,7 +51,7 @@ class _FeedForYouTabState extends State<FeedForYouTab> {
       fetch: () => pctrl.loadMoreForYou(QueryMode.next),
       apply: (items) {
         final ranked = items.rankFeed(pctrl.sessionSeed);
-        pctrl.stateFor(_key).append(ranked);
+        _states.append(ranked);
       },
       onError: () => _showError('Failed to load more'),
     );
@@ -70,9 +69,9 @@ class _FeedForYouTabState extends State<FeedForYouTab> {
         message: "There's no posts yet.",
         hasError: pctrl.error.value,
         onMore: _loadMore,
-        onRefresh: pctrl.refreshPost,
+        onRefresh: () => pctrl.refreshPost,
         onRetry: () => _load(retry: true),
-        builder: (ctx, idx) => LiveFeed(_states[idx]),
+        builder: (ctx, idx) => LiveFeedThreaded(_states[idx]),
       );
     });
   }

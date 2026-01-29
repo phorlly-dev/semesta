@@ -1,26 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/app/models/media.dart';
+import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/src/widgets/main/media_item.dart';
 
 class MediaGallery extends StatelessWidget {
   final String id;
-  final double height, start, end;
+  final double start, end;
   final List<Media> media; // image or video URLs
   final BorderRadius? borderRadius;
   const MediaGallery({
     super.key,
     required this.media,
     required this.id,
-    this.height = 360,
-    this.start = 60,
+    this.start = 56,
     this.end = 12,
     this.borderRadius,
   });
 
   @override
   Widget build(BuildContext context) {
-    final feedWidth = MediaQuery.of(context).size.width;
-
     // For single media
     if (media.length == 1) {
       return Padding(
@@ -43,11 +41,11 @@ class MediaGallery extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         itemCount: media.length,
         padding: EdgeInsetsDirectional.only(start: start, end: end),
-        separatorBuilder: (ctx, idx) => const SizedBox(width: 6),
-        itemBuilder: (context, index) {
+        separatorBuilder: (_, idx) => const SizedBox(width: 8),
+        itemBuilder: (_, index) {
           final m = media[index];
           return SizedBox(
-            width: feedWidth * 0.48,
+            width: context.width * 0.48,
             child: MediaItem(
               id: id,
               url: m.display,

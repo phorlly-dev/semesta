@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:get/get_utils/src/extensions/context_extensions.dart';
 import 'package:semesta/src/widgets/sub/error_view.dart';
 import 'package:semesta/src/widgets/sub/loading_animated.dart';
 import 'package:semesta/src/widgets/sub/no_data_entries.dart';
@@ -22,7 +23,7 @@ class DataBinder extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isLoading) {
       return SizedBox(
-        height: MediaQuery.of(context).size.height,
+        height: context.height,
         child: LoadingAnimated(cupertino: true),
       );
     } else if (isEmpty) {

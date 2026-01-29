@@ -9,6 +9,7 @@ import 'package:semesta/app/controllers/auth_controller.dart';
 import 'package:semesta/app/controllers/controller.dart';
 import 'package:semesta/app/models/author.dart';
 import 'package:semesta/public/helpers/audit_view.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
 class UserController extends IController<AuthedView> {
   StreamSubscription? _userSub, _currentUserSub;
@@ -37,14 +38,14 @@ class UserController extends IController<AuthedView> {
       currentUid.value = '';
     } else {
       // Logged in → fetch new data
-      _currentUserSub = urepo.stream$(firebaseUser.uid).listen((u) {
+      _currentUserSub = urepo.sync$(firebaseUser.uid).listen((u) {
         currentUid.value = u.id;
         currentUser.value = u;
       });
     }
   }
 
-  Future<void> loadInfo() async {
+  Wait<void> loadInfo() async {
     final data = await urepo.index(limit: 100);
     if (data.isEmpty) return;
 
@@ -53,7 +54,7 @@ class UserController extends IController<AuthedView> {
     }
   }
 
-  Future<void> toggleFollow(String targetId) async {
+  Wait<void> toggleFollow(String targetId) async {
     final uid = currentUid.value;
     if (uid.isEmpty || targetId.isEmpty) return;
 
@@ -61,10 +62,10 @@ class UserController extends IController<AuthedView> {
   }
 
   void listenToUser(String uid) {
-    _userSub = urepo.stream$(uid).listen((u) => dataMapping[uid] = u);
+    _userSub = urepo.sync$(uid).listen((u) => dataMapping[uid] = u);
   }
 
-  Future<List<AuthedView>> loadUserFollowing(
+  Wait<List<AuthedView>> loadUserFollowing(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {
@@ -77,7 +78,7 @@ class UserController extends IController<AuthedView> {
     return mapToFollow(users, actions, (value) => value.targetId);
   }
 
-  Future<List<AuthedView>> loadUserFollowers(
+  Wait<List<AuthedView>> loadUserFollowers(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {

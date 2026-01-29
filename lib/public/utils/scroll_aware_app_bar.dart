@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 class ScrollAwareAppBar extends StatefulWidget {
-  final PropsCallback<bool, Widget> _builder;
+  final FnP<bool, Widget> _builder;
   const ScrollAwareAppBar(this._builder, {super.key});
 
   @override

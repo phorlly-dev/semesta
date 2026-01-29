@@ -18,7 +18,7 @@ mixin RepoMixin<T> on GenericRepository {
   T from(AsMap map, String id);
 
   /// Get document by ID
-  Future<T?> show(String id) async {
+  Wait<T?> show(String id) async {
     final doc = await collection(path).doc(id).get();
     if (!doc.exists) return null;
 
@@ -26,58 +26,54 @@ mixin RepoMixin<T> on GenericRepository {
   }
 
   /// Get all documents (basic)
-  Future<List<T>> index({
+  Wait<List<T>> index({
     int limit = 20,
     bool descending = true,
     String orderKey = made,
     QueryMode mode = QueryMode.normal,
-  }) {
-    return collection(path)
-        .orderBy(orderKey, descending: descending)
-        .limit(mode == QueryMode.refresh ? 100 : limit)
-        .get()
-        .then((value) {
-          return value.docs.map((doc) => from(doc.data(), doc.id)).toList();
-        })
-        .catchError((error, stackTrace) {
-          HandleLogger.error(
-            'Failed to fetch all documents',
-            message: error,
-            stack: stackTrace,
-          );
+  }) => collection(path)
+      .orderBy(orderKey, descending: descending)
+      .limit(mode == QueryMode.refresh ? 100 : limit)
+      .get()
+      .then((value) {
+        return value.docs.map((doc) => from(doc.data(), doc.id)).toList();
+      })
+      .catchError((error, stackTrace) {
+        HandleLogger.error(
+          'Failed to fetch all documents',
+          message: error,
+          stack: stackTrace,
+        );
 
-          return <T>[];
-        });
-  }
+        return <T>[];
+      });
 
   /// Get all documents (anvanced)
-  Future<List<T>> subindex({
+  Wait<List<T>> subindex({
     int limit = 20,
     String col = comments,
     bool descending = true,
     String orderKey = made,
     QueryMode mode = QueryMode.normal,
-  }) {
-    return subcollection(col)
-        .orderBy(orderKey, descending: descending)
-        .limit(mode == QueryMode.refresh ? 100 : limit)
-        .get()
-        .then((value) {
-          return value.docs.map((doc) => from(doc.data(), doc.id)).toList();
-        })
-        .catchError((error, stackTrace) {
-          HandleLogger.error(
-            'Failed to fetch all subdocuments',
-            message: error,
-            stack: stackTrace,
-          );
+  }) => subcollection(col)
+      .orderBy(orderKey, descending: descending)
+      .limit(mode == QueryMode.refresh ? 100 : limit)
+      .get()
+      .then((value) {
+        return value.docs.map((doc) => from(doc.data(), doc.id)).toList();
+      })
+      .catchError((error, stackTrace) {
+        HandleLogger.error(
+          'Failed to fetch all subdocuments',
+          message: error,
+          stack: stackTrace,
+        );
 
-          return <T>[];
-        });
-  }
+        return <T>[];
+      });
 
   /// Flexible query builder with optional filtering, ordering, and pagination
-  Future<List<T>> query({
+  Wait<List<T>> query({
     String? key,
     Object? value,
     int limit = 20,
@@ -92,7 +88,7 @@ mixin RepoMixin<T> on GenericRepository {
 
     // Apply filters
     if (value != null) {
-      query = query.where(key ?? id, isEqualTo: value);
+      query = query.where(key ?? keyId, isEqualTo: value);
     } else if (values != null && values.isNotEmpty) {
       query = query.where(key ?? userId, whereIn: values);
     }
@@ -103,7 +99,7 @@ mixin RepoMixin<T> on GenericRepository {
   }
 
   /// Advanced query with multiple conditions
-  Future<List<T>> queryAdvanced({
+  Wait<List<T>> queryAdvanced({
     int limit = 20,
     String orderKey = made,
     bool descending = true,
@@ -127,7 +123,7 @@ mixin RepoMixin<T> on GenericRepository {
     return snapshot.docs.map((doc) => from(doc.data(), doc.id)).toList();
   }
 
-  Stream<T> stream$(String doc) {
+  Sync<T> sync$(String doc) {
     assert(doc.isNotEmpty, 'Document ID must not be empty');
 
     return collection(path)
@@ -146,11 +142,11 @@ mixin RepoMixin<T> on GenericRepository {
         });
   }
 
-  Stream<Doc<AsMap>> liveStream(String doc) {
+  Sync<Doc<AsMap>> syncDoc$(String doc) {
     return collection(path).doc(doc).snapshots();
   }
 
-  Stream<bool> has$(String docPath) {
+  Sync<bool> has$(String docPath) {
     return document(docPath).snapshots().map((d) => d.exists);
   }
 
@@ -165,7 +161,7 @@ mixin RepoMixin<T> on GenericRepository {
     return db.doc(docPath);
   }
 
-  Future<List<T>> getInOrder(
+  Wait<List<T>> getInOrder(
     AsList values, {
     int limit = 20,
     QueryMode mode = QueryMode.normal,
@@ -183,10 +179,10 @@ mixin RepoMixin<T> on GenericRepository {
     return values.where(map.containsKey).map((id) => map[id]!).toList();
   }
 
-  Future<List<T>> getInSuborder(
+  Wait<List<T>> getInSuborder(
     AsList values, {
     int limit = 20,
-    String key = id,
+    String key = keyId,
     String col = comments,
     QueryMode mode = QueryMode.normal,
   }) async {
@@ -203,7 +199,7 @@ mixin RepoMixin<T> on GenericRepository {
     return values.where(map.containsKey).map((id) => map[id]!).toList();
   }
 
-  Future<List<Reaction>> getReactions({
+  Wait<List<Reaction>> getReactions({
     int limit = 30,
     String orderKey = made,
     String col = followers,
@@ -238,7 +234,7 @@ mixin RepoMixin<T> on GenericRepository {
         });
   }
 
-  Future<List<T>> getInGrouped({
+  Wait<List<T>> getInGrouped({
     int limit = 20,
     String col = comments,
     String orderKey = made,

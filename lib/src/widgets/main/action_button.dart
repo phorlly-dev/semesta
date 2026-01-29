@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/functions/format_helper.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
 
 class ActionButton extends StatefulWidget {
   final dynamic icon;
   final dynamic label;
-  final Color? iconColor;
+  final Color? color;
   final double sizeIcon, textSize;
   final bool isActive; // 🔥 for liked/reposted/saved state
   final VoidCallback? onPressed;
-
   const ActionButton({
     super.key,
     this.icon,
     this.label,
-    this.iconColor,
+    this.color,
     this.sizeIcon = 22,
     this.isActive = false,
     this.onPressed,
@@ -59,18 +60,17 @@ class _ActionButtonState extends State<ActionButton>
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).hintColor;
     final iconWidget = widget.icon is IconData
         ? Icon(
             widget.icon,
             size: widget.sizeIcon,
-            color: widget.iconColor ?? color,
+            color: widget.color ?? context.hintColor,
           )
         : Image.asset(
             asImage(widget.icon, true),
             width: widget.sizeIcon,
             height: widget.sizeIcon,
-            color: widget.iconColor ?? color,
+            color: widget.color ?? context.hintColor,
           );
 
     return GestureDetector(
@@ -79,7 +79,7 @@ class _ActionButtonState extends State<ActionButton>
         widget.onPressed?.call();
       },
       behavior: HitTestBehavior.opaque,
-      child: Row(
+      child: DirectionX(
         mainAxisSize: MainAxisSize.min,
         children: [
           AnimatedScale(
@@ -94,9 +94,11 @@ class _ActionButtonState extends State<ActionButton>
           if (widget.label != null) ...[
             const SizedBox(width: 6),
             Text(
-              widget.label is int ? toCount(widget.label ?? 0) : widget.label,
+              widget.label is int
+                  ? (widget.label > 0 ? toCount(widget.label ?? 0) : '')
+                  : widget.label,
               style: TextStyle(
-                color: color,
+                color: widget.color ?? context.hintColor,
                 fontSize: widget.textSize,
                 fontWeight: FontWeight.w500,
               ),

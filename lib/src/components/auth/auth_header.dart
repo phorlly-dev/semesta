@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class AuthHeader extends StatelessWidget {
   final bool isCreate;
@@ -6,7 +7,7 @@ class AuthHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return DirectionY(
       children: [
         Icon(Icons.lock_outline, size: 80, color: const Color(0xFF4A9EFF)),
         const SizedBox(height: 8),

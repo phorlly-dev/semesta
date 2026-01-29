@@ -1,6 +1,4 @@
-import 'dart:async';
 import 'package:semesta/public/functions/custom_toast.dart';
-import 'package:semesta/public/functions/logger.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/app/controllers/feed_controller.dart';
@@ -36,7 +34,7 @@ class PostController extends IFeedController {
     metaFor(key).dirty = true; // next switch triggers refill
   }
 
-  Future<void> save(Feed model, List<AssetEntity> files) async {
+  Wait<void> save(Feed model, List<AssetEntity> files) async {
     await handleAsync(
       callback: () async {
         final user = currentUser;
@@ -50,41 +48,24 @@ class PostController extends IFeedController {
     );
   }
 
-  Future<void> saveChange(String pid, AsMap data) async {
-    if (pid.isEmpty) return;
+  Wait<void> saveChange(Feed post, AsMap data) async {
     await handleAsync(
       callback: () async {
-        await prepo.modify(pid, data);
+        await prepo.modifyPost(post, data);
+        editCache(post, currentUid, this);
         CustomToast.info('Post updated.!');
       },
     );
   }
 
-  Future<void> remove(String pid, String uid) async {
-    if (pid.isEmpty || uid.isEmpty) return;
+  Wait<void> remove(Feed post) async {
     await handleAsync(
       callback: () async {
-        final post = dataMapping[pid]!;
-        if (post.media.isNotEmpty) {
-          for (final m in post.media) {
-            try {
-              await prepo.deleteFile(m.path);
+        await deleteMediaFiles(post.media);
+        await prepo.destroyPost(post);
 
-              final path = m.thumbnails['path'].toString();
-              if (m.thumbnails.isNotEmpty && path.isNotEmpty) {
-                await prepo.deleteFile(path);
-              }
-            } catch (e) {
-              HandleLogger.error(
-                "Failed to delete media file",
-                message: e.toString(),
-              );
-            }
-          }
-        }
-
-        await prepo.destroy(pid);
-        CustomToast.success('Post deleted.!');
+        clearCache(post, currentUid, this);
+        CustomToast.success('Post deleted!');
       },
     );
   }

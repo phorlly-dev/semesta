@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/utils/custom_bottom_sheet.dart';
 import 'package:semesta/public/utils/custom_modal.dart';
-import 'package:semesta/public/functions/visible_option.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/helpers/audit_view.dart';
@@ -14,21 +14,19 @@ class OptionModal {
   final BuildContext _context;
   const OptionModal(this._context);
 
-  ColorScheme get colors => Theme.of(_context).colorScheme;
-
   void anotherOptions(
     Feed post,
     ActionTarget target, {
     bool iFollow = false,
-    required String name,
     bool active = false,
-    bool primary = true,
+    bool profiled = true,
+    required String name,
     required StatusView status,
   }) {
     CustomBottomSheet(
       _context,
       children: [
-        if (primary)
+        if (profiled)
           OptionButton(
             'Go to Profile',
             icon: Icons.person,
@@ -55,12 +53,12 @@ class OptionModal {
                 title: 'Unfollow $name',
                 children: [Text(unfollow)],
                 onConfirm: () async {
-                  _context.pop();
                   status.toggle();
+                  _context.pop();
                   await actrl.toggleFollow(post.uid, iFollow);
                 },
                 icon: Icons.person_remove_sharp,
-                color: colors.primary,
+                color: _context.primaryColor,
                 label: 'Unfollow',
               );
             } else {
@@ -79,14 +77,14 @@ class OptionModal {
         OptionButton(
           'Block',
           icon: Icons.person_off,
-          color: colors.error,
+          color: _context.errorColor,
           onTap: () {},
         ),
 
         OptionButton(
           'Report',
           icon: Icons.report_problem_outlined,
-          color: colors.error,
+          color: _context.errorColor,
           onTap: () {},
         ),
       ],
@@ -96,13 +94,43 @@ class OptionModal {
   void currentOptions(
     Feed post,
     ActionTarget target, {
-    bool primary = true,
+    bool profiled = false,
     bool active = false,
   }) {
     CustomBottomSheet(
       _context,
       children: [
-        if (primary)
+        if (profiled && post.isEditable)
+          StreamBuilder(
+            stream: post.editCountdown$,
+            builder: (_, snap) {
+              if (!snap.hasData || snap.data == Duration.zero) {
+                return const SizedBox.shrink();
+              }
+
+              final remaining = snap.data!;
+              final opacity = remaining.inSeconds <= 10 ? 0.6 : 1.0;
+
+              return Opacity(
+                opacity: opacity,
+                child: OptionButton(
+                  'Edit Post',
+                  icon: Icons.edit_square,
+                  status: Text(
+                    post.formatMMSS(remaining),
+                    style: _context.text.bodyMedium?.copyWith(
+                      color: _context.outlineColor,
+                    ),
+                  ),
+                  onTap: () async {
+                    await _context.openById(route.change, post.id);
+                  },
+                ),
+              );
+            },
+          ),
+
+        if (!profiled)
           OptionButton(
             icon: Icons.person,
             'Go to Profile',
@@ -119,34 +147,28 @@ class OptionModal {
           },
         ),
 
-        if (!primary)
-          OptionButton(
-            'Edit Post',
-            icon: Icons.edit_square,
-            onTap: () {},
-            color: colors.scrim,
-          ),
-
         OptionButton(
           'Change who can reply',
           icon: 'comment.png',
-          color: colors.primary,
+          color: _context.primaryColor,
           onTap: () {
-            final show = VisibleOption(_context);
-            show.showModal(
-              selected: show.mapVisibleToId(post.visible),
-              onSelected: (id, opt) async {
-                await pctrl.saveChange(post.id, {'visible': opt.name});
+            _context.tap.showModal(
+              selected: _context.tap.mapVisibleToId(post.visible),
+              onSelected: (_, opt) async {
+                await pctrl.saveChange(
+                  post,
+                  post.copy(visible: opt, edited: true).to(),
+                );
               },
             );
           },
         ),
 
-        if (!primary)
+        if (profiled) ...[
           OptionButton(
             'Delete post',
             icon: Icons.delete_outline,
-            color: colors.error,
+            color: _context.errorColor,
             onTap: () {
               CustomModal(
                 _context,
@@ -158,12 +180,14 @@ class OptionModal {
                 ],
                 onConfirm: () async {
                   _context.pop();
-                  await pctrl.remove(post.id, post.uid);
+                  await pctrl.remove(post);
                 },
-                color: colors.error,
+                color: _context.errorColor,
               );
             },
           ),
+          const SizedBox(height: 12),
+        ],
       ],
     );
   }
@@ -188,6 +212,7 @@ class OptionModal {
             await _context.openById(route.repost, vm.pid);
           },
         ),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -199,7 +224,7 @@ class OptionModal {
         OptionButton(
           icon: Icons.file_download_outlined,
           'Save to photo',
-          color: colors.secondary,
+          color: _context.secondaryColor,
           onTap: () async {
             // await _files.saveImageToGallery(
             //   path,
@@ -214,18 +239,22 @@ class OptionModal {
             // );
           },
         ),
+
         OptionButton(
           icon: 'share.png',
           'Share external',
-          color: colors.secondary,
+          color: _context.secondaryColor,
           onTap: () {},
         ),
+
         OptionButton(
           icon: Icons.report_outlined,
           'Report photo',
-          color: colors.secondary,
+          color: _context.secondaryColor,
           onTap: () {},
         ),
+
+        const SizedBox(height: 12),
       ],
     );
   }

@@ -7,6 +7,8 @@ import 'package:semesta/src/components/composer/post_editor.dart';
 import 'package:semesta/src/components/user/user_info.dart';
 import 'package:semesta/src/widgets/main/media_display.dart';
 import 'package:semesta/src/widgets/sub/avatar_animation.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class CommentEditor extends StatelessWidget {
@@ -18,57 +20,54 @@ class CommentEditor extends StatelessWidget {
   final ValueChanged<int>? onRemove;
   final ValueChanged<String>? onChanged;
   final List<AssetEntity> assets;
+  final double start, end;
   const CommentEditor({
     super.key,
-    required this.avatar,
     this.label,
-    required this.content,
     this.onChanged,
-    required this.post,
     this.onRemove,
+    required this.avatar,
+    required this.content,
+    required this.post,
     required this.assets,
     required this.actor,
+    this.start = 44,
+    this.end = 370,
   });
 
   @override
   Widget build(BuildContext context) {
-    final dividerColor = Theme.of(context).dividerColor.withValues(alpha: 0.5);
-
-    // In a real scenario, these offsets would likely be calculated
-    // via GlobalKeys or based on the list index.
-    final start = Offset(20, 46); // Relative to Stack top-left
-    final end = Offset(20, 362);
-
-    return Column(
+    return DirectionY(
       children: [
         Stack(
           children: [
             Positioned.fill(
               child: CustomPaint(
                 painter: CommentConnector(
-                  startPoint: start,
-                  endPoint: end,
-                  lineColor: dividerColor,
+                  startPoint: Offset(16, start),
+                  endPoint: Offset(16, post.media.isEmpty ? 78 : end),
+                  lineColor: context.dividerColor,
                 ),
               ),
             ),
 
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            DirectionX(
               children: [
                 // LEFT GUTTER (avatar + connector)
-                AvatarAnimation(actor.avatar, size: 40),
+                AvatarAnimation(actor.avatar, padding: EdgeInsets.only(top: 2)),
 
-                SizedBox(width: 12),
+                SizedBox(width: 8),
 
                 // FULL POST PREVIEW (not just text!)
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: DirectionY(
                     children: [
-                      Row(
+                      DirectionX(
                         children: [
                           DisplayName(actor.name, maxChars: 56),
+
+                          const SizedBox(width: 6),
+                          Username(actor.uname),
 
                           const Spacer(),
                           Text(
@@ -97,10 +96,10 @@ class CommentEditor extends StatelessWidget {
                       ],
 
                       const SizedBox(height: 8),
-                      Row(
+                      DirectionX(
                         spacing: 4,
                         children: [
-                          Text('Reply to'),
+                          Text('Reply to', style: TextStyle(fontSize: 16)),
                           Username(
                             actor.uname,
                             color: Colors.blueAccent,
@@ -116,7 +115,7 @@ class CommentEditor extends StatelessWidget {
           ],
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         PostEditor(
           avatar: avatar,
           content: content,

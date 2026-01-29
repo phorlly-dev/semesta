@@ -4,8 +4,8 @@ import 'package:semesta/public/functions/logger.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
-typedef PageFetch<T> = FutureCallback<List<T>>;
-typedef PageApply<T> = void Function(List<T> items);
+typedef PageFetch<T> = Fn<List<T>>;
+typedef PageApply<T> = FnP<List<T>, void>;
 
 mixin PagerMixin<T> on GetxController {
   final loading = false.obs;
@@ -15,7 +15,7 @@ mixin PagerMixin<T> on GetxController {
   final error = Rxn<String>();
 
   /// Initial load or refresh from start
-  Future<void> loadStart({
+  Wait<void> loadStart({
     required PageFetch<T> fetch,
     required PageApply<T> apply,
     int pageSize = 20,
@@ -42,7 +42,7 @@ mixin PagerMixin<T> on GetxController {
   }
 
   /// Load next page
-  Future<void> loadMore({
+  Wait<void> loadMore({
     required PageFetch<T> fetch,
     required PageApply<T> apply,
     int pageSize = 20,
@@ -63,7 +63,7 @@ mixin PagerMixin<T> on GetxController {
 
       final elapsed = sw.elapsedMilliseconds;
       if (elapsed < 300) {
-        await Future.delayed(Duration(milliseconds: 300 - elapsed));
+        await Wait.delayed(Duration(milliseconds: 300 - elapsed));
       }
 
       apply(items);
@@ -79,7 +79,7 @@ mixin PagerMixin<T> on GetxController {
   }
 
   /// Pull-to-refresh: load latest items
-  Future<void> loadLatest({
+  Wait<void> loadLatest({
     required PageFetch<T> fetch,
     required PageApply<T> apply,
     VoidCallback? onSuccess,
@@ -95,7 +95,7 @@ mixin PagerMixin<T> on GetxController {
 
       final elapsed = now.difference(start);
       if (elapsed < const Duration(milliseconds: 400)) {
-        await Future.delayed(const Duration(milliseconds: 400) - elapsed);
+        await Wait.delayed(const Duration(milliseconds: 400) - elapsed);
       }
 
       apply(items);
@@ -110,7 +110,7 @@ mixin PagerMixin<T> on GetxController {
   }
 
   /// Retry after error
-  Future<void> retry({
+  Wait<void> retry({
     required PageFetch<T> fetch,
     required PageApply<T> apply,
     int pageSize = 20,

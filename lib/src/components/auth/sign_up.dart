@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
+import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/app/models/author.dart';
 import 'package:semesta/src/widgets/main/custom_button.dart';
 import 'package:semesta/src/widgets/sub/date_time_input.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 import 'package:semesta/src/widgets/sub/image_picker.dart';
-import 'package:semesta/src/widgets/sub/loading_animated.dart';
 import 'package:semesta/src/widgets/sub/text_input.dart';
 
 class SignUp extends StatefulWidget {
-  final GlobalKey<FormBuilderState> formKey;
-  const SignUp(this.formKey, {super.key});
+  final GlobalKey<FormBuilderState> _formKey;
+  const SignUp(this._formKey, {super.key});
 
   @override
   State<SignUp> createState() => _SignUpState();
@@ -31,12 +32,13 @@ class _SignUpState extends State<SignUp> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final form = widget.formKey;
+      final form = widget._formKey;
+      final file = grepo.file.value;
       final isLoading = octrl.isLoading.value;
 
-      return Column(
+      return DirectionY(
         children: [
-          ImagePicker(onTap: grepo.fromPicture, image: grepo.file.value),
+          ImagePicker(onTap: grepo.fromPicture, image: file),
 
           TextInput(
             'name',
@@ -200,9 +202,9 @@ class _SignUpState extends State<SignUp> {
           // Sign Up Button
           CustomButton(
             enableShadow: true,
-            icon: isLoading ? LoadingAnimated() : Icons.create_new_folder,
+            icon: Icons.create_new_folder,
             label: isLoading ? 'Signing Up...' : 'Sign Up',
-            color: Theme.of(context).colorScheme.secondary,
+            color: context.colors.secondary,
             onPressed: isLoading
                 ? null
                 : () async {
@@ -221,12 +223,7 @@ class _SignUpState extends State<SignUp> {
                       name: data['name'],
                     );
 
-                    await octrl.register(
-                      email,
-                      password,
-                      grepo.file.value!,
-                      model,
-                    );
+                    await octrl.register(email, password, file!, model);
                   },
           ),
         ],
@@ -239,6 +236,7 @@ class _SignUpState extends State<SignUp> {
     _ckpassword = '';
     _visible = false;
     _confirm = false;
+    grepo.file.value = null;
     _cinput.dispose();
     _pinput.dispose();
     _uinput.dispose();

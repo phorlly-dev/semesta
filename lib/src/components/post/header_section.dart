@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:semesta/public/extensions/extension.dart';
-import 'package:semesta/public/functions/option_modal.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
@@ -10,6 +9,8 @@ import 'package:semesta/src/components/info/reposted_banner.dart';
 import 'package:semesta/src/components/user/user_info.dart';
 import 'package:semesta/src/widgets/main/follow_button.dart';
 import 'package:semesta/src/widgets/sub/avatar_animation.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class HeaderSection extends StatelessWidget {
   final StateView _state;
@@ -17,9 +18,6 @@ class HeaderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final options = OptionModal(context);
-    final colors = Theme.of(context).colorScheme;
-
     final status = _state.status;
     final authed = status.authed;
     final iFollow = status.iFollow;
@@ -28,111 +26,108 @@ class HeaderSection extends StatelessWidget {
     final actions = _state.actions;
     final model = actions.feed;
 
-    return Column(
+    return DirectionY(
       children: [
         RepostedBanner(actions.target),
 
-        Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: AnimatedBuilder(
-            animation: status,
-            builder: (_, child) => Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AvatarAnimation(
-                  user.avatar,
-                  onTap: () async {
-                    await context.openProfile(user.id, authed);
-                  },
-                ),
-                const SizedBox(width: 8),
+        AnimatedBuilder(
+          animation: status,
+          builder: (_, child) => DirectionX(
+            padding: const EdgeInsets.only(left: 12, bottom: 4),
+            children: [
+              AvatarAnimation(
+                user.avatar,
+                padding: const EdgeInsets.only(top: 6.0),
+                onTap: () async {
+                  await context.openProfile(user.id, authed);
+                },
+              ),
+              const SizedBox(width: 8),
 
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          DisplayName(user.name),
-                          if (user.verified)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 4),
-                              child: Icon(
-                                Icons.verified,
-                                size: 14,
-                                color: colors.primary,
-                              ),
-                            ),
-                        ],
-                      ),
-
-                      Username(user.uname),
-                    ],
-                  ),
-                ),
-
-                Row(
+              Expanded(
+                child: DirectionY(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (!authed)
-                      FollowButton(
-                        resolveState(iFollow, status.theyFollow),
-                        onPressed: () async {
-                          if (iFollow) {
-                            CustomModal(
-                              context,
-                              title: 'Unfollow ${user.name}?',
-                              children: [Text(unfollow)],
-                              onConfirm: () async {
-                                context.pop();
-                                status.toggle();
-                                await actrl.toggleFollow(user.id, iFollow);
-                              },
-                              label: 'Unfollow',
-                              icon: Icons.person_remove_sharp,
-                              color: colors.primary,
-                            );
-                          } else {
-                            status.toggle();
-                            await actrl.toggleFollow(user.id, iFollow);
-                          }
-                        },
-                      ),
+                    DirectionX(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        DisplayName(user.name),
+                        if (user.verified) ...[
+                          SizedBox(width: 6),
+                          Icon(
+                            Icons.verified,
+                            size: 14,
+                            color: context.primaryColor,
+                          ),
+                        ],
+                      ],
+                    ),
 
-                    InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4),
-                        child: Icon(
-                          Icons.more_vert_outlined,
-                          size: 20,
-                          color: colors.secondary,
-                        ),
-                      ),
-                      onTap: () {
-                        if (authed) {
-                          options.currentOptions(
-                            model,
-                            actions.target,
-                            active: actions.bookmarked,
-                            primary: true,
+                    Username(user.uname),
+                  ],
+                ),
+              ),
+
+              DirectionX(
+                padding: const EdgeInsets.only(right: 6.0),
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (!authed)
+                    FollowButton(
+                      resolveState(iFollow, status.theyFollow),
+                      onPressed: () async {
+                        if (iFollow) {
+                          CustomModal(
+                            context,
+                            title: 'Unfollow ${user.name}?',
+                            children: [Text(unfollow)],
+                            onConfirm: () async {
+                              status.toggle();
+                              context.pop();
+                              await actrl.toggleFollow(user.id, iFollow);
+                            },
+                            label: 'Unfollow',
+                            icon: Icons.person_remove_sharp,
+                            color: context.primaryColor,
                           );
                         } else {
-                          options.anotherOptions(
-                            model,
-                            actions.target,
-                            status: status,
-                            primary: true,
-                            name: user.name,
-                            iFollow: iFollow,
-                            active: actions.bookmarked,
-                          );
+                          status.toggle();
+                          await actrl.toggleFollow(user.id, iFollow);
                         }
                       },
                     ),
-                  ],
-                ),
-              ],
-            ),
+
+                  InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Icon(
+                      Icons.more_vert_outlined,
+                      size: 20,
+                      color: context.secondaryColor,
+                    ),
+                    onTap: () {
+                      if (authed) {
+                        context.open.currentOptions(
+                          model,
+                          actions.target,
+                          active: actions.bookmarked,
+                          profiled: false,
+                        );
+                      } else {
+                        context.open.anotherOptions(
+                          model,
+                          actions.target,
+                          status: status,
+                          profiled: false,
+                          name: user.name,
+                          iFollow: iFollow,
+                          active: actions.bookmarked,
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ],

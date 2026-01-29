@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:semesta/public/utils/custom_bottom_sheet.dart';
 import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/app/models/feed.dart';
+import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/src/widgets/main/option_button.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class VisibleOption {
   final BuildContext _context;
@@ -10,21 +12,28 @@ class VisibleOption {
 
   void showModal({
     int selected = 1,
-    required void Function(int value, Visible option) onSelected,
+    required FnP2<int, Visible, void> onSelected,
   }) {
     CustomBottomSheet<VisibleToPost>(
       _context,
       children: [
-        const Text(
-          'Who Can Reply?',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        DirectionY(
+          mainAxisSize: MainAxisSize.min,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          children: [
+            const Text(
+              'Who Can Reply?',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Pick who can reply to this post. Anyone mentioned can always reply.',
+              style: TextStyle(fontSize: 14),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        const Text(
-          'Pick who can reply to this post. Anyone mentioned can always reply.',
-          style: TextStyle(fontSize: 14),
-        ),
-        const SizedBox(height: 20),
+
+        const SizedBox(height: 16),
 
         ...select(selected, onSelected).map((e) {
           return OptionButton(
@@ -37,39 +46,32 @@ class VisibleOption {
                 : const Icon(Icons.circle_outlined, color: Colors.grey),
           );
         }),
+        const SizedBox(height: 16),
       ],
     );
   }
 
   int mapVisibleToId(Visible v) {
-    switch (v) {
-      case Visible.verified:
-        return 2;
-      case Visible.following:
-        return 3;
-      case Visible.mentioned:
-        return 4;
-      default:
-        return 1;
-    }
+    return switch (v) {
+      Visible.verified => 2,
+      Visible.following => 3,
+      Visible.mentioned => 4,
+      _ => 1,
+    };
   }
 
   IconData mapToIcon(Visible v) {
-    switch (v) {
-      case Visible.verified:
-        return Icons.verified;
-      case Visible.following:
-        return Icons.people_alt_outlined;
-      case Visible.mentioned:
-        return Icons.alternate_email_outlined;
-      default:
-        return Icons.public;
-    }
+    return switch (v) {
+      Visible.verified => Icons.verified,
+      Visible.following => Icons.people_alt_outlined,
+      Visible.mentioned => Icons.alternate_email_outlined,
+      _ => Icons.public,
+    };
   }
 
   List<VisibleToPost> select(
     int selected,
-    Function(int value, Visible option) onSelected,
+    FnP2<int, Visible, void> onSelected,
   ) => [
     VisibleToPost(
       icon: Icons.public,

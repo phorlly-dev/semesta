@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/src/widgets/sub/loading_animated.dart';
 import 'package:video_player/video_player.dart';
 import 'package:smooth_video_progress/smooth_video_progress.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -24,26 +25,24 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget._video))
       ..setLooping(true)
       ..initialize()
-          .then((_) {
-            setState(() {});
-          })
-          .catchError((_) {
-            setState(() => hasError = true);
-          });
+          .then((_) => setState(() {}))
+          .catchError((_) => setState(() => hasError = true));
   }
 
   void _handleVisibility(double visibleFraction) {
     final isMostlyVisible = visibleFraction > 0.5; // 50% on screen
-    if (isMostlyVisible && !_controller.value.isPlaying) {
+    final playing = _controller.value.isPlaying;
+    if (isMostlyVisible && !playing) {
       _controller.play();
-    } else if (!isMostlyVisible && _controller.value.isPlaying) {
+    } else if (!isMostlyVisible && playing) {
       _controller.pause();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (hasError || _controller.value.hasError) {
+    final player = _controller.value;
+    if (hasError || player.hasError) {
       return Container(
         color: Colors.black12,
         alignment: Alignment.center,
@@ -59,20 +58,29 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         alignment: Alignment.center,
         children: [
           // --- Video player ---
-          if (_controller.value.isInitialized)
-            FittedBox(fit: BoxFit.cover, child: VideoPlayer(_controller))
+          if (player.isInitialized)
+            AspectRatio(
+              aspectRatio: player.aspectRatio,
+              child: VideoPlayer(_controller),
+            )
           else
-            const Center(child: CircularProgressIndicator()),
+            const Center(
+              child: SizedBox(
+                height: 24,
+                width: 24,
+                child: LoadingAnimated(bold: 1.8),
+              ),
+            ),
 
           // --- Progress Bar (only if preview mode) ---
-          if (widget.showProgress && _controller.value.isInitialized)
+          if (widget.showProgress && player.isInitialized)
             Positioned(
               bottom: 8,
               left: 8,
               right: 8,
               child: SmoothVideoProgress(
                 controller: _controller,
-                builder: (context, position, duration, _) {
+                builder: (_, position, duration, child) {
                   return SliderTheme(
                     data: const SliderThemeData(
                       trackHeight: 2,

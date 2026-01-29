@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
 class RouterRefreshStream extends ChangeNotifier {
   late final StreamSubscription _authSub;
@@ -22,21 +23,19 @@ class RouterRefreshStream extends ChangeNotifier {
   }
 }
 
-Stream<T> debounceStream<T>(Stream<T> source, Duration delay) {
+Sync<T> debounceStream<T>(Sync<T> source, Duration delay) {
   Timer? timer;
   StreamController<T>? controller;
 
   controller = StreamController<T>(
-    onListen: () {
-      source.listen(
-        (event) {
-          timer?.cancel();
-          timer = Timer(delay, () => controller!.add(event));
-        },
-        onError: controller!.addError,
-        onDone: controller.close,
-      );
-    },
+    onListen: () => source.listen(
+      (event) {
+        timer?.cancel();
+        timer = Timer(delay, () => controller!.add(event));
+      },
+      onError: controller!.addError,
+      onDone: controller.close,
+    ),
   );
 
   return controller.stream;

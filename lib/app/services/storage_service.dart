@@ -5,15 +5,16 @@ import 'package:path/path.dart' as p;
 import 'package:semesta/public/mixins/filer_mixin.dart';
 import 'package:semesta/app/models/media.dart';
 import 'package:semesta/app/services/firebase_service.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
 abstract class IStorageService extends FirebaseService with FilerMixin {
   // final _dio = Dio();
 
   /// Upload a file and return its public download URL
-  Future<Media?> uploadFile({
+  Wait<Media?> uploadFile(
+    File file, {
     required String folderName,
     required String fileName,
-    required File file,
   }) async {
     try {
       final path = '$folderName/$fileName';
@@ -40,7 +41,7 @@ abstract class IStorageService extends FirebaseService with FilerMixin {
   }
 
   /// Get a file's public download URL if you already know its path
-  Future<String> getPublicDownloadUrl(String path) async {
+  Wait<String> getPublicDownloadUrl(String path) async {
     try {
       final ref = ud.ref().child(path);
 
@@ -56,7 +57,7 @@ abstract class IStorageService extends FirebaseService with FilerMixin {
   }
 
   /// Delete a file by its storage path
-  Future<void> deleteFile(String path) async {
+  Wait<void> deleteFile(String path) async {
     try {
       final ref = ud.ref().child(path);
       await ref.delete();
@@ -71,7 +72,7 @@ abstract class IStorageService extends FirebaseService with FilerMixin {
     }
   }
 
-  // Future<void> saveImageToGallery(
+  // Wait<void> saveImageToGallery(
   //   String storagePath, {
   //   void Function(int received, int total)? onProgress,
   // }) async {

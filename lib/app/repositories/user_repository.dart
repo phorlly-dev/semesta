@@ -8,7 +8,7 @@ import 'package:semesta/app/repositories/repository.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
 
 class UserRepository extends IRepository<Author> with UserMixin {
-  Future<void> createUser(Author model, [String? path]) async {
+  Wait<void> createUser(Author model, [String? path]) async {
     final newUser = Author(
       id: model.id,
       email: model.email,
@@ -29,14 +29,14 @@ class UserRepository extends IRepository<Author> with UserMixin {
     await setUsername(model.id, model.uname, path);
   }
 
-  Future<void> setUsername(String uid, String uname, [String? path]) async {
+  Wait<void> setUsername(String uid, String uname, [String? path]) async {
     await collection(unames)
         .doc(uname)
         .set({userId: uid, 'path': path, 'uname': uname.trim()})
         .catchError((e) => throw Exception('Username $uname is already taken'));
   }
 
-  Future<void> toggleFollow(String me, String them) async {
+  Wait<void> toggleFollow(String me, String them) async {
     if (me == them) return;
 
     final meRef = collection(path).doc(me);

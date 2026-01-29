@@ -1,4 +1,5 @@
 import 'package:semesta/public/functions/func_helper.dart';
+import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/app/models/media.dart';
 import 'package:semesta/app/models/model.dart';
@@ -77,7 +78,7 @@ class Feed extends Model<Feed> {
     stats: stats ?? this.stats,
     mentions: mentions ?? this.mentions,
     createdAt: createdAt ?? this.createdAt,
-    updatedAt: DateTime.now(),
+    updatedAt: now,
     deletedAt: deletedAt ?? this.deletedAt,
   );
 
@@ -126,22 +127,19 @@ class Feed extends Model<Feed> {
   }
 
   @override
-  AsMap to() {
-    final data = {
-      ...general,
-      'title': title,
-      'uid': uid,
-      'edited': edited,
-      'removed': removed,
-      'location': location,
-      'pid': pid,
-      'hashtags': hashtags.toList(),
-      'mentions': mentions.toList(),
-      'media': media.map((e) => e.to()),
-      'type': type.name,
-      'stats': stats.to(),
-      'visible': visible.name,
-    };
-    return Model.convertJsonKeys(data);
-  }
+  AsMap to() => Model.convertJsonKeys({
+    ...general,
+    'title': title,
+    'uid': uid,
+    'edited': edited,
+    'removed': removed,
+    'location': location,
+    'pid': pid,
+    'hashtags': hashtags.toList(),
+    'mentions': mentions.toList(),
+    'media': media.map((e) => e.to()),
+    'type': type.name,
+    'stats': stats.to(),
+    'visible': visible.name,
+  });
 }

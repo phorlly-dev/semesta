@@ -4,17 +4,15 @@ import 'package:go_router/go_router.dart';
 class TransitionPage extends CustomTransitionPage {
   TransitionPage({required super.child, super.fullscreenDialog, super.key})
     : super(
-        transitionDuration: const Duration(milliseconds: 400),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final offsetTween = Tween(
-            begin: const Offset(0.0, 0.1),
-            end: Offset.zero,
-          ).chain(CurveTween(curve: Curves.easeOut));
-
-          return SlideTransition(
-            position: animation.drive(offsetTween),
-            child: FadeTransition(opacity: animation, child: child),
-          );
-        },
+        transitionDuration: const Duration(milliseconds: 600),
+        transitionsBuilder: (_, animation, sa, child) => SlideTransition(
+          position: animation.drive(
+            Tween(
+              end: Offset.zero,
+              begin: const Offset(0.0, 0.1),
+            ).chain(CurveTween(curve: Curves.easeOut)),
+          ),
+          child: FadeTransition(opacity: animation, child: child),
+        ),
       );
 }

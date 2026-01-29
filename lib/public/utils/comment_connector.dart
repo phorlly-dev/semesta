@@ -14,27 +14,16 @@ class CommentConnector extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = lineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.6
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
 
-    final path = Path();
-    path.moveTo(startPoint.dx, startPoint.dy);
-
-    // Create a smooth curve between the points
-    // Adjust control points for the desired "elbow" curvature
-    final controlPoint1 = Offset(startPoint.dx, endPoint.dy);
-
-    path.quadraticBezierTo(
-      controlPoint1.dx,
-      controlPoint1.dy,
-      endPoint.dx,
-      endPoint.dy,
-    );
-
-    canvas.drawPath(path, paint);
+    canvas.drawLine(startPoint, endPoint, paint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CommentConnector old) {
+    return startPoint != old.startPoint ||
+        endPoint != old.endPoint ||
+        lineColor != old.lineColor;
+  }
 }

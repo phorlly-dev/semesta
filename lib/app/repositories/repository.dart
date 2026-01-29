@@ -1,6 +1,6 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:semesta/public/functions/logger.dart';
+import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
@@ -10,7 +10,7 @@ import 'package:semesta/public/helpers/utils_helper.dart';
 
 abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
   /// Add a new document
-  Future<String> store(T model) async {
+  Wait<String> store(T model) async {
     final docRef = collection(path).doc();
     final newModel = (model as dynamic).copy(id: docRef.id);
     await docRef.set(to(newModel));
@@ -19,18 +19,48 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
   }
 
   /// Update an existing document
-  Future<void> modify(String id, AsMap data) {
-    return collection(path).doc(id).update(data);
+  Wait<void> modify(String id, AsMap data) async {
+    await collection(path).doc(id).update(data).catchError((e) {
+      HandleLogger.error('Failed to update data: $e', message: e);
+    });
   }
 
   /// Delete a document
-  Future<void> destroy(String id) => collection(path).doc(id).delete();
+  Wait<void> destroy(String id) async {
+    await collection(path).doc(id).delete().catchError((e) {
+      HandleLogger.error('Failed to delete data: $e', message: e);
+    });
+  }
+
+  Wait<void> incrementView(ActionTarget target, [String col = comments]) async {
+    try {
+      await db.runTransaction((txs) async {
+        final ref = collection(path);
+        switch (target) {
+          case ParentTarget(:final pid):
+            txs.update(ref.doc(pid), incrementStat(FeedKind.viewed));
+            break;
+
+          case ChildTarget(:final pid, :final cid):
+            txs.update(
+              ref.doc(pid).collection(col).doc(cid),
+              incrementStat(FeedKind.viewed),
+            );
+            break;
+        }
+      });
+    } catch (e) {
+      // Log error or handle appropriately
+      HandleLogger.error('Failed to update view count: $e', message: e);
+      rethrow; // or handle gracefully
+    }
+  }
 
   /// [sdoc] - Source document ID (e.g., user ID)
   /// [edoc] - Edge/target document ID (e.g., post ID)
   /// [key] - The reaction type key (default: 'favorites')
   /// [subcol] - The subcollection name (default: 'favorites')
-  Future<void> toggle(
+  Wait<void> toggle(
     String sdoc,
     String edoc, {
     String subcol = favorites,
@@ -52,8 +82,7 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
 
         if (edgeSnap.exists) {
           // Remove reaction
-          txn.delete(edgeRef);
-          txn.update(doc, incrementStat(kind, -1));
+          txn.delete(edgeRef).update(doc, incrementStat(kind, -1));
         } else {
           // Add reaction
           final reaction = Reaction(
@@ -64,8 +93,7 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
             currentId: sdoc,
           ).to();
 
-          txn.set(edgeRef, reaction);
-          txn.update(doc, incrementStat(kind));
+          txn.set(edgeRef, reaction).update(doc, incrementStat(kind));
         }
       });
     } on FirebaseException catch (e) {
@@ -90,7 +118,7 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
   /// [key] - The reaction type key (default: 'favorites')
   /// [subcol] - The subcollection name for reactions (default: 'favorites')
   /// [inSubcol] - The intermediate subcollection name (default: 'comments')
-  Future<void> subtoggle(
+  Wait<void> subtoggle(
     String sdoc,
     String bdoc,
     String edoc, {
@@ -114,9 +142,7 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
 
         if (actionSnap.exists) {
           // Remove nested reaction
-          txn
-            ..delete(nestedRef)
-            ..update(doc, incrementStat(kind, -1));
+          txn.delete(nestedRef).update(doc, incrementStat(kind, -1));
         } else {
           // Add nested reaction
           final reaction = Reaction(
@@ -127,9 +153,7 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
             createdAt: now,
           ).to();
 
-          txn
-            ..set(nestedRef, reaction)
-            ..update(doc, incrementStat(kind));
+          txn.set(nestedRef, reaction).update(doc, incrementStat(kind));
         }
       });
     } on FirebaseException catch (e) {

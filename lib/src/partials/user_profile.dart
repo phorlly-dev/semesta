@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
 import 'package:semesta/public/extensions/extension.dart';
-import 'package:semesta/public/helpers/audit_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/public/utils/params.dart';
@@ -62,74 +61,72 @@ class _UserProfileState extends State<UserProfile>
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return StreamBuilder<StatusView>(
-      stream: actrl.statusStream$(widget.uid),
-      builder: (context, snapshot) {
+    return StreamBuilder(
+      stream: actrl.status$(widget.uid),
+      builder: (_, snapshot) {
         if (!snapshot.hasData) return const LoadingSkelenton();
 
-        final ctx = snapshot.data!;
+        final state = snapshot.data!;
         return AnimatedBuilder(
-          animation: ctx,
-          builder: (context, child) {
-            return NestedScrollView(
-              headerSliverBuilder: (_, innerBox) => [
-                ScrollAwareAppBar(
-                  (visible) => SliverAppBar(
-                    snap: true,
-                    floating: true,
-                    centerTitle: true,
-                    title: Text(ctx.authed ? 'Your profile' : ctx.author.name),
-                    actions: [
-                      ctx.authed
-                          ? IconButton(
-                              onPressed: () {},
-                              icon: Icon(Icons.settings),
-                              color: colors.outline,
-                            )
-                          : IconButton(
-                              onPressed: () {},
-                              icon: Icon(Icons.search),
-                              color: colors.outline,
-                            ),
-                    ],
-                    elevation: 0,
-                    scrolledUnderElevation: 0,
-                    toolbarHeight: visible ? kToolbarHeight : 0,
-                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                    surfaceTintColor: Colors.transparent,
+          animation: state,
+          builder: (_, child) => NestedScrollView(
+            headerSliverBuilder: (_, innerBox) => [
+              ScrollAwareAppBar(
+                (visible) => SliverAppBar(
+                  snap: true,
+                  floating: true,
+                  centerTitle: true,
+                  title: Text(
+                    state.authed ? 'Your profile' : state.author.name,
                   ),
+                  actions: [
+                    state.authed
+                        ? IconButton(
+                            onPressed: () {},
+                            icon: Icon(Icons.settings),
+                            color: context.outlineColor,
+                          )
+                        : IconButton(
+                            onPressed: () {},
+                            icon: Icon(Icons.search),
+                            color: context.outlineColor,
+                          ),
+                  ],
+                  elevation: 0,
+                  scrolledUnderElevation: 0,
+                  toolbarHeight: visible ? kToolbarHeight : 0,
+                  backgroundColor: context.defaultColor,
+                  surfaceTintColor: Colors.transparent,
                 ),
-
-                SliverPersistentHeader(
-                  delegate: ProfileHeaderDelegate(
-                    expandedHeight: 120,
-                    authed: ctx.authed,
-                    collapsedHeight: kToolbarHeight,
-                    avatarUrl: ctx.author.avatar,
-                    coverUrl: ctx.author.banner,
-                    onPreview: () async {
-                      await context.openById(route.avatar, widget.uid);
-                    },
-                  ),
-                ),
-
-                // Profile info section
-                SliverToBoxAdapter(child: ProfileInfo(_state, ctx)),
-
-                // Tab bar section
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: TabDelegate(_tabBar),
-                ),
-              ],
-              body: TabBarView(
-                controller: _tabController,
-                children: widget.children,
               ),
-            );
-          },
+
+              SliverPersistentHeader(
+                delegate: ProfileHeaderDelegate(
+                  expandedHeight: 120,
+                  authed: state.authed,
+                  collapsedHeight: kToolbarHeight,
+                  avatarUrl: state.author.avatar,
+                  coverUrl: state.author.banner,
+                  onPreview: () async {
+                    await context.openById(route.avatar, widget.uid);
+                  },
+                ),
+              ),
+
+              // Profile info section
+              SliverToBoxAdapter(child: ProfileInfo(_state, state)),
+
+              // Tab bar section
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: TabDelegate(_tabBar),
+              ),
+            ],
+            body: TabBarView(
+              controller: _tabController,
+              children: widget.children,
+            ),
+          ),
         );
       },
     );

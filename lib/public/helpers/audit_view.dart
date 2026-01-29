@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:semesta/app/models/author.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/app/models/reaction.dart';
@@ -27,11 +27,11 @@ class StatusView with ChangeNotifier {
   final bool theyFollow;
 
   StatusView({
+    this.actor,
     required this.author,
     this.authed = false,
     this.iFollow = false,
     this.theyFollow = false,
-    this.actor,
   });
 
   StatusView copy({
@@ -40,15 +40,13 @@ class StatusView with ChangeNotifier {
     bool? authed,
     bool? iFollow,
     bool? theyFollow,
-  }) {
-    return StatusView(
-      author: author ?? this.author,
-      actor: actor ?? this.actor,
-      authed: authed ?? this.authed,
-      iFollow: iFollow ?? this.iFollow,
-      theyFollow: theyFollow ?? this.theyFollow,
-    );
-  }
+  }) => StatusView(
+    author: author ?? this.author,
+    actor: actor ?? this.actor,
+    authed: authed ?? this.authed,
+    iFollow: iFollow ?? this.iFollow,
+    theyFollow: theyFollow ?? this.theyFollow,
+  );
 
   void toggle() {
     iFollow = !iFollow;
@@ -68,8 +66,8 @@ class ActionsView with ChangeNotifier {
   int favorites;
   int bookmarks;
   int reposts;
-  final int quotes;
 
+  final int quotes;
   final int views;
   final int comments;
   final int shares;

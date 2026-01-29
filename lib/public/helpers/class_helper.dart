@@ -12,13 +12,13 @@ sealed class ActionTarget {
   const ActionTarget();
 }
 
-class FeedTarget extends ActionTarget {
+class ParentTarget extends ActionTarget {
   final String pid;
-  const FeedTarget(this.pid);
+  const ParentTarget(this.pid);
 }
 
-class CommentTarget extends ActionTarget {
+class ChildTarget extends ActionTarget {
   final String pid;
   final String cid;
-  const CommentTarget(this.pid, this.cid);
+  const ChildTarget(this.pid, this.cid);
 }

@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:get/get.dart';
+import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/widgets/main/custom_button.dart';
-import 'package:semesta/src/widgets/sub/loading_animated.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 import 'package:semesta/src/widgets/sub/text_input.dart';
 
 class SignIn extends StatefulWidget {
-  final GlobalKey<FormBuilderState> formKey;
-  const SignIn(this.formKey, {super.key});
+  final bool isLoading;
+  final GlobalKey<FormBuilderState> _formKey;
+  const SignIn(this._formKey, {super.key, this.isLoading = false});
 
   @override
   State<SignIn> createState() => _SignInState();
@@ -21,7 +22,7 @@ class _SignInState extends State<SignIn> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return DirectionY(
       children: [
         TextInput(
           'email',
@@ -59,24 +60,21 @@ class _SignInState extends State<SignIn> {
         const SizedBox(height: 12),
 
         // Sign In Button
-        Obx(() {
-          final isLoading = octrl.isLoading.value;
-          return CustomButton(
-            enableShadow: true,
-            icon: isLoading ? LoadingAnimated() : Icons.login_rounded,
-            label: isLoading ? 'Signing In...' : 'Sign In',
-            color: Theme.of(context).colorScheme.primary,
-            onPressed: isLoading
-                ? null
-                : () async {
-                    final state = widget.formKey.currentState;
-                    if (state == null || !state.saveAndValidate()) return;
+        CustomButton(
+          enableShadow: true,
+          icon: Icons.login_rounded,
+          label: widget.isLoading ? 'Signing In...' : 'Sign In',
+          color: context.colors.primary,
+          onPressed: widget.isLoading
+              ? null
+              : () async {
+                  final state = widget._formKey.currentState;
+                  if (state == null || !state.saveAndValidate()) return;
 
-                    final data = state.value;
-                    await octrl.login(data['email'], data['password']);
-                  },
-          );
-        }),
+                  final data = state.value;
+                  await octrl.login(data['email'], data['password']);
+                },
+        ),
 
         SizedBox(height: 24),
       ],

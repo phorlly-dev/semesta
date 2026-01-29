@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class CardSkeleton extends StatelessWidget {
   const CardSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).dividerColor.withValues(alpha: 0.15);
-    return Padding(
+    final color = context.dividerColor.withValues(alpha: .15);
+    return DirectionY(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _HeaderSkeleton(color),
-          _ContentSkeleton(color),
-          _FooterSkeleton(color),
-        ],
-      ),
+      spacing: 12,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _HeaderSkeleton(color),
+        _ContentSkeleton(color),
+        _FooterSkeleton(color),
+      ],
     );
   }
 }
@@ -26,7 +28,7 @@ class _HeaderSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return DirectionX(
       children: [
         // avatar
         Container(
@@ -38,8 +40,7 @@ class _HeaderSkeleton extends StatelessWidget {
 
         // name + time
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: DirectionY(
             children: [
               Container(height: 12, width: 120, color: _color),
               const SizedBox(height: 6),
@@ -58,8 +59,7 @@ class _ContentSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return DirectionY(
       children: [
         Container(height: 14, width: double.infinity, color: _color),
         const SizedBox(height: 8),
@@ -90,7 +90,7 @@ class _FooterSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return DirectionX(
       children: List.generate(4, (_) {
         return Padding(
           padding: const EdgeInsets.only(right: 16),

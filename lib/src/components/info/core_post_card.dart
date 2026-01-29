@@ -1,22 +1,31 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
+import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/components/global/media_gallery.dart';
 import 'package:semesta/src/components/post/actions_bar.dart';
 import 'package:semesta/src/components/post/status_bar.dart';
 import 'package:semesta/src/widgets/sub/break_section.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class CorePostCard extends StatelessWidget {
   final StateView _state;
+  final String? uid;
   final bool primary, profiled;
   final Widget? above, middle, reference;
+  final double startedLine, endedLine;
   const CorePostCard(
     this._state, {
     super.key,
-    this.primary = true,
+    this.primary = false,
     this.above,
     this.middle,
     this.reference,
     this.profiled = false,
+    this.startedLine = 52,
+    this.endedLine = 396,
+    this.uid,
   });
 
   @override
@@ -25,25 +34,47 @@ class CorePostCard extends StatelessWidget {
     final model = actions.feed;
     final media = model.media;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ?above,
-        StatusBar(
-          _state.status,
-          model,
-          primary: primary,
-          profiled: profiled,
-          reference: reference,
-          target: actions.target,
-          saved: actions.bookmarked,
-        ),
-        if (media.length > 1) MediaGallery(media: media, id: model.id),
+    return VisibilityDetector(
+      key: ValueKey('view-${model.id}'),
+      child: DirectionY(
+        children: [
+          ?above,
+          StatusBar(
+            _state.status,
+            model,
+            uid: uid,
+            end: endedLine,
+            primary: primary,
+            start: startedLine,
+            profiled: profiled,
+            reference: reference,
+            target: actions.target,
+            saved: actions.bookmarked,
+          ),
 
-        ?middle,
-        ActionsBar(actions),
-        const BreakSection(),
-      ],
+          InkWell(
+            child: DirectionY(
+              children: [
+                if (media.isNotEmpty) MediaGallery(media: media, id: model.id),
+
+                ?middle,
+              ],
+            ),
+            onTap: () async {
+              await context.openById(route.detail, model.id);
+            },
+          ),
+          ActionsBar(actions),
+
+          if (!primary) const BreakSection(),
+          const SizedBox(height: 6),
+        ],
+      ),
+      onVisibilityChanged: (info) {
+        if (info.visibleFraction > 0.6) {
+          pctrl.markViewed(actions.target);
+        }
+      },
     );
   }
 }

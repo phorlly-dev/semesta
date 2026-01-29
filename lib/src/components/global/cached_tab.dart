@@ -17,7 +17,7 @@ class CachedTab<T extends HasAttributes> extends StatefulWidget {
 
   final LoadFn<T> onInitial;
   final LoadFn<T> onMore;
-  final LoadFn<T> onRefresh;
+  final LoadFn<T>? onRefresh;
 
   final ScrollController? scroller;
 
@@ -30,7 +30,7 @@ class CachedTab<T extends HasAttributes> extends StatefulWidget {
     required this.cache,
     required this.onMore,
     required this.onInitial,
-    required this.onRefresh,
+    this.onRefresh,
     required this.controller,
     required this.builder,
     this.isGrid = false,
@@ -72,11 +72,10 @@ class _CachedTabState<T extends HasAttributes> extends State<CachedTab<T>> {
   }
 
   Future<void> _handleRefresh() async {
+    widget.cache.clear();
     await widget.controller.loadLatest(
-      fetch: widget.onRefresh,
-      apply: (items) => widget.cache
-        ..clear()
-        ..set(items),
+      fetch: widget.onRefresh!,
+      apply: (items) => widget.cache.assignAll(items),
       onError: () => _showError('Failed to refresh'),
     );
   }
@@ -115,7 +114,7 @@ class _CachedTabState<T extends HasAttributes> extends State<CachedTab<T>> {
 
         // Callbacks
         onMore: _handleMore,
-        onRefresh: _handleRefresh,
+        onRefresh: widget.onRefresh != null ? _handleRefresh : null,
         onRetry: _handleRetry,
       );
     });

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
+import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/functions/resolve_action.dart';
-import 'package:semesta/public/functions/visible_option.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/app/models/feed.dart';
@@ -12,9 +12,11 @@ import 'package:semesta/src/components/composer/post_composer.dart';
 import 'package:semesta/src/components/layout/custom_app_bar.dart';
 import 'package:semesta/src/widgets/main/actions_grouped.dart';
 import 'package:semesta/src/components/layout/_layout_page.dart';
+import 'package:semesta/src/widgets/main/option_button.dart';
 import 'package:semesta/src/widgets/sub/block_overlay.dart';
 import 'package:semesta/src/widgets/sub/break_section.dart';
 import 'package:semesta/src/widgets/sub/custom_text_button.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class GenericComposer extends StatefulWidget {
   final ComposerType _type;
@@ -29,8 +31,8 @@ class _GenericComposerState extends State<GenericComposer> {
   final _textContent = TextEditingController();
   late ResolveAction _action;
 
-  int selected = 1;
-  VisibleToPost canReply = VisibleToPost(
+  int _selected = 1;
+  VisibleToPost _visible = VisibleToPost(
     icon: Icons.public,
     id: 1,
     label: 'Everyone',
@@ -51,35 +53,35 @@ class _GenericComposerState extends State<GenericComposer> {
 
     _action.onSubmit(
       onPost: () async {
-        final post = Feed(title: text, visible: canReply.option);
+        final post = Feed(title: text, visible: _visible.option);
 
         await pctrl.save(post, files);
         if (mounted) context.pop();
-        await pctrl.refreshPost();
+        await pctrl.refreshPost;
       },
       onQuote: () async {
         final post = Feed(
           title: text,
-          visible: canReply.option,
+          visible: _visible.option,
           pid: parent?.id ?? '',
           type: Create.quote,
         );
 
         await pctrl.save(post, files);
         if (mounted) context.pop();
-        await pctrl.refreshPost();
+        await pctrl.refreshPost;
       },
       onReply: () async {
         final post = Feed(
           title: text,
-          visible: canReply.option,
+          visible: _visible.option,
           pid: parent?.id ?? '',
           type: Create.reply,
         );
 
         await pctrl.save(post, files);
         if (mounted) context.pop();
-        await pctrl.refreshPost();
+        await pctrl.refreshPost;
       },
     );
   }
@@ -94,10 +96,6 @@ class _GenericComposerState extends State<GenericComposer> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final text = theme.textTheme;
-    final options = VisibleOption(context);
-
     return Obx(() {
       final author = pctrl.currentUser;
       final actor = pctrl.uCtrl.dataMapping[widget.parent?.uid ?? ''];
@@ -109,6 +107,7 @@ class _GenericComposerState extends State<GenericComposer> {
       final hasContent = content.isNotEmpty || files.isNotEmpty;
       final isReply = widget._type == ComposerType.reply;
       final isRepost = widget._type == ComposerType.quote && !hasContent;
+      final color = isRepost ? Colors.lightBlueAccent : Colors.blueAccent[100];
 
       return Stack(
         children: [
@@ -143,56 +142,49 @@ class _GenericComposerState extends State<GenericComposer> {
             ),
 
             // ✅ Fixed bottom actions
-            footer: Wrap(
+            footer: DirectionY(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // ---- Privacy row ----
                 if (!isReply) ...[
-                  const BreakSection(bold: .3, height: 0),
-                  ListTile(
-                    leading: Icon(
-                      canReply.icon,
-                      color: isRepost
-                          ? Colors.lightBlueAccent
-                          : Colors.blueAccent,
-                      size: 18,
-                    ),
-                    title: Text(
-                      "${canReply.label} can reply",
-                      style: text.bodyMedium?.copyWith(
-                        color: isRepost
-                            ? Colors.lightBlueAccent
-                            : Colors.blueAccent[100],
-                      ),
-                    ),
+                  OptionButton(
+                    "${_visible.label} can reply",
+                    icon: _visible.icon,
+                    color: color,
+                    canPop: false,
+                    style: context.text.bodyMedium?.copyWith(color: color),
+                    sizeIcon: 18,
                     onTap: isRepost
                         ? null
                         : () {
-                            options.showModal(
-                              selected: selected,
+                            context.tap.showModal(
+                              selected: _selected,
                               onSelected: (id, opt) {
                                 setState(() {
-                                  selected = id;
-                                  canReply = options
-                                      .select(selected, (id, opt) {})
-                                      .firstWhere((e) => e.id == selected);
+                                  _selected = id;
+                                  _visible = context.tap
+                                      .select(_selected, (id, opt) {})
+                                      .firstWhere((e) => e.id == _selected);
                                 });
                               },
                             );
                           },
                   ),
                 ],
-                const BreakSection(bold: .3, height: 1),
+                const BreakSection(),
 
                 ActionsGrouped(
                   onCamera: () => grepo.fromCamera(context),
                   onMedia: () => grepo.fromMedia(context),
                 ),
+
+                const SizedBox(height: 18),
               ],
             ),
           ),
 
           // ---- overlay ----
-          isLoading ? BlockOverlay('Posting') : SizedBox.shrink(),
+          if (isLoading) BlockOverlay('Posting'),
         ],
       );
     });

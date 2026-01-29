@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
 
 class AuthFoooter extends StatelessWidget {
   final bool isCreate;
@@ -7,7 +8,7 @@ class AuthFoooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return DirectionX(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(

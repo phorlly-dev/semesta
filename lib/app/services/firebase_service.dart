@@ -5,9 +5,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:semesta/config/firebase_options.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
 class FirebaseService {
-  Future<void> init() async {
+  Wait<void> init() async {
     final app = await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );

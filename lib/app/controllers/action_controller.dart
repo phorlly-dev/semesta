@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:get/get.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
@@ -6,6 +5,7 @@ import 'package:semesta/app/controllers/post_controller.dart';
 import 'package:semesta/app/controllers/user_controller.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
 class ActionController extends GetxController {
   ///Playload
@@ -20,12 +20,12 @@ class ActionController extends GetxController {
   String get _bKey => getKey(id: currentUid, screen: Screen.bookmark);
   String get _cKey => getKey(id: currentUid, screen: Screen.comment);
 
-  Future<void> toggleFollow(String uid, bool active) async {
+  Wait<void> toggleFollow(String uid, bool active) async {
     await uCtrl.toggleFollow(uid);
     if (!active) pCtrl.metaFor(getKey(screen: Screen.following)).dirty = true;
   }
 
-  Future<void> toggleFavorite(
+  Wait<void> toggleFavorite(
     ActionTarget target,
     String pid, {
     bool active = false,
@@ -37,7 +37,7 @@ class ActionController extends GetxController {
     }
   }
 
-  Future<void> toggleBookmark(
+  Wait<void> toggleBookmark(
     ActionTarget target,
     String pid, {
     bool active = false,
@@ -52,7 +52,7 @@ class ActionController extends GetxController {
     }
   }
 
-  Future<void> toggleRepost(
+  Wait<void> toggleRepost(
     ActionTarget target,
     String pid, {
     bool active = false,

@@ -11,6 +11,7 @@ import 'package:semesta/src/pages/auth_page.dart';
 import 'package:semesta/src/pages/avatar_preview_page.dart';
 import 'package:semesta/src/pages/commnet_post_page.dart';
 import 'package:semesta/src/pages/create_post_page.dart';
+import 'package:semesta/src/pages/edit_post_page.dart';
 import 'package:semesta/src/pages/user_follow_page.dart';
 import 'package:semesta/src/pages/image_preview_page.dart';
 import 'package:semesta/src/pages/liked_page.dart';
@@ -40,7 +41,7 @@ class AppRouter extends Routes {
       ),
       appReady,
     ),
-    redirect: (context, state) {
+    redirect: (_, state) {
       final goingTo = state.matchedLocation;
       final isLoggedIn = octrl.isLoggedIn;
       final isReady = appReady.value;
@@ -67,12 +68,12 @@ class AppRouter extends Routes {
       return null;
     },
     routes: [
-      goRoute(splash, builder: (ctx, sts) => SplashPage()),
-      goRoute(auth, builder: (ctx, sts) => const AuthPage()),
+      goRoute(splash, builder: (_, sts) => SplashPage()),
+      goRoute(auth, builder: (_, sts) => const AuthPage()),
 
       // Shell (tabs)
       StatefulShellRoute.indexedStack(
-        builder: (context, state, shell) => AppLayout(shell),
+        builder: (_, state, shell) => AppLayout(shell),
         branches: [
           branch(home, child: const HomeScreen()),
           branch(reel, child: const ReelsScreen()),
@@ -85,7 +86,7 @@ class AppRouter extends Routes {
       // ⚡ FULLSCREEN OUTSIDE TAB ROUTES ⚡
       goRoute(
         profile,
-        pageBuilder: (context, state) {
+        pageBuilder: (_, state) {
           return TransitionPage(
             child: ProfilePage(
               state.pathOrQuery('id'),
@@ -96,19 +97,19 @@ class AppRouter extends Routes {
       ),
       goRoute(
         bookmark,
-        pageBuilder: (context, state) {
+        pageBuilder: (_, state) {
           return TransitionPage(child: SavedPage(state.pathOrQuery('id')));
         },
       ),
       goRoute(
         favorite,
-        pageBuilder: (context, state) {
+        pageBuilder: (_, state) {
           return TransitionPage(child: LikedPage(state.pathOrQuery('id')));
         },
       ),
       goRoute(
         avatar,
-        pageBuilder: (context, state) {
+        pageBuilder: (_, state) {
           return TransitionPage(
             child: AvatarPreviewPage(state.pathOrQuery('id')),
             fullscreenDialog: true,
@@ -117,7 +118,7 @@ class AppRouter extends Routes {
       ),
       goRoute(
         create,
-        pageBuilder: (context, state) {
+        pageBuilder: (_, state) {
           return TransitionPage(
             child: CreatePostPage(),
             fullscreenDialog: true,
@@ -126,7 +127,7 @@ class AppRouter extends Routes {
       ),
       goRoute(
         comment,
-        pageBuilder: (context, state) {
+        pageBuilder: (_, state) {
           return TransitionPage(
             fullscreenDialog: true,
             child: CommnetPostPage(state.pathOrQuery('id')),
@@ -135,7 +136,7 @@ class AppRouter extends Routes {
       ),
       goRoute(
         repost,
-        pageBuilder: (context, state) {
+        pageBuilder: (_, state) {
           return TransitionPage(
             fullscreenDialog: true,
             child: QuotePostPage(state.pathOrQuery('id')),
@@ -144,7 +145,7 @@ class AppRouter extends Routes {
       ),
       goRoute(
         media,
-        pageBuilder: (context, state) {
+        pageBuilder: (_, state) {
           return TransitionPage(
             fullscreenDialog: true,
             child: ImagePreviewPage(
@@ -156,7 +157,7 @@ class AppRouter extends Routes {
       ),
       goRoute(
         friendship,
-        pageBuilder: (context, state) {
+        pageBuilder: (_, state) {
           return TransitionPage(
             child: UserFollowPage(
               uid: state.pathOrQuery('id'),
@@ -169,10 +170,16 @@ class AppRouter extends Routes {
 
       goRoute(
         detail,
-        pageBuilder: (context, state) {
+        pageBuilder: (_, state) {
           return TransitionPage(
             child: PostDetailsPage(state.pathOrQuery('id')),
           );
+        },
+      ),
+      goRoute(
+        change,
+        pageBuilder: (_, state) {
+          return TransitionPage(child: EditPostPage(state.pathOrQuery('id')));
         },
       ),
     ],

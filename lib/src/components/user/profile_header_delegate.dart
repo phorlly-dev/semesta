@@ -33,7 +33,7 @@ class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    final pTop = MediaQuery.of(context).padding.top;
+    final pTop = context.query.padding.top;
     final progress = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
 
     // Avatar sizes (X-like)

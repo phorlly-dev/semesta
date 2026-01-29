@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/public/extensions/extension.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget? start, middle, end;
-  final Color? bgColor;
+  final Color? color;
   final double? height;
   final PreferredSizeWidget? bottom;
   const CustomAppBar({
@@ -11,7 +12,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.middle,
     this.end,
     this.bottom,
-    this.bgColor,
+    this.color,
     this.height,
   });
 
@@ -27,7 +28,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [?end],
       bottom: bottom,
       elevation: 0,
-      backgroundColor: bgColor ?? Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: color ?? context.defaultColor,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
     );

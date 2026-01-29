@@ -32,10 +32,7 @@ class RouteNode {
   const RouteNode(this.path, this.name);
 
   RouteNode child(String subpath, String subname) {
-    assert(
-      !subpath.startsWith('/'),
-      'Child route must be relative. Got:: $subpath',
-    );
+    assert(!subpath.startsWith('/'), 'Child route must be relative: $subpath');
 
     return RouteNode('$path/$subpath', '$name.$subname');
   }

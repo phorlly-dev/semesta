@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/src/widgets/sub/direction_x.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class LoadingSkelenton extends StatelessWidget {
   final int count;
@@ -10,68 +12,62 @@ class LoadingSkelenton extends StatelessWidget {
       itemCount: count,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemBuilder: (ctx, idx) => const FeedSkeleton(),
+      itemBuilder: (_, idx) => const _FeedSkeleton(),
     );
   }
 }
 
-class FeedSkeleton extends StatelessWidget {
-  const FeedSkeleton({super.key});
+class _FeedSkeleton extends StatelessWidget {
+  const _FeedSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return DirectionY(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const SkeletonWave(
-                width: 44,
-                height: 44,
-                radius: BorderRadius.all(Radius.circular(22)),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  SkeletonWave(width: 120, height: 14),
-                  SizedBox(height: 6),
-                  SkeletonWave(width: 80, height: 12),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          const SkeletonWave(width: double.infinity, height: 14),
-          const SizedBox(height: 8),
-          const SkeletonWave(width: 240, height: 14),
-          const SizedBox(height: 14),
-          const SkeletonWave(width: double.infinity, height: 180),
-        ],
-      ),
+      children: [
+        DirectionX(
+          children: [
+            const _SkeletonWave(
+              width: 44,
+              height: 44,
+              radius: BorderRadius.all(Radius.circular(22)),
+            ),
+            const SizedBox(width: 12),
+            DirectionY(
+              children: const [
+                _SkeletonWave(width: 120, height: 14),
+                SizedBox(height: 6),
+                _SkeletonWave(width: 80, height: 12),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        const _SkeletonWave(width: double.infinity, height: 14),
+        const SizedBox(height: 8),
+        const _SkeletonWave(width: 240, height: 14),
+        const SizedBox(height: 14),
+        const _SkeletonWave(width: double.infinity, height: 180),
+      ],
     );
   }
 }
 
-class SkeletonWave extends StatefulWidget {
+class _SkeletonWave extends StatefulWidget {
   final double width;
   final double height;
   final BorderRadius radius;
-
-  const SkeletonWave({
-    super.key,
+  const _SkeletonWave({
     required this.width,
     required this.height,
     this.radius = const BorderRadius.all(Radius.circular(12)),
   });
 
   @override
-  State<SkeletonWave> createState() => _SkeletonWaveState();
+  State<_SkeletonWave> createState() => _SkeletonWaveState();
 }
 
-class _SkeletonWaveState extends State<SkeletonWave>
+class _SkeletonWaveState extends State<_SkeletonWave>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
@@ -94,7 +90,7 @@ class _SkeletonWaveState extends State<SkeletonWave>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (ctx, _) {
+      builder: (_, child) {
         return Container(
           width: widget.width,
           height: widget.height,

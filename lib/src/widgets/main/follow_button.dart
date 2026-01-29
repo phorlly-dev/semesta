@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/app/models/author.dart';
+import 'package:semesta/public/extensions/extension.dart';
 
 class FollowButton extends StatelessWidget {
   final Follow _state;
@@ -8,7 +9,6 @@ class FollowButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     String label = "Follow";
     Color bg = Colors.blueAccent;
     Color text = Colors.white;
@@ -17,19 +17,19 @@ class FollowButton extends StatelessWidget {
       case Follow.following:
         label = "Following";
         bg = Colors.transparent;
-        text = colors.primary;
+        text = context.primaryColor;
         break;
 
       case Follow.followBack:
         label = "Follow back";
-        bg = colors.primary;
-        text = colors.onPrimary;
+        bg = context.primaryColor;
+        text = context.colors.onPrimary;
         break;
 
       default:
         label = "Follow";
-        bg = colors.primary;
-        text = colors.onPrimary;
+        bg = context.primaryColor;
+        text = context.colors.onPrimary;
         break;
     }
 
@@ -44,7 +44,7 @@ class FollowButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: _state == Follow.following
-                ? BorderSide(color: colors.primaryContainer)
+                ? BorderSide(color: context.colors.primaryContainer)
                 : BorderSide.none,
           ),
         ),
