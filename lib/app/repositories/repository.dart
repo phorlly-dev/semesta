@@ -19,20 +19,20 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
   }
 
   /// Update an existing document
-  Wait<void> modify(String id, AsMap data) async {
+  AsWait modify(String id, AsMap data) async {
     await collection(path).doc(id).update(data).catchError((e) {
       HandleLogger.error('Failed to update data: $e', message: e);
     });
   }
 
   /// Delete a document
-  Wait<void> destroy(String id) async {
+  AsWait destroy(String id) async {
     await collection(path).doc(id).delete().catchError((e) {
       HandleLogger.error('Failed to delete data: $e', message: e);
     });
   }
 
-  Wait<void> incrementView(ActionTarget target, [String col = comments]) async {
+  AsWait incrementView(ActionTarget target, [String col = comments]) async {
     try {
       await db.runTransaction((txs) async {
         final ref = collection(path);
@@ -60,7 +60,7 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
   /// [edoc] - Edge/target document ID (e.g., post ID)
   /// [key] - The reaction type key (default: 'favorites')
   /// [subcol] - The subcollection name (default: 'favorites')
-  Wait<void> toggle(
+  AsWait toggle(
     String sdoc,
     String edoc, {
     String subcol = favorites,
@@ -118,7 +118,7 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
   /// [key] - The reaction type key (default: 'favorites')
   /// [subcol] - The subcollection name for reactions (default: 'favorites')
   /// [inSubcol] - The intermediate subcollection name (default: 'comments')
-  Wait<void> subtoggle(
+  AsWait subtoggle(
     String sdoc,
     String bdoc,
     String edoc, {

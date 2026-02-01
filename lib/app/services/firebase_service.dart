@@ -8,7 +8,7 @@ import 'package:semesta/config/firebase_options.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 class FirebaseService {
-  Wait<void> init() async {
+  AsWait init() async {
     final app = await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );

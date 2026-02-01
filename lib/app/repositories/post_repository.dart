@@ -8,7 +8,7 @@ import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
 
 class PostRepository extends IRepository<Feed> with PostMixin {
-  Wait<void> insert(Feed model) async {
+  AsWait insert(Feed model) async {
     assert(model.uid.isNotEmpty);
 
     try {
@@ -58,7 +58,7 @@ class PostRepository extends IRepository<Feed> with PostMixin {
     }
   }
 
-  Wait<void> toggleFavorite(ActionTarget target, String uid) async {
+  AsWait toggleFavorite(ActionTarget target, String uid) async {
     switch (target) {
       case ParentTarget(:final pid):
         await toggle(pid, uid);
@@ -70,7 +70,7 @@ class PostRepository extends IRepository<Feed> with PostMixin {
     }
   }
 
-  Wait<void> toggleRepost(ActionTarget target, String uid) async {
+  AsWait toggleRepost(ActionTarget target, String uid) async {
     switch (target) {
       case ParentTarget(:final pid):
         await toggle(pid, uid, subcol: reposts, kind: FeedKind.reposted);
@@ -88,7 +88,7 @@ class PostRepository extends IRepository<Feed> with PostMixin {
     }
   }
 
-  Wait<void> toggleBookmark(ActionTarget target, String uid) async {
+  AsWait toggleBookmark(ActionTarget target, String uid) async {
     switch (target) {
       case ParentTarget(:final pid):
         await toggle(pid, uid, subcol: bookmarks, kind: FeedKind.saved);
@@ -100,7 +100,7 @@ class PostRepository extends IRepository<Feed> with PostMixin {
     }
   }
 
-  Wait<void> destroyPost(Feed post, [String col = comments]) async {
+  AsWait destroyPost(Feed post, [String col = comments]) async {
     try {
       await db.runTransaction((txs) async {
         final ref = collection(path);
@@ -131,7 +131,7 @@ class PostRepository extends IRepository<Feed> with PostMixin {
     }
   }
 
-  Wait<void> modifyPost(Feed post, AsMap data, [String col = comments]) async {
+  AsWait modifyPost(Feed post, AsMap data, [String col = comments]) async {
     try {
       await db.runTransaction((txs) async {
         final ref = collection(path);

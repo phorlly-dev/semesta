@@ -21,7 +21,7 @@ class HandleLogger {
   final Object? err;
   final StackTrace? stack;
 
-  HandleLogger(
+  HandleLogger._(
     this.message, {
     this.type = LogType.error,
     this.err,
@@ -55,18 +55,23 @@ class HandleLogger {
   }
 
   // --- Static shortcuts for easy use anywhere ---
-  static void error(String title, {Object? message, StackTrace? stack}) =>
-      HandleLogger(title, type: LogType.error, err: message, stack: stack);
+  static void error(String title, {Object? message, StackTrace? stack}) {
+    HandleLogger._(title, type: LogType.error, err: message, stack: stack);
+  }
 
-  static void warn(String title, {Object? message, StackTrace? stack}) =>
-      HandleLogger(title, type: LogType.warning, err: message, stack: stack);
+  static void warn(String title, {Object? message, StackTrace? stack}) {
+    HandleLogger._(title, type: LogType.warning, err: message, stack: stack);
+  }
 
-  static void info(String title, {Object? message, StackTrace? stack}) =>
-      HandleLogger(title, type: LogType.info, err: message, stack: stack);
+  static void info(String title, {Object? message, StackTrace? stack}) {
+    HandleLogger._(title, type: LogType.info, err: message, stack: stack);
+  }
 
-  static void debug(String title, {Object? message, StackTrace? stack}) =>
-      HandleLogger(title, type: LogType.debug, err: message, stack: stack);
+  static void debug(String title, {Object? message, StackTrace? stack}) {
+    HandleLogger._(title, type: LogType.debug, err: message, stack: stack);
+  }
 
-  static void track(String title, {Object? message, StackTrace? stack}) =>
-      HandleLogger(title, type: LogType.track, err: message, stack: stack);
+  static void track(String title, {Object? message, StackTrace? stack}) {
+    HandleLogger._(title, type: LogType.track, err: message, stack: stack);
+  }
 }

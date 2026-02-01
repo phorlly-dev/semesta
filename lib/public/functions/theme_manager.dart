@@ -14,7 +14,7 @@ class ThemeManager with ChangeNotifier {
     _loadTheme();
   }
 
-  Wait<void> _loadTheme() async {
+  AsWait _loadTheme() async {
     final stored = _prefs.getStorage(_key);
 
     if (stored == 'light') {

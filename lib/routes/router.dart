@@ -2,29 +2,30 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:semesta/public/extensions/extension.dart';
-import 'package:semesta/routes/router_refresh_stream.dart';
+import 'package:semesta/routes/router_refresh.dart';
 import 'package:semesta/routes/routes.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/transition_page.dart';
-import 'package:semesta/src/components/layout/index.dart';
-import 'package:semesta/src/pages/auth_page.dart';
-import 'package:semesta/src/pages/avatar_preview_page.dart';
-import 'package:semesta/src/pages/commnet_post_page.dart';
-import 'package:semesta/src/pages/create_post_page.dart';
-import 'package:semesta/src/pages/edit_post_page.dart';
-import 'package:semesta/src/pages/user_follow_page.dart';
-import 'package:semesta/src/pages/image_preview_page.dart';
-import 'package:semesta/src/pages/liked_page.dart';
-import 'package:semesta/src/pages/post_details_page.dart';
+import 'package:semesta/src/components/layout/_index.dart';
+import 'package:semesta/src/pages/auth.dart';
+import 'package:semesta/src/pages/avatar_preview.dart';
+import 'package:semesta/src/pages/commnet_post.dart';
+import 'package:semesta/src/pages/create_post.dart';
+import 'package:semesta/src/pages/edit_post.dart';
+import 'package:semesta/src/pages/edit_profile.dart';
+import 'package:semesta/src/pages/user_follow.dart';
+import 'package:semesta/src/pages/image_preview.dart';
+import 'package:semesta/src/pages/liked_posts.dart';
+import 'package:semesta/src/pages/post_details.dart';
 import 'package:semesta/src/pages/profile_page.dart';
-import 'package:semesta/src/pages/quote_post_page.dart';
-import 'package:semesta/src/pages/saved_page.dart';
+import 'package:semesta/src/pages/quote_post.dart';
+import 'package:semesta/src/pages/saved_posts.dart';
 import 'package:semesta/src/pages/splash_page.dart';
-import 'package:semesta/src/screens/explore_screen.dart';
-import 'package:semesta/src/screens/home_screen.dart';
-import 'package:semesta/src/screens/message_screen.dart';
-import 'package:semesta/src/screens/notifications_screen.dart';
-import 'package:semesta/src/screens/reels_screen.dart';
+import 'package:semesta/src/screens/explore.dart';
+import 'package:semesta/src/screens/home.dart';
+import 'package:semesta/src/screens/message.dart';
+import 'package:semesta/src/screens/notifications.dart';
+import 'package:semesta/src/screens/reels.dart';
 
 class AppRouter extends Routes {
   final rootNavKey = GlobalKey<NavigatorState>();
@@ -34,11 +35,8 @@ class AppRouter extends Routes {
     debugLogDiagnostics: true,
     navigatorKey: rootNavKey,
     initialLocation: splash.path,
-    refreshListenable: RouterRefreshStream(
-      debounceStream(
-        octrl.currentUser.stream,
-        const Duration(milliseconds: 200),
-      ),
+    refreshListenable: RouterRefresh(
+      debounce(octrl.currentUser.stream, const Duration(milliseconds: 200)),
       appReady,
     ),
     redirect: (_, state) {
@@ -98,13 +96,13 @@ class AppRouter extends Routes {
       goRoute(
         bookmark,
         pageBuilder: (_, state) {
-          return TransitionPage(child: SavedPage(state.pathOrQuery('id')));
+          return TransitionPage(child: SavedPostsPage(state.pathOrQuery('id')));
         },
       ),
       goRoute(
         favorite,
         pageBuilder: (_, state) {
-          return TransitionPage(child: LikedPage(state.pathOrQuery('id')));
+          return TransitionPage(child: LikedPostsPage(state.pathOrQuery('id')));
         },
       ),
       goRoute(
@@ -160,8 +158,8 @@ class AppRouter extends Routes {
         pageBuilder: (_, state) {
           return TransitionPage(
             child: UserFollowPage(
-              uid: state.pathOrQuery('id'),
-              name: state.pathOrQuery('name', true),
+              state.pathOrQuery('id'),
+              state.pathOrQuery('name', true),
               index: int.parse(state.pathOrQuery('index', true)),
             ),
           );
@@ -180,6 +178,14 @@ class AppRouter extends Routes {
         change,
         pageBuilder: (_, state) {
           return TransitionPage(child: EditPostPage(state.pathOrQuery('id')));
+        },
+      ),
+      goRoute(
+        edit,
+        pageBuilder: (_, state) {
+          return TransitionPage(
+            child: EditProfilePage(state.pathOrQuery('id')),
+          );
         },
       ),
     ],

@@ -141,7 +141,7 @@ class AuthRepository extends UserRepository {
   Wait<bool> exists(String child) async => isExists(users, child);
 
   // ---------- SIGN OUT ----------
-  Wait<void> signOut() async {
+  AsWait signOut() async {
     await auth.signOut();
     // await google.signOut();
     // await facebook.logOut();

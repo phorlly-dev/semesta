@@ -57,7 +57,7 @@ abstract class IStorageService extends FirebaseService with FilerMixin {
   }
 
   /// Delete a file by its storage path
-  Wait<void> deleteFile(String path) async {
+  AsWait deleteFile(String path) async {
     try {
       final ref = ud.ref().child(path);
       await ref.delete();
@@ -72,7 +72,7 @@ abstract class IStorageService extends FirebaseService with FilerMixin {
     }
   }
 
-  // Wait<void> saveImageToGallery(
+  // AsWait saveImageToGallery(
   //   String storagePath, {
   //   void Function(int received, int total)? onProgress,
   // }) async {

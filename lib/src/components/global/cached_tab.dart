@@ -5,38 +5,38 @@ import 'package:semesta/public/functions/custom_toast.dart';
 import 'package:semesta/public/helpers/cached_helper.dart';
 import 'package:semesta/public/mixins/pager_mixin.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
+import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/src/components/global/items_builder.dart';
 
-typedef LoadFn<T> = Future<List<T>> Function();
-typedef ItemBuilder<T> = Widget Function(T item);
+typedef Load<T> = Def<List<T>>;
 
 class CachedTab<T extends HasAttributes> extends StatefulWidget {
   final PagerMixin<T> controller;
   final CachedState<T> cache;
   final bool isGrid, autoLoad, isBreak;
 
-  final LoadFn<T> onInitial;
-  final LoadFn<T> onMore;
-  final LoadFn<T>? onRefresh;
+  final Load<T> onInit;
+  final Load<T> onMore;
+  final Load<T>? onRefresh;
 
   final ScrollController? scroller;
 
-  final ItemBuilder<T> builder;
-  final String emptyMessage;
+  final String message;
+  final Defo<T, Widget> builder;
 
   const CachedTab({
     super.key,
     this.scroller,
     required this.cache,
     required this.onMore,
-    required this.onInitial,
+    required this.onInit,
     this.onRefresh,
     required this.controller,
     required this.builder,
     this.isGrid = false,
     this.autoLoad = true,
     this.isBreak = false,
-    this.emptyMessage = 'No data available',
+    this.message = 'No data available',
   });
 
   @override
@@ -56,7 +56,7 @@ class _CachedTabState<T extends HasAttributes> extends State<CachedTab<T>> {
       if (!mounted) return;
 
       widget.controller.loadStart(
-        fetch: widget.onInitial,
+        fetch: widget.onInit,
         apply: (items) => widget.cache.set(items),
         onError: () => _showError('Failed to load data'),
       );
@@ -72,17 +72,16 @@ class _CachedTabState<T extends HasAttributes> extends State<CachedTab<T>> {
   }
 
   Future<void> _handleRefresh() async {
-    widget.cache.clear();
     await widget.controller.loadLatest(
       fetch: widget.onRefresh!,
-      apply: (items) => widget.cache.assignAll(items),
+      apply: (items) => widget.cache.merge(items),
       onError: () => _showError('Failed to refresh'),
     );
   }
 
   Future<void> _handleRetry() async {
     await widget.controller.retry(
-      fetch: widget.onInitial,
+      fetch: widget.onInit,
       apply: (items) => widget.cache.set(items),
     );
   }
@@ -110,7 +109,7 @@ class _CachedTabState<T extends HasAttributes> extends State<CachedTab<T>> {
 
         // Empty and error state
         hasError: ctrl.error.value,
-        message: widget.emptyMessage,
+        message: widget.message,
 
         // Callbacks
         onMore: _handleMore,

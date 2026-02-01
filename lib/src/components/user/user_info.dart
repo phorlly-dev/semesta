@@ -43,10 +43,9 @@ class Username extends StatelessWidget {
       child: Text(
         '@${_data.limitText(maxChars)}',
         style: TextStyle(
-          fontSize: 16,
           overflow: TextOverflow.ellipsis,
           color: color ?? context.secondaryColor,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -70,7 +69,7 @@ class Status extends StatelessWidget {
   Widget build(BuildContext context) {
     return DirectionX(
       crossAxisAlignment: CrossAxisAlignment.center,
-      spacing: 4.2,
+      spacing: 4,
       children: [
         if (!hasIcon)
           Icon(Icons.circle, size: 3.2, color: context.secondaryColor),

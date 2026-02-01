@@ -1,11 +1,11 @@
-import 'dart:ui';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:semesta/public/functions/logger.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
-typedef PageFetch<T> = Fn<List<T>>;
-typedef PageApply<T> = FnP<List<T>, void>;
+typedef Fetch<T> = Def<List<T>>;
+typedef Apply<T> = ValueChanged<List<T>>;
 
 mixin PagerMixin<T> on GetxController {
   final loading = false.obs;
@@ -15,9 +15,9 @@ mixin PagerMixin<T> on GetxController {
   final error = Rxn<String>();
 
   /// Initial load or refresh from start
-  Wait<void> loadStart({
-    required PageFetch<T> fetch,
-    required PageApply<T> apply,
+  AsWait loadStart({
+    required Fetch<T> fetch,
+    required Apply<T> apply,
     int pageSize = 20,
     VoidCallback? onSuccess,
     VoidCallback? onError,
@@ -42,9 +42,9 @@ mixin PagerMixin<T> on GetxController {
   }
 
   /// Load next page
-  Wait<void> loadMore({
-    required PageFetch<T> fetch,
-    required PageApply<T> apply,
+  AsWait loadMore({
+    required Fetch<T> fetch,
+    required Apply<T> apply,
     int pageSize = 20,
     VoidCallback? onSuccess,
     VoidCallback? onError,
@@ -79,9 +79,9 @@ mixin PagerMixin<T> on GetxController {
   }
 
   /// Pull-to-refresh: load latest items
-  Wait<void> loadLatest({
-    required PageFetch<T> fetch,
-    required PageApply<T> apply,
+  AsWait loadLatest({
+    required Fetch<T> fetch,
+    required Apply<T> apply,
     VoidCallback? onSuccess,
     VoidCallback? onError,
   }) async {
@@ -110,9 +110,9 @@ mixin PagerMixin<T> on GetxController {
   }
 
   /// Retry after error
-  Wait<void> retry({
-    required PageFetch<T> fetch,
-    required PageApply<T> apply,
+  AsWait retry({
+    required Fetch<T> fetch,
+    required Apply<T> apply,
     int pageSize = 20,
   }) async {
     resetPagination();

@@ -10,8 +10,21 @@ import 'package:semesta/app/services/storage_service.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
+typedef Filer = Rxn<File>;
+
 class GenericRepository extends IStorageService {
-  final file = Rxn<File>();
+  final Map<String, Filer> _cache = {};
+  Filer cacheFor(String key) {
+    return _cache.putIfAbsent(key, () => Filer());
+  }
+
+  void clearFor(String key) {
+    final cache = cacheFor(key);
+
+    cache.value = null;
+    cache.refresh();
+  }
+
   final assets = <AssetEntity>[].obs;
   final _rand = Random();
   final faker = Faker();
@@ -141,7 +154,7 @@ class GenericRepository extends IStorageService {
     return medialist.toList();
   }
 
-  Wait<void> fromPicture() async {
+  AsWait fromPicture(String key) async {
     final image = await pickImage();
     if (image == null) return;
 
@@ -151,10 +164,26 @@ class GenericRepository extends IStorageService {
       return;
     }
 
-    file.value = image;
+    cacheFor(key).value = image;
   }
 
-  Wait<void> fromVideo() async {
+  AsWait fromAsset(BuildContext context, String key) async {
+    final asset = await pickFromCamera(context);
+    if (asset == null) return;
+
+    final file = await asset.file;
+    if (file == null) return;
+
+    if (!isFileSizeValid(file, maxMB: 5)) {
+      CustomToast.warning('Image must be smaller than 5MB');
+
+      return;
+    }
+
+    cacheFor(key).value = file;
+  }
+
+  AsWait fromVideo(String key) async {
     final video = await pickVideo();
     if (video == null) return;
 
@@ -164,10 +193,10 @@ class GenericRepository extends IStorageService {
       return;
     }
 
-    file.value = video;
+    cacheFor(key).value = video;
   }
 
-  Wait<void> fromMedia(BuildContext context) async {
+  AsWait fromMedia(BuildContext context) async {
     final media = await pickMedia(context);
 
     if (media.isEmpty) return;
@@ -176,7 +205,7 @@ class GenericRepository extends IStorageService {
     if (isUnique(media, assets)) assets.addAll(media);
   }
 
-  Wait<void> fromCamera(BuildContext context) async {
+  AsWait fromCamera(BuildContext context) async {
     final asset = await pickFromCamera(context);
 
     if (asset != null) assets.add(asset);

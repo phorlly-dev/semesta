@@ -13,7 +13,6 @@ class CustomButton extends StatelessWidget {
   final bool fullWidth;
   final BorderRadius? borderRadius;
   final bool enableShadow;
-
   const CustomButton({
     super.key,
     this.icon,
@@ -32,7 +31,6 @@ class CustomButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = borderRadius ?? BorderRadius.circular(12);
-
     return Animated(
       onTap: onPressed,
       child: Container(
@@ -56,6 +54,7 @@ class CustomButton extends StatelessWidget {
           child: DirectionX(
             mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (icon != null)
                 icon is IconData

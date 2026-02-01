@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/src/widgets/sub/loading_animated.dart';
+import 'package:semesta/src/widgets/sub/direction_y.dart';
+import 'package:semesta/src/widgets/sub/animated_loader.dart';
 
 class BlockOverlay extends StatelessWidget {
   final String _title;
@@ -9,26 +10,25 @@ class BlockOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return AbsorbPointer(
       absorbing: true,
-      child: Container(
-        color: Colors.black.withValues(alpha: .8),
+      child: DirectionY(
         alignment: Alignment.center,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            LoadingAnimated(color: Colors.white, cupertino: true),
-            SizedBox(height: 16),
-            Text(
-              '$_title...',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                decoration: TextDecoration.none, // ❌ remove underline
-                fontWeight: FontWeight.w600,
-              ),
+        mainAxisSize: MainAxisSize.min,
+        color: Colors.black.withValues(alpha: .8),
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          AnimatedLoader(color: Colors.white, cupertino: true),
+          SizedBox(height: 16),
+          Text(
+            '$_title...',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              decoration: TextDecoration.none, // ❌ remove underline
+              fontWeight: FontWeight.w600,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

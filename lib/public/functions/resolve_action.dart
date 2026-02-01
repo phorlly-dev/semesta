@@ -1,4 +1,4 @@
-import 'package:flutter/rendering.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
 enum ComposerType { post, reply, quote }
 
@@ -7,54 +7,30 @@ class ResolveAction {
   const ResolveAction(this._type);
 
   void onSubmit({
-    required VoidCallback onPost,
-    required VoidCallback onQuote,
-    required VoidCallback onReply,
-  }) {
-    switch (_type) {
-      case ComposerType.reply:
-        onReply.call();
-        break;
+    required AsDef onPost,
+    required AsDef onQuote,
+    required AsDef onReply,
+  }) => switch (_type) {
+    ComposerType.post => onPost.call(),
+    ComposerType.reply => onReply.call(),
+    ComposerType.quote => onQuote.call(),
+  };
 
-      case ComposerType.quote:
-        onQuote.call();
-        break;
+  String get getActionLabel => switch (_type) {
+    ComposerType.post => 'Post',
+    ComposerType.reply => 'Reply',
+    ComposerType.quote => 'Repost',
+  };
 
-      case ComposerType.post:
-        onPost.call();
-    }
-  }
+  String get getTitle => switch (_type) {
+    ComposerType.quote => 'Repost',
+    ComposerType.post => 'Create Post',
+    ComposerType.reply => 'Reply to Post',
+  };
 
-  String getActionLabel() {
-    switch (_type) {
-      case ComposerType.reply:
-        return 'Reply';
-      case ComposerType.quote:
-        return 'Repost';
-      default:
-        return 'Post';
-    }
-  }
-
-  String getHeaderTitle() {
-    switch (_type) {
-      case ComposerType.reply:
-        return 'Reply to Post';
-      case ComposerType.quote:
-        return 'Repost';
-      default:
-        return 'Create Post';
-    }
-  }
-
-  String getLabel() {
-    switch (_type) {
-      case ComposerType.reply:
-        return 'Post your reply';
-      case ComposerType.quote:
-        return 'Add a comment...';
-      default:
-        return "What's new?";
-    }
-  }
+  String get getLabel => switch (_type) {
+    ComposerType.post => "What's new?",
+    ComposerType.reply => 'Post your reply',
+    ComposerType.quote => 'Add a comment...',
+  };
 }

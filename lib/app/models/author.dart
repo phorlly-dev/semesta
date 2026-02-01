@@ -3,8 +3,6 @@ import 'package:semesta/app/models/model.dart';
 
 enum Gender { female, male, other }
 
-enum Follow { follow, followBack, following }
-
 class Author extends Model<Author> {
   final String avatar;
   final String name;

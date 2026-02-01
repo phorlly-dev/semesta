@@ -3,7 +3,7 @@ import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/src/components/global/loading_skelenton.dart';
+import 'package:semesta/src/components/global/animated_card.dart';
 import 'package:semesta/src/components/info/core_post_card.dart';
 import 'package:semesta/src/components/info/reference_to_post.dart';
 import 'package:semesta/src/components/info/reposted_banner.dart';
@@ -51,7 +51,7 @@ class CommentedContext extends StatelessWidget {
             : StreamBuilder(
                 stream: actrl.state$(parent!),
                 builder: (_, snapshot) {
-                  if (!snapshot.hasData) return const LoadingSkelenton();
+                  if (!snapshot.hasData) return const AnimatedCard();
 
                   final sts = snapshot.data!;
                   return DirectionY(

@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:semesta/public/functions/logger.dart';
 import 'package:semesta/public/mixins/pager_mixin.dart';
@@ -11,10 +12,10 @@ abstract class IController<T> extends GetxController with PagerMixin<T> {
   final RxString message = ''.obs;
 
   /// A reusable async handler for try/catch/finally logic.
-  Wait<void> handleAsync({
-    required Fn<void> callback,
-    FnP<bool, void>? onFinal,
-    FnP2<Object, StackTrace, void>? onError,
+  AsWait handleAsync({
+    AsError? onError,
+    required AsDef callback,
+    ValueChanged<bool>? onFinal,
   }) async {
     // 1. Set loading state to true *before* the operation starts.
     isLoading.value = true;
@@ -38,10 +39,10 @@ abstract class IController<T> extends GetxController with PagerMixin<T> {
     }
   }
 
-  Wait<void> tryCatch({
-    required Fn<void> callback,
-    FnP<bool, void>? onFinal,
-    FnP2<Object, StackTrace, void>? onError,
+  AsWait tryCatch({
+    AsError? onError,
+    required AsDef callback,
+    ValueChanged<bool>? onFinal,
   }) async {
     try {
       await callback();

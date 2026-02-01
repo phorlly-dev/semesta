@@ -6,11 +6,12 @@ import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/app/models/author.dart';
+import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/src/widgets/main/custom_button.dart';
-import 'package:semesta/src/widgets/sub/date_time_input.dart';
+import 'package:semesta/src/widgets/sub/dated_picker.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
-import 'package:semesta/src/widgets/sub/image_picker.dart';
-import 'package:semesta/src/widgets/sub/text_input.dart';
+import 'package:semesta/src/widgets/sub/avatar_editale.dart';
+import 'package:semesta/src/widgets/sub/inputable.dart';
 
 class SignUp extends StatefulWidget {
   final GlobalKey<FormBuilderState> _formKey;
@@ -28,21 +29,27 @@ class _SignUpState extends State<SignUp> {
   final _cinput = TextEditingController();
   final _uinput = TextEditingController();
   final _focus = FocusNode();
+  final _key = 'avatar';
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       final form = widget._formKey;
-      final file = grepo.file.value;
+      final file = grepo.cacheFor(_key).value;
       final isLoading = octrl.isLoading.value;
 
       return DirectionY(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          ImagePicker(onTap: grepo.fromPicture, image: file),
+          AvatarEditale(
+            MediaSource.file(file?.path ?? ''),
+            onTap: () => grepo.fromPicture(_key),
+          ),
 
-          TextInput(
+          Inputable(
             'name',
             focusNode: _focus,
+            hint: 'Name cannot be blank',
             prefixIcon: const Icon(Icons.person),
             validator: FormBuilderValidators.compose([
               FormBuilderValidators.required(errorText: 'Name is required'),
@@ -70,8 +77,9 @@ class _SignUpState extends State<SignUp> {
             },
           ),
 
-          TextInput(
+          Inputable(
             'uname',
+            hint: 'Useraname cannot be blank',
             controller: _uinput,
             prefixIcon: const Icon(Icons.person_outline),
             validator: FormBuilderValidators.compose([
@@ -107,9 +115,9 @@ class _SignUpState extends State<SignUp> {
           //     );
           //   }).toList(),
           // ),
-          DateTimeInput(
+          DatedPicker(
             'dob',
-            lable: 'Date of Birth',
+            lable: 'Date of birth',
             icon: Icons.date_range,
             validator: FormBuilderValidators.compose([
               FormBuilderValidators.required(
@@ -133,7 +141,7 @@ class _SignUpState extends State<SignUp> {
               },
             ]),
           ),
-          TextInput(
+          Inputable(
             'email',
             keyboardType: TextInputType.emailAddress,
             prefixIcon: const Icon(Icons.email_outlined),
@@ -143,9 +151,10 @@ class _SignUpState extends State<SignUp> {
             ]),
           ),
 
-          TextInput(
+          Inputable(
             'password',
             controller: _pinput,
+            hint: 'Password cannot be blank',
             keyboardType: TextInputType.visiblePassword,
             prefixIcon: const Icon(Icons.lock_outline_rounded),
             obscureText: !_visible,
@@ -172,9 +181,10 @@ class _SignUpState extends State<SignUp> {
             ]),
           ),
 
-          TextInput(
+          Inputable(
             'confirm',
             controller: _cinput,
+            hint: 'Confirm must be match password',
             keyboardType: TextInputType.visiblePassword,
             prefixIcon: const Icon(Icons.lock_outline_rounded),
             obscureText: !_confirm,
@@ -236,7 +246,7 @@ class _SignUpState extends State<SignUp> {
     _ckpassword = '';
     _visible = false;
     _confirm = false;
-    grepo.file.value = null;
+    grepo.clearFor(_key);
     _cinput.dispose();
     _pinput.dispose();
     _uinput.dispose();

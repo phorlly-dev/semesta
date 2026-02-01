@@ -3,12 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/public/utils/custom_modal.dart';
+import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/src/components/info/reposted_banner.dart';
 import 'package:semesta/src/components/user/user_info.dart';
 import 'package:semesta/src/widgets/main/follow_button.dart';
-import 'package:semesta/src/widgets/sub/avatar_animation.dart';
+import 'package:semesta/src/widgets/sub/animated_avatar.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
 
@@ -36,7 +36,7 @@ class HeaderSection extends StatelessWidget {
             padding: const EdgeInsets.only(left: 12, bottom: 4),
             children: [
               AvatarAnimation(
-                user.avatar,
+                MediaSource.network(user.avatar),
                 padding: const EdgeInsets.only(top: 6.0),
                 onTap: () async {
                   await context.openProfile(user.id, authed);
@@ -74,10 +74,10 @@ class HeaderSection extends StatelessWidget {
                 children: [
                   if (!authed)
                     FollowButton(
-                      resolveState(iFollow, status.theyFollow),
+                      context.follow(iFollow, status.theyFollow),
                       onPressed: () async {
                         if (iFollow) {
-                          CustomModal(
+                          CustomModal<String>(
                             context,
                             title: 'Unfollow ${user.name}?',
                             children: [Text(unfollow)],
@@ -106,14 +106,14 @@ class HeaderSection extends StatelessWidget {
                     ),
                     onTap: () {
                       if (authed) {
-                        context.open.currentOptions(
+                        context.current(
                           model,
                           actions.target,
                           active: actions.bookmarked,
                           profiled: false,
                         );
                       } else {
-                        context.open.anotherOptions(
+                        context.target(
                           model,
                           actions.target,
                           status: status,

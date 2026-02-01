@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:lazy_load_scrollview/lazy_load_scrollview.dart';
 import 'package:semesta/public/utils/type_def.dart';
-import 'package:semesta/src/components/global/loading_skelenton.dart';
+import 'package:semesta/src/components/global/animated_card.dart';
 import 'package:semesta/src/widgets/sub/break_section.dart';
-import 'package:semesta/src/widgets/sub/error_view.dart';
-import 'package:semesta/src/widgets/sub/no_data_entries.dart';
+import 'package:semesta/src/widgets/sub/occurred_error.dart';
+import 'package:semesta/src/widgets/sub/empty_data.dart';
 
 class ItemsBuilder extends StatefulWidget {
   final int counter;
   final IndexedWidgetBuilder builder;
   final bool isLoading, isLoadingNext, isEmpty, isGrid, isBreak;
-  final Fn<void>? onRefresh;
+  final AsDef? onRefresh;
   final ScrollController? scroller;
   final VoidCallback onMore;
   final VoidCallback? onRetry;
@@ -63,16 +63,16 @@ class _ItemsBuilderState extends State<ItemsBuilder>
                       SliverToBoxAdapter(child: BreakSection()),
 
                     if (widget.isLoading && widget.isEmpty)
-                      SliverFillRemaining(child: LoadingSkelenton())
+                      SliverFillRemaining(child: AnimatedCard())
                     else if (widget.isEmpty && !widget.isLoading)
                       SliverFillRemaining(
-                        child: NoDataEntries(
+                        child: EmptyData(
                           widget.message ?? "There's no data yet.",
                         ),
                       )
                     else if (widget.hasError != null)
                       SliverFillRemaining(
-                        child: ErrorView(
+                        child: OccurredError(
                           onRetry: widget.onRetry,
                           message: widget.hasError,
                         ),
@@ -104,16 +104,16 @@ class _ItemsBuilderState extends State<ItemsBuilder>
                 controller: widget.scroller,
                 slivers: [
                   if (widget.isLoading && widget.isEmpty)
-                    SliverFillRemaining(child: LoadingSkelenton())
+                    SliverFillRemaining(child: AnimatedCard())
                   else if (widget.isEmpty && !widget.isLoading)
                     SliverFillRemaining(
-                      child: NoDataEntries(
+                      child: EmptyData(
                         widget.message ?? "There's no data yet.",
                       ),
                     )
                   else if (widget.hasError != null)
                     SliverFillRemaining(
-                      child: ErrorView(
+                      child: OccurredError(
                         onRetry: widget.onRetry,
                         message: widget.hasError,
                       ),

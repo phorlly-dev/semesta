@@ -10,15 +10,15 @@ import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/src/components/user/user_info.dart';
 import 'package:semesta/src/widgets/main/action_button.dart';
 import 'package:semesta/src/widgets/main/follow_button.dart';
-import 'package:semesta/src/widgets/sub/action_count.dart';
-import 'package:semesta/src/widgets/sub/custom_text_button.dart';
+import 'package:semesta/src/widgets/sub/animated_count.dart';
+import 'package:semesta/src/widgets/sub/animated_button.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class ProfileInfo extends StatelessWidget {
   final StatusView _status;
-  final CountState _state;
-  const ProfileInfo(this._state, this._status, {super.key});
+  final CountState _count;
+  const ProfileInfo(this._count, this._status, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,15 +31,20 @@ class ProfileInfo extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         // White background for content
-        _AuthorInfo(user, _state),
+        _AuthorInfo(user, _count),
 
         // Edit / Follow button
         Positioned(
           right: 8,
           child: authed
-              ? CustomTextButton(label: 'Edit Profile', onPressed: () {})
+              ? AnimatedButton(
+                  label: 'Edit Profile',
+                  onPressed: () async {
+                    await context.openById(route.edit, user.id);
+                  },
+                )
               : FollowButton(
-                  resolveState(iFollow, theyFollow),
+                  context.follow(iFollow, theyFollow),
                   onPressed: () async {
                     if (iFollow) {
                       CustomModal(
@@ -77,8 +82,8 @@ class _AuthorInfo extends StatelessWidget {
     return DirectionY(
       padding: const EdgeInsets.fromLTRB(16, 32, 12, 8),
       children: [
-        DisplayName(_user.name, maxChars: 50),
-        Username(_user.uname, maxChars: 60),
+        DisplayName(_user.name, maxChars: 32),
+        Username(_user.uname, maxChars: 36),
         SizedBox(height: 12),
 
         if (_user.bio.isNotEmpty) Bio(_user.bio),
@@ -109,7 +114,7 @@ class _AuthorInfo extends StatelessWidget {
         DirectionX(
           spacing: 12,
           children: [
-            ActionCount(
+            AnimatedCount(
               _user.following,
               kind: FeedKind.following,
               onTap: () async {
@@ -122,7 +127,7 @@ class _AuthorInfo extends StatelessWidget {
               },
             ),
 
-            ActionCount(
+            AnimatedCount(
               _user.follower,
               kind: FeedKind.follower,
               onTap: () async {
@@ -135,7 +140,8 @@ class _AuthorInfo extends StatelessWidget {
               },
             ),
 
-            if (_state.value > 0) ActionCount(_state.value, kind: _state.kind),
+            if (_state.value > 0)
+              AnimatedCount(_state.value, kind: _state.kind),
           ],
         ),
       ],

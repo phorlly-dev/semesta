@@ -34,7 +34,7 @@ class PostController extends IFeedController {
     metaFor(key).dirty = true; // next switch triggers refill
   }
 
-  Wait<void> save(Feed model, List<AssetEntity> files) async {
+  AsWait save(Feed model, List<AssetEntity> files) async {
     await handleAsync(
       callback: () async {
         final user = currentUser;
@@ -48,7 +48,7 @@ class PostController extends IFeedController {
     );
   }
 
-  Wait<void> saveChange(Feed post, AsMap data) async {
+  AsWait saveChange(Feed post, AsMap data) async {
     await handleAsync(
       callback: () async {
         await prepo.modifyPost(post, data);
@@ -58,7 +58,7 @@ class PostController extends IFeedController {
     );
   }
 
-  Wait<void> remove(Feed post) async {
+  AsWait remove(Feed post) async {
     await handleAsync(
       callback: () async {
         await deleteMediaFiles(post.media);

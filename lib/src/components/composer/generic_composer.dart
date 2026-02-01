@@ -8,14 +8,15 @@ import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/helpers/audit_view.dart';
+import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/src/components/composer/post_composer.dart';
-import 'package:semesta/src/components/layout/custom_app_bar.dart';
-import 'package:semesta/src/widgets/main/actions_grouped.dart';
-import 'package:semesta/src/components/layout/_layout_page.dart';
+import 'package:semesta/src/components/layout/nav_bar.dart';
+import 'package:semesta/src/widgets/main/grouped_action.dart';
+import 'package:semesta/src/components/layout/_page.dart';
 import 'package:semesta/src/widgets/main/option_button.dart';
 import 'package:semesta/src/widgets/sub/block_overlay.dart';
 import 'package:semesta/src/widgets/sub/break_section.dart';
-import 'package:semesta/src/widgets/sub/custom_text_button.dart';
+import 'package:semesta/src/widgets/sub/animated_button.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class GenericComposer extends StatefulWidget {
@@ -28,17 +29,10 @@ class GenericComposer extends StatefulWidget {
 }
 
 class _GenericComposerState extends State<GenericComposer> {
-  final _textContent = TextEditingController();
   late ResolveAction _action;
-
-  int _selected = 1;
-  VisibleToPost _visible = VisibleToPost(
-    icon: Icons.public,
-    id: 1,
-    label: 'Everyone',
-    option: Visible.everyone,
-    selected: true,
-  );
+  final _input = TextEditingController();
+  Visible _option = Visible.everyone;
+  VisibleToPost _visible = VisibleToPost.public();
 
   @override
   void initState() {
@@ -46,14 +40,14 @@ class _GenericComposerState extends State<GenericComposer> {
     super.initState();
   }
 
-  Future<void> _submit() async {
-    final text = _textContent.text.trim();
+  AsWait get _submit async {
+    final text = _input.text.trim();
     final files = grepo.assets.toList();
     final parent = widget.parent;
 
     _action.onSubmit(
       onPost: () async {
-        final post = Feed(title: text, visible: _visible.option);
+        final post = Feed(title: text, visible: _option);
 
         await pctrl.save(post, files);
         if (mounted) context.pop();
@@ -62,7 +56,7 @@ class _GenericComposerState extends State<GenericComposer> {
       onQuote: () async {
         final post = Feed(
           title: text,
-          visible: _visible.option,
+          visible: _option,
           pid: parent?.id ?? '',
           type: Create.quote,
         );
@@ -74,7 +68,7 @@ class _GenericComposerState extends State<GenericComposer> {
       onReply: () async {
         final post = Feed(
           title: text,
-          visible: _visible.option,
+          visible: _option,
           pid: parent?.id ?? '',
           type: Create.reply,
         );
@@ -88,7 +82,7 @@ class _GenericComposerState extends State<GenericComposer> {
 
   @override
   void dispose() {
-    _textContent.dispose();
+    _input.dispose();
     grepo.assets.clear();
     pctrl.message.value = '';
     super.dispose();
@@ -97,11 +91,11 @@ class _GenericComposerState extends State<GenericComposer> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final author = pctrl.currentUser;
-      final actor = pctrl.uCtrl.dataMapping[widget.parent?.uid ?? ''];
-      final isLoading = pctrl.isLoading.value;
-      final content = pctrl.message.value;
       final files = grepo.assets;
+      final author = pctrl.currentUser;
+      final content = pctrl.message.value;
+      final isLoading = pctrl.isLoading.value;
+      final actor = pctrl.uCtrl.dataMapping[widget.parent?.uid ?? author.id];
 
       // ✅ hide or disable button if text + files empty
       final hasContent = content.isNotEmpty || files.isNotEmpty;
@@ -111,17 +105,17 @@ class _GenericComposerState extends State<GenericComposer> {
 
       return Stack(
         children: [
-          LayoutPage(
-            header: CustomAppBar(
-              middle: Text(_action.getHeaderTitle()),
+          PageLayout(
+            header: AppNavBar(
+              middle: Text(_action.getTitle),
               end: Container(
                 margin: EdgeInsets.only(right: 12),
-                child: CustomTextButton(
-                  onPressed: !hasContent ? null : _submit,
+                child: AnimatedButton(
+                  onPressed: () => !hasContent ? null : _submit,
                   bgColor: !hasContent
                       ? Colors.lightBlueAccent
                       : Colors.blueAccent,
-                  label: isLoading ? 'Posting...' : _action.getActionLabel(),
+                  label: isLoading ? 'Posting...' : _action.getActionLabel,
                   textColor: Colors.white,
                 ),
               ),
@@ -130,10 +124,10 @@ class _GenericComposerState extends State<GenericComposer> {
             // ---- Main content ----
             content: PostComposer(
               audit: StatusView(author: author, actor: actor),
-              content: _textContent,
+              content: _input,
               parent: widget.parent,
               assets: files.toList(),
-              label: _action.getLabel(),
+              label: _action.getLabel,
               onRemove: (index) => files.removeAt(index),
               isReply: isReply,
               onChanged: (value) {
@@ -156,26 +150,22 @@ class _GenericComposerState extends State<GenericComposer> {
                     sizeIcon: 18,
                     onTap: isRepost
                         ? null
-                        : () {
-                            context.tap.showModal(
-                              selected: _selected,
-                              onSelected: (id, opt) {
-                                setState(() {
-                                  _selected = id;
-                                  _visible = context.tap
-                                      .select(_selected, (id, opt) {})
-                                      .firstWhere((e) => e.id == _selected);
-                                });
-                              },
-                            );
-                          },
+                        : () => context.show(
+                            _option,
+                            onChanged: (opt) {
+                              setState(() {
+                                _option = opt;
+                                _visible = VisibleToPost.render(_option);
+                              });
+                            },
+                          ),
                   ),
                 ],
                 const BreakSection(),
 
-                ActionsGrouped(
-                  onCamera: () => grepo.fromCamera(context),
-                  onMedia: () => grepo.fromMedia(context),
+                GroupedAction(
+                  onCamera: () => context.camera,
+                  onMedia: () => context.gallery,
                 ),
 
                 const SizedBox(height: 18),

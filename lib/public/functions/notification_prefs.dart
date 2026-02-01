@@ -17,7 +17,7 @@ class NotificationPrefs {
   static const _dUpdate = true;
   static const _dPromo = true;
 
-  static Wait<void> init() async {
+  static AsWait init() async {
     _sp = await SharedPreferences.getInstance();
   }
 
@@ -26,7 +26,7 @@ class NotificationPrefs {
   static bool get update => _sp.getBool(_kUpdate) ?? _dUpdate;
   static bool get promo => _sp.getBool(_kPromo) ?? _dPromo;
 
-  static Wait<void> setPushOn(bool v) async {
+  static AsWait setPushOn(bool v) async {
     await _sp.setBool(_kPush, v);
 
     if (v) {
@@ -37,26 +37,26 @@ class NotificationPrefs {
     }
   }
 
-  static Wait<void> setUpdate(bool v) async {
+  static AsWait setUpdate(bool v) async {
     await _sp.setBool(_kUpdate, v);
 
     await toggleTag(_kUpdate, v);
   }
 
-  static Wait<void> setPromo(bool v) async {
+  static AsWait setPromo(bool v) async {
     await _sp.setBool(_kPromo, v);
 
     await toggleTag(_kPromo, v);
   }
 
   /// Call this once at startup so the SDK matches stored settings.
-  static Wait<void> syncToOneSignal() async {
+  static AsWait syncToOneSignal() async {
     await setUpdate(update);
     await setPromo(promo);
     await setPushOn(pushOn);
   }
 
-  static Wait<void> toggleTag(String key, bool value) async {
+  static AsWait toggleTag(String key, bool value) async {
     if (value) {
       await _user.addTagWithKey(key, value);
     } else {

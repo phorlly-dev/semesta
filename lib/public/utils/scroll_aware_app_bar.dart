@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 class ScrollAwareAppBar extends StatefulWidget {
-  final FnP<bool, Widget> _builder;
+  final Defo<bool, Widget> _builder;
   const ScrollAwareAppBar(this._builder, {super.key});
 
   @override
@@ -23,7 +23,7 @@ class _ScrollAwareAppBarState extends State<ScrollAwareAppBar> {
           setState(() => _visible = true);
         }
 
-        return false;
+        return _visible;
       },
       child: widget._builder(_visible),
     );

@@ -4,7 +4,7 @@ import 'package:semesta/public/helpers/audit_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/src/widgets/main/action_button.dart';
-import 'package:semesta/src/widgets/sub/action_count.dart';
+import 'package:semesta/src/widgets/sub/animated_count.dart';
 import 'package:semesta/src/widgets/sub/break_section.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
@@ -41,7 +41,7 @@ class FooterSection extends StatelessWidget {
                   if (_actions.views > 0) ...[
                     Text('·', style: TextStyle(color: context.outlineColor)),
 
-                    ActionCount(
+                    AnimatedCount(
                       _actions.views,
                       kind: FeedKind.viewed,
                       detailed: true,
@@ -57,24 +57,24 @@ class FooterSection extends StatelessWidget {
                   padding: padding,
                   children: [
                     if (_actions.reposts > 0)
-                      ActionCount(
+                      AnimatedCount(
                         _actions.reposts,
                         kind: FeedKind.reposted,
                         onTap: () {},
                       ),
 
                     if (_actions.quotes > 0)
-                      ActionCount(
+                      AnimatedCount(
                         _actions.quotes,
                         kind: FeedKind.quoted,
                         onTap: () {},
                       ),
 
                     if (_actions.favorites > 0)
-                      ActionCount(_actions.favorites, kind: FeedKind.liked),
+                      AnimatedCount(_actions.favorites, kind: FeedKind.liked),
 
                     if (_actions.bookmarks > 0)
-                      ActionCount(_actions.bookmarks, kind: FeedKind.saved),
+                      AnimatedCount(_actions.bookmarks, kind: FeedKind.saved),
                   ],
                 ),
 
@@ -101,7 +101,7 @@ class FooterSection extends StatelessWidget {
                         ? Colors.redAccent
                         : context.hintColor,
                     isActive: _actions.reposted,
-                    onPressed: () => context.open.repostOptions(_actions),
+                    onPressed: () => context.repost(_actions),
                   ),
 
                   // Like

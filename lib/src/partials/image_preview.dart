@@ -8,7 +8,7 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
 import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/src/components/layout/_layout_page.dart';
+import 'package:semesta/src/components/layout/_page.dart';
 import 'package:semesta/src/components/post/actions_bar.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 
@@ -65,14 +65,14 @@ class _ImagePreviewState extends State<ImagePreview> {
         statusBarIconBrightness: Brightness.light, // Android
         statusBarBrightness: Brightness.dark, // iOS
       ),
-      child: LayoutPage(
+      child: PageLayout(
         color: Colors.black.withValues(alpha: opacity),
         content: GestureDetector(
           onVerticalDragUpdate: _onVerticalDragUpdate,
           onVerticalDragEnd: _onVerticalDragEnd,
           onTap: () => setState(() => _toggle = !_toggle),
           onLongPress: () {
-            context.open.imageOptions(_media[_currentIndex]);
+            context.image(_media[_currentIndex]);
           },
           child: Stack(
             children: [
@@ -138,7 +138,7 @@ class _ImagePreviewState extends State<ImagePreview> {
                       _CircleButton(
                         Icons.more_horiz,
                         onTap: () {
-                          context.open.imageOptions(_media[_currentIndex]);
+                          context.image(_media[_currentIndex]);
                         },
                       ),
                     ],

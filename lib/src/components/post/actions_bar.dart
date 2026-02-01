@@ -6,15 +6,15 @@ import 'package:semesta/src/widgets/main/action_button.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 
 class ActionsBar extends StatelessWidget {
-  final ActionsView _actions;
   final Color? color;
+  final ActionsView _actions;
   final double start, end, top, bottom;
   const ActionsBar(
     this._actions, {
     super.key,
-    this.start = 56,
+    this.start = 58,
     this.end = 12,
-    this.top = 12,
+    this.top = 16,
     this.bottom = 6,
     this.color,
   });
@@ -68,7 +68,7 @@ class ActionsBar extends StatelessWidget {
                     ? Colors.green
                     : color ?? context.hintColor,
                 isActive: _actions.reposted,
-                onPressed: () => context.open.repostOptions(_actions),
+                onPressed: () => context.repost(_actions),
               ),
 
               // Views

@@ -20,12 +20,12 @@ class ActionController extends GetxController {
   String get _bKey => getKey(id: currentUid, screen: Screen.bookmark);
   String get _cKey => getKey(id: currentUid, screen: Screen.comment);
 
-  Wait<void> toggleFollow(String uid, bool active) async {
+  AsWait toggleFollow(String uid, bool active) async {
     await uCtrl.toggleFollow(uid);
     if (!active) pCtrl.metaFor(getKey(screen: Screen.following)).dirty = true;
   }
 
-  Wait<void> toggleFavorite(
+  AsWait toggleFavorite(
     ActionTarget target,
     String pid, {
     bool active = false,
@@ -37,7 +37,7 @@ class ActionController extends GetxController {
     }
   }
 
-  Wait<void> toggleBookmark(
+  AsWait toggleBookmark(
     ActionTarget target,
     String pid, {
     bool active = false,
@@ -52,7 +52,7 @@ class ActionController extends GetxController {
     }
   }
 
-  Wait<void> toggleRepost(
+  AsWait toggleRepost(
     ActionTarget target,
     String pid, {
     bool active = false,

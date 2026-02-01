@@ -10,6 +10,7 @@ class AuthFoooter extends StatelessWidget {
   Widget build(BuildContext context) {
     return DirectionX(
       mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           isCreate ? 'Already have an account? ' : "Don't have an account? ",

@@ -1,4 +1,5 @@
 import 'package:semesta/app/models/feed.dart';
+import 'package:semesta/app/models/media.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
@@ -38,4 +39,9 @@ extension FeedX on Feed {
       await Future.delayed(const Duration(seconds: 1));
     }
   }
+}
+
+extension MediaX on Media {
+  bool get img => type == MediaType.image;
+  bool get mp4 => type == MediaType.video;
 }

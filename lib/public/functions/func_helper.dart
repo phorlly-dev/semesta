@@ -40,9 +40,9 @@ List<T> parseJsonList<T>(dynamic data, T Function(AsMap json) fromJson) {
 }
 
 /// Parses to either a List
-List<String> parseToList(dynamic data) {
+AsList parseToList(dynamic data) {
   try {
-    return List<String>.from(data ?? const []);
+    return AsList.from(data ?? const []);
   } catch (e, s) {
     HandleLogger.warn('⚠️ Error in parse to list', message: e, stack: s);
     return const [];

@@ -1,6 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
 import 'package:semesta/app/controllers/auth_controller.dart';
 import 'package:semesta/routes/routes.dart';
@@ -9,7 +6,6 @@ import 'package:semesta/app/controllers/user_controller.dart';
 import 'package:semesta/app/repositories/generic_repository.dart';
 import 'package:semesta/app/repositories/post_repository.dart';
 import 'package:semesta/app/repositories/user_repository.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/app/controllers/action_controller.dart';
 import 'package:semesta/app/controllers/direction_controller.dart';
 
@@ -57,15 +53,9 @@ PostController get pctrl => Get.find<PostController>();
 ActionController get actrl => Get.find<ActionController>();
 GenericRepository get grepo => Get.put(GenericRepository());
 DirectionController get dctrl => Get.find<DirectionController>();
-GlobalKey<FormBuilderState> get fkey => GlobalKey<FormBuilderState>();
 
 ///Misc
 String toCapitalize(String? name) => name?.capitalize ?? '';
 String get unfollow {
   return 'Their posts will no longer show up in your home timeline. You can still view their profile, unless their posts are proteted.';
 }
-
-///Stat Incrementer
-Map<String, dynamic> incrementStat(FeedKind key, [int by = 1]) => {
-  'stats.${key.name}': FieldValue.increment(by),
-};

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/app/models/media.dart';
 import 'package:semesta/public/extensions/extension.dart';
-import 'package:semesta/src/widgets/main/media_item.dart';
+import 'package:semesta/src/widgets/main/media_render.dart';
 
 class MediaGallery extends StatelessWidget {
   final String id;
@@ -25,12 +25,7 @@ class MediaGallery extends StatelessWidget {
         padding: EdgeInsetsDirectional.only(start: start, end: end),
         child: AspectRatio(
           aspectRatio: 1,
-          child: MediaItem(
-            id: id,
-            type: media[0].type,
-            url: media[0].display,
-            borderRadius: borderRadius,
-          ),
+          child: MediaRender(media[0], id: id, borderRadius: borderRadius),
         ),
       );
     }
@@ -42,19 +37,15 @@ class MediaGallery extends StatelessWidget {
         itemCount: media.length,
         padding: EdgeInsetsDirectional.only(start: start, end: end),
         separatorBuilder: (_, idx) => const SizedBox(width: 8),
-        itemBuilder: (_, index) {
-          final m = media[index];
-          return SizedBox(
-            width: context.width * 0.48,
-            child: MediaItem(
-              id: id,
-              url: m.display,
-              type: m.type,
-              initIndex: index,
-              borderRadius: borderRadius,
-            ),
-          );
-        },
+        itemBuilder: (_, index) => SizedBox(
+          width: context.width * 0.48,
+          child: MediaRender(
+            media[index],
+            id: id,
+            initIndex: index,
+            borderRadius: borderRadius,
+          ),
+        ),
       ),
     );
   }

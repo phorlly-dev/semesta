@@ -3,11 +3,11 @@ import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 
 class DirectionController extends GetxController {
-  final isVisible = true.obs;
-  final currentIndex = 0.obs;
-  final scrollControllers = List.generate(8, (_) => ScrollController());
+  final visible = true.obs;
+  final index = 0.obs;
+  final controllers = List.generate(8, (_) => ScrollController());
 
-  void get jump => scrollControllers[currentIndex.value].animateTo(
+  void get jump => controllers[index.value].animateTo(
     0,
     duration: Durations.extralong4,
     curve: Curves.easeOut,
@@ -15,7 +15,7 @@ class DirectionController extends GetxController {
 
   @override
   void onInit() {
-    ever(currentIndex, (index) {
+    ever(index, (index) {
       _attachListener(index);
     });
     _attachListener(0); // default
@@ -24,28 +24,28 @@ class DirectionController extends GetxController {
   }
 
   void _attachListener(int index) {
-    for (final ctrl in scrollControllers) {
+    for (final ctrl in controllers) {
       ctrl.removeListener(_listener);
     }
-    scrollControllers[index].addListener(_listener);
+    controllers[index].addListener(_listener);
     update();
   }
 
   void _listener() {
-    final controller = scrollControllers[currentIndex.value];
-    if (!controller.hasClients) return;
+    final ctrl = controllers[index.value];
+    if (!ctrl.hasClients) return;
 
-    final direction = controller.position.userScrollDirection;
+    final direction = ctrl.position.userScrollDirection;
     if (direction == ScrollDirection.reverse) {
-      isVisible.value = false;
+      visible.value = false;
     } else if (direction == ScrollDirection.forward) {
-      isVisible.value = true;
+      visible.value = true;
     }
   }
 
   @override
   void onClose() {
-    for (final ctrl in scrollControllers) {
+    for (final ctrl in controllers) {
       ctrl.dispose();
     }
     super.onClose();

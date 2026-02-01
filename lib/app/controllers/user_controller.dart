@@ -45,7 +45,7 @@ class UserController extends IController<AuthedView> {
     }
   }
 
-  Wait<void> loadInfo() async {
+  AsWait loadInfo() async {
     final data = await urepo.index(limit: 100);
     if (data.isEmpty) return;
 
@@ -54,7 +54,7 @@ class UserController extends IController<AuthedView> {
     }
   }
 
-  Wait<void> toggleFollow(String targetId) async {
+  AsWait toggleFollow(String targetId) async {
     final uid = currentUid.value;
     if (uid.isEmpty || targetId.isEmpty) return;
 

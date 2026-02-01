@@ -40,11 +40,11 @@ class _AnimatedState extends State<Animated> {
       onTap: widget.onTap != null ? _animateTap : null,
       onLongPress: widget.onLongPress,
       child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 160),
+        duration: const Duration(milliseconds: 180),
         opacity: _opacity,
         child: AnimatedScale(
           scale: _scale,
-          duration: const Duration(milliseconds: 160),
+          duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
           child: widget.child,
         ),

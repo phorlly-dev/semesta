@@ -13,80 +13,70 @@ List<FeedView> mapFollowActions(
   String? uid,
   FeedKind type = FeedKind.posted,
   List<Reaction> actions = const [],
-}) {
-  return feeds
-      .map((feed) {
-        final action = followActions(actions, (value) => value.currentId);
-        return FeedView.from(
-          feed,
-          uid: uid,
-          kind: type,
-          action: action[feed.id],
-        );
-      })
-      .toList()
-      .sortOrder;
-}
+}) => feeds
+    .map((feed) {
+      final action = followActions(actions, (value) => value.currentId);
+      return FeedView.from(feed, uid: uid, kind: type, action: action[feed.id]);
+    })
+    .toList()
+    .sortOrder;
 
 List<AuthedView> mapToFollow(
   List<Author> users,
   List<Reaction> reactions,
-  FnP<Reaction, String> selector,
-) {
-  return users
-      .map((user) {
-        final action = followActions(reactions, selector)[user.id];
-        if (action == null) return null;
+  Defo<Reaction, String> selector,
+) => users
+    .map((user) {
+      final action = followActions(reactions, selector)[user.id];
+      if (action == null) return null;
 
-        return AuthedView(user, action);
-      })
-      .whereType<AuthedView>()
-      .toList();
-}
+      return AuthedView(user, action);
+    })
+    .whereType<AuthedView>()
+    .toList();
 
-List<FeedView> mapToFeed(List<Feed> feeds, [String? uid]) {
-  return feeds
-      .map((post) {
-        switch (post.type) {
-          case Create.quote:
-            return FeedView(
-              post,
-              uid: uid ?? post.uid,
-              kind: FeedKind.quoted,
-              created: post.createdAt,
-              actor: uctrl.dataMapping[post.uid],
-              parent: pctrl.dataMapping[post.pid],
-              rid: getRowId(kind: FeedKind.quoted, pid: post.id),
-            );
+List<FeedView> mapToFeed(List<Feed> feeds, [String? uid]) => feeds
+    .map((post) {
+      final parent = pctrl.dataMapping[post.pid];
+      final actor = uctrl.dataMapping[parent?.uid ?? ''];
 
-          case Create.reply:
-            return FeedView(
-              post,
-              uid: uid ?? post.uid,
-              kind: FeedKind.replied,
-              created: post.createdAt,
-              actor: uctrl.dataMapping[post.uid],
-              parent: pctrl.dataMapping[post.pid],
-              rid: getRowId(kind: FeedKind.replied, pid: post.id),
-            );
+      return switch (post.type) {
+        Create.quote => FeedView(
+          post,
+          actor: actor,
+          parent: parent,
+          kind: FeedKind.quoted,
+          created: post.createdAt,
+          uid: uid ?? actor?.id ?? post.uid,
+          rid: getRowId(kind: FeedKind.quoted, pid: post.id),
+        ),
 
-          default:
-            return FeedView(
-              post,
-              uid: uid ?? post.uid,
-              created: post.createdAt,
-              rid: getRowId(pid: post.id),
-            );
-        }
-      })
-      .whereType<FeedView>()
-      .toList();
-}
+        Create.reply => FeedView(
+          post,
+          actor: actor,
+          parent: parent,
+          kind: FeedKind.replied,
+          created: post.createdAt,
+          uid: uid ?? actor?.id ?? post.uid,
+          rid: getRowId(kind: FeedKind.replied, pid: post.id),
+        ),
+
+        Create.post => FeedView(
+          post,
+          created: post.createdAt,
+          rid: getRowId(pid: post.id),
+          uid: uid ?? actor?.id ?? post.uid,
+        ),
+      };
+    })
+    .whereType<FeedView>()
+    .toList();
 
 Map<String, Reaction> followActions(
   List<Reaction> actions,
-  FnP<Reaction, String> selector,
+  Defo<Reaction, String> selector,
 ) => {for (final action in actions) selector(action): action};
 
-AsList getKeys(List<Reaction> actions, FnP<Reaction, String> selector) =>
-    actions.map(selector).toSet().toList();
+AsList getKeys(List<Reaction> actions, Defo<Reaction, String> selector) {
+  return actions.map(selector).toSet().toList();
+}

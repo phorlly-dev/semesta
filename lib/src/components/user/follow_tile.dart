@@ -3,11 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
 import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/public/utils/custom_modal.dart';
-import 'package:semesta/src/components/global/loading_skelenton.dart';
+import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/src/components/global/animated_card.dart';
 import 'package:semesta/src/components/user/user_info.dart';
-import 'package:semesta/src/widgets/sub/avatar_animation.dart';
+import 'package:semesta/src/widgets/sub/animated_avatar.dart';
 import 'package:semesta/src/widgets/sub/break_section.dart';
 import 'package:semesta/src/widgets/main/follow_button.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
@@ -22,7 +22,7 @@ class FollowTile extends StatelessWidget {
     return StreamBuilder(
       stream: actrl.status$(_uid),
       builder: (_, snapshot) {
-        if (!snapshot.hasData) return const LoadingSkelenton();
+        if (!snapshot.hasData) return const AnimatedCard();
 
         final state = snapshot.data!;
         final author = state.author;
@@ -45,7 +45,7 @@ class FollowTile extends StatelessWidget {
                     // Avatar
                     // -------------------------------
                     AvatarAnimation(
-                      author.avatar,
+                      MediaSource.network(author.avatar),
                       padding: const EdgeInsetsDirectional.only(top: 6),
                     ),
 
@@ -55,8 +55,8 @@ class FollowTile extends StatelessWidget {
                     Expanded(
                       child: DirectionY(
                         children: [
-                          DisplayName(author.name, maxChars: 50),
-                          Username(author.uname, maxChars: 56),
+                          DisplayName(author.name, maxChars: 32),
+                          Username(author.uname, maxChars: 32),
                           if (author.bio.isNotEmpty) ...[
                             SizedBox(height: 6),
                             Bio(author.bio),
@@ -70,7 +70,7 @@ class FollowTile extends StatelessWidget {
                     // -------------------------------
                     if (!state.authed)
                       FollowButton(
-                        resolveState(state.iFollow, state.theyFollow),
+                        context.follow(state.iFollow, state.theyFollow),
                         onPressed: () async {
                           if (state.iFollow) {
                             CustomModal(

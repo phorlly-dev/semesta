@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:provider/provider.dart';
+import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/functions/option_modal.dart';
 import 'package:semesta/public/functions/theme_manager.dart';
 import 'package:semesta/public/functions/visible_option.dart';
+import 'package:semesta/public/helpers/audit_view.dart';
+import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
@@ -95,7 +98,7 @@ extension DateTimeX2 on DateTime? {
 }
 
 extension IntegerX on int {
-  String get countable {
+  String get format {
     String formatted;
     if (this >= 1000000000) {
       formatted = (this / 1000000000).toStringAsFixed(1);
@@ -119,7 +122,7 @@ extension IntegerX on int {
 }
 
 extension BuildContextX on BuildContext {
-  Wait<void> openProfile(String uid, bool yourself) async {
+  AsWait openProfile(String uid, bool yourself) async {
     await pushNamed(
       route.profile.name,
       pathParameters: {'id': uid},
@@ -127,11 +130,11 @@ extension BuildContextX on BuildContext {
     );
   }
 
-  Wait<void> openById(RouteNode route, String id) async {
+  AsWait openById(RouteNode route, String id) async {
     await pushNamed(route.name, pathParameters: {'id': id});
   }
 
-  Wait<void> openFollow(
+  AsWait openFollow(
     RouteNode route,
     String id, {
     String name = '',
@@ -144,12 +147,28 @@ extension BuildContextX on BuildContext {
     );
   }
 
-  Wait<void> openPreview(RouteNode route, String id, [int idx = 0]) async {
+  AsWait openPreview(RouteNode route, String id, [int idx = 0]) async {
     await pushNamed(
       route.name,
       pathParameters: {'id': id},
       queryParameters: {'index': idx.toString()},
     );
+  }
+
+  FollowState state(Follow type) => FollowState.render(this, type);
+  Follow follow(bool iFollow, bool theyFollow) {
+    if (iFollow) {
+      return Follow.following;
+    } else if (!iFollow && theyFollow) {
+      return Follow.followBack;
+    } else {
+      return Follow.follow;
+    }
+  }
+
+  bool canNavigate(String targetUid, [String? viewedUid]) {
+    if (viewedUid == null) return true;
+    return targetUid != viewedUid;
   }
 
   String get location => GoRouterState.of(this).matchedLocation;
@@ -159,9 +178,10 @@ extension BuildContextX on BuildContext {
   ColorScheme get colors => theme.colorScheme;
   MediaQueryData get query => MediaQuery.of(this);
 
-  OptionModal get open => OptionModal(this);
-  VisibleOption get tap => VisibleOption(this);
   void get toggleTheme => read<ThemeManager>().toggleTheme(this);
+  AsWait get camera => grepo.fromCamera(this);
+  AsWait get gallery => grepo.fromMedia(this);
+  AsWait asset(String key) => grepo.fromAsset(this, key);
 
   Color get hintColor => theme.hintColor;
   Color get errorColor => colors.error;
@@ -172,6 +192,41 @@ extension BuildContextX on BuildContext {
   Color get dividerColor => theme.dividerColor.withValues(alpha: 0.5);
   Color? get navigatColor => theme.bottomNavigationBarTheme.backgroundColor;
 
-  double get width => MediaQuery.of(this).size.width;
-  double get height => MediaQuery.of(this).size.height;
+  double get width => query.size.width;
+  double get height => query.size.height;
+
+  VisibleOption get _tap => VisibleOption(this);
+  IconData icon(Visible v) => _tap.getIcon(v);
+  void show(Visible option, {ValueChanged<Visible>? onChanged}) {
+    _tap.showModal(VisibleToPost.render(option).option, onChanged);
+  }
+
+  OptionModal get _open => OptionModal(this);
+  void repost(ActionsView vm) => _open.repostOptions(vm);
+  void image(String path) => _open.imageOptions(path);
+
+  void current(
+    Feed post,
+    ActionTarget target, {
+    bool profiled = false,
+    bool active = false,
+  }) => _open.currentOptions(post, target, active: active, profiled: profiled);
+
+  void target(
+    Feed post,
+    ActionTarget target, {
+    bool iFollow = false,
+    bool active = false,
+    bool profiled = true,
+    required String name,
+    required StatusView status,
+  }) => _open.tagetOptions(
+    post,
+    target,
+    iFollow: iFollow,
+    name: name,
+    status: status,
+    active: active,
+    profiled: profiled,
+  );
 }

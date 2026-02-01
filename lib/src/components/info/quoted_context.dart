@@ -3,10 +3,11 @@ import 'package:semesta/app/models/author.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
+import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/src/components/global/expandable_text.dart';
 import 'package:semesta/src/components/global/media_gallery.dart';
 import 'package:semesta/src/components/user/user_info.dart';
-import 'package:semesta/src/widgets/sub/avatar_animation.dart';
+import 'package:semesta/src/widgets/sub/animated_avatar.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
 
@@ -41,7 +42,7 @@ class QuotedContext extends StatelessWidget {
                   padding: const EdgeInsets.all(8.0),
                   children: [
                     AvatarAnimation(
-                      actor!.avatar,
+                      MediaSource.network(actor!.avatar),
                       size: 32,
                       padding: const EdgeInsets.only(top: 6.0),
                     ),
@@ -53,11 +54,10 @@ class QuotedContext extends StatelessWidget {
                           DirectionX(
                             children: [
                               DisplayName(actor!.name),
-                              SizedBox(width: 6),
-
-                              Username(actor!.uname, maxChars: 32),
                               SizedBox(width: 4),
 
+                              // Username(actor!.uname, maxChars: 32),
+                              // SizedBox(width: 4),
                               Status(
                                 created: quoted!.createdAt,
                                 hasIcon: false,

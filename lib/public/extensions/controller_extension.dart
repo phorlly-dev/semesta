@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:rxdart/streams.dart';
 import 'package:semesta/public/extensions/list_extension.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
+import 'package:semesta/public/helpers/cached_helper.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/app/controllers/action_controller.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
@@ -15,21 +16,17 @@ import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 extension ActionControllerX on ActionController {
-  Sync<StatusView> status$(String uid) {
-    return CombineLatestStream.combine3(
-      urepo.sync$(uid),
-      urepo.iFollow$(currentUid, uid),
-      urepo.theyFollow$(currentUid, uid),
-      (author, me, them) {
-        return StatusView(
-          authed: isCurrentUser(uid),
-          iFollow: me,
-          theyFollow: them,
-          author: author,
-        );
-      },
-    ).shareReplay(maxSize: 1);
-  }
+  Sync<StatusView> status$(String uid) => CombineLatestStream.combine3(
+    urepo.sync$(uid),
+    urepo.iFollow$(currentUid, uid),
+    urepo.theyFollow$(currentUid, uid),
+    (author, me, them) => StatusView(
+      iFollow: me,
+      author: author,
+      theyFollow: them,
+      authed: isCurrentUser(uid),
+    ),
+  ).shareReplay(maxSize: 1);
 
   Sync<RepostView> repost$(ActionTarget target, [String? uid]) {
     return prepo.syncDoc$(repostPath(target, uid ?? currentUid)).map((event) {
@@ -44,13 +41,11 @@ extension ActionControllerX on ActionController {
     });
   }
 
-  Sync<StateView> state$(Feed item) {
-    return CombineLatestStream.combine2(
-      status$(item.uid),
-      actions$(item),
-      (sts, rxs) => StateView(sts, rxs),
-    ).shareReplay(maxSize: 1);
-  }
+  Sync<StateView> state$(Feed item) => CombineLatestStream.combine2(
+    status$(item.uid),
+    actions$(item),
+    (sts, rxs) => StateView(sts, rxs),
+  ).shareReplay(maxSize: 1);
 
   Sync<ActionsView> actions$(Feed item) {
     final target = getTarget(item);
@@ -80,35 +75,28 @@ extension ActionControllerX on ActionController {
     ).shareReplay(maxSize: 1);
   }
 
-  Sync<FeedStateView> feed$(FeedView state) {
-    final post = state.feed;
-    return CombineLatestStream.combine2(status$(post.uid), actions$(post), (
-      status,
-      rxs,
-    ) {
-      final parent = pctrl.dataMapping[post.pid];
-      final actor = uCtrl.dataMapping[parent?.uid ?? post.uid];
-
-      return FeedStateView(
-        actions: rxs,
-        status: status.copy(actor: state.actor),
-        content: state.copy(
-          parent: state.parent ?? parent,
-          actor: state.actor ?? actor,
-        ),
-      );
-    }).shareReplay(maxSize: 1);
-  }
+  Sync<FeedStateView> feed$(FeedView state) => CombineLatestStream.combine2(
+    status$(state.feed.uid),
+    actions$(state.feed),
+    (status, rxs) => FeedStateView(
+      actions: rxs,
+      status: status.copy(actor: state.actor),
+      content: state.copy(parent: state.parent, actor: state.actor),
+    ),
+  ).shareReplay(maxSize: 1);
 }
 
 extension PostControllerX on PostController {
+  CachedState<FeedView> _state(String key) => stateFor(key);
+
   Wait<List<FeedView>> combinePosts(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {
-    final posts = await loadUserPosts(uid, mode);
-    final reposts = await loadUserReposts(uid, mode);
-    final items = [...posts, ...reposts];
+    final items = [
+      ...await loadUserPosts(uid, mode),
+      ...await loadUserReposts(uid, mode),
+    ];
 
     return items.sortOrder;
   }
@@ -117,21 +105,20 @@ extension PostControllerX on PostController {
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {
-    final posts = await loadUserPosts(uid, mode);
-    final reposts = await loadUserReposts(uid, mode);
-    final comments = await loadUserComments(uid, mode);
-    final items = [...posts, ...reposts, ...comments];
+    final items = [
+      ...await loadUserPosts(uid, mode),
+      ...await loadUserReposts(uid, mode),
+      ...await loadUserComments(uid, mode),
+    ];
 
     return items.sortOrder;
   }
 
-  Wait<void> get reloadPost async {
-    final pkey = getKey(id: currentUid, screen: Screen.post);
-    final ckey = getKey(id: currentUid, screen: Screen.comment);
-    final pstate = pctrl.stateFor(pkey);
+  AsWait get reloadPost async {
+    final pstate = _state(getKey(id: currentUid, screen: Screen.post));
     pstate.clear();
 
-    final cstate = pctrl.stateFor(ckey);
+    final cstate = _state(getKey(id: currentUid, screen: Screen.comment));
     cstate.clear();
 
     await Future.wait([
@@ -149,23 +136,18 @@ extension PostControllerX on PostController {
     ]);
   }
 
-  Wait<void> get refreshPost async {
+  AsWait get refreshPost async {
     await loadLatest(
       fetch: () => loadMoreForYou(QueryMode.refresh),
-      apply: (items) {
-        final ranked = items.rankFeed(refreshSeed);
-        stateFor(getKey()).set(ranked);
-      },
+      apply: (items) => _state(getKey()).set(items.rankFeed(refreshSeed)),
       onError: () => _showError('Failed to refresh'),
     );
   }
 
-  Wait<void> get refreshFollowing async {
+  AsWait get refreshFollowing async {
     await loadLatest(
       fetch: () => loadMoreFollowing(QueryMode.refresh),
-      apply: (items) {
-        stateFor(getKey(screen: Screen.following)).merge(items);
-      },
+      apply: (items) => _state(getKey(screen: Screen.following)).merge(items),
       onError: () => _showError('Failed to refresh'),
     );
   }

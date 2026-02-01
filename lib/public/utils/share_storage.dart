@@ -4,13 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ShareStorage {
   static SharedPreferences? _instance;
 
-  static Wait<void> init() async {
+  static AsWait init() async {
     _instance = await SharedPreferences.getInstance();
   }
 
   SharedPreferences get prefs => _instance!;
 
-  Wait<void> setStorage(String key, String value) async {
+  AsWait setStorage(String key, String value) async {
     await prefs.setString(key, value);
   }
 

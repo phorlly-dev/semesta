@@ -7,11 +7,11 @@ import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
-import 'package:semesta/src/components/layout/_layout_page.dart';
+import 'package:semesta/src/components/layout/_page.dart';
 import 'package:semesta/src/partials/user_profile.dart';
-import 'package:semesta/src/partials/comments_tab.dart';
-import 'package:semesta/src/partials/media_tab.dart';
-import 'package:semesta/src/partials/posts_tab.dart';
+import 'package:semesta/src/partials/user_comments_tab.dart';
+import 'package:semesta/src/partials/user_media_tab.dart';
+import 'package:semesta/src/partials/user_posts_tab.dart';
 import 'package:semesta/src/widgets/sub/block_overlay.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -47,14 +47,18 @@ class _ProfilePageState extends State<ProfilePage> {
 
       return Stack(
         children: [
-          LayoutPage(
+          PageLayout(
             content: UserProfile(
-              uid: _uid,
+              _uid,
               initIndex: _idx,
               authed: widget.authed,
               postCount: _state(_cKey).length,
               mediaCount: _state(_mKey).length,
-              children: [PostsTab(_uid), CommentsTab(_uid), MediaTab(_uid)],
+              children: [
+                UserPostsTab(_uid),
+                UserCommentsTab(_uid),
+                UserMediaTab(_uid),
+              ],
               onTap: (idx) {
                 setState(() => _idx = idx);
 

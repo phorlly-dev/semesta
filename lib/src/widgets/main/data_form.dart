@@ -10,16 +10,16 @@ class DataForm extends StatelessWidget {
   const DataForm(
     this._formKey, {
     super.key,
-    required this.children,
-    this.spacing = 8,
+    this.spacing = 12,
     this.autovalidate,
+    this.children = const [],
   });
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: const EdgeInsets.all(24.0),
       child: FormBuilder(
         key: _formKey,
         autovalidateMode: autovalidate,

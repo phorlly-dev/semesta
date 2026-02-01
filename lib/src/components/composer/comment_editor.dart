@@ -3,10 +3,11 @@ import 'package:semesta/app/models/author.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/utils/comment_connector.dart';
+import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/src/components/composer/post_editor.dart';
 import 'package:semesta/src/components/user/user_info.dart';
-import 'package:semesta/src/widgets/main/media_display.dart';
-import 'package:semesta/src/widgets/sub/avatar_animation.dart';
+import 'package:semesta/src/widgets/main/imaged_render.dart';
+import 'package:semesta/src/widgets/sub/animated_avatar.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
@@ -16,7 +17,7 @@ class CommentEditor extends StatelessWidget {
   final String? label;
   final Feed post;
   final Author actor;
-  final TextEditingController content;
+  final TextEditingController? content;
   final ValueChanged<int>? onRemove;
   final ValueChanged<String>? onChanged;
   final List<AssetEntity> assets;
@@ -26,10 +27,10 @@ class CommentEditor extends StatelessWidget {
     this.label,
     this.onChanged,
     this.onRemove,
-    required this.avatar,
-    required this.content,
+    this.avatar = '',
+    this.content,
     required this.post,
-    required this.assets,
+    this.assets = const [],
     required this.actor,
     this.start = 44,
     this.end = 370,
@@ -54,7 +55,10 @@ class CommentEditor extends StatelessWidget {
             DirectionX(
               children: [
                 // LEFT GUTTER (avatar + connector)
-                AvatarAnimation(actor.avatar, padding: EdgeInsets.only(top: 2)),
+                AvatarAnimation(
+                  MediaSource.network(actor.avatar),
+                  padding: EdgeInsets.only(top: 2),
+                ),
 
                 SizedBox(width: 8),
 
@@ -66,9 +70,8 @@ class CommentEditor extends StatelessWidget {
                         children: [
                           DisplayName(actor.name, maxChars: 56),
 
-                          const SizedBox(width: 6),
-                          Username(actor.uname),
-
+                          // const SizedBox(width: 6),
+                          // Username(actor.uname),
                           const Spacer(),
                           Text(
                             post.createdAt.toAgo,
@@ -89,7 +92,7 @@ class CommentEditor extends StatelessWidget {
 
                       if (post.media.isNotEmpty) ...[
                         const SizedBox(height: 6),
-                        MediaDisplay(
+                        ImagedRender(
                           post.media[0],
                           borderRadius: BorderRadius.circular(8),
                         ),

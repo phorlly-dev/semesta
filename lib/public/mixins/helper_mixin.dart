@@ -8,7 +8,7 @@ import 'package:semesta/public/utils/type_def.dart';
 
 mixin HelperMixin {
   /// Deletes thumbnail if it exists
-  Wait<void> _deleteThumbnail(AsMap thumbnails) async {
+  AsWait _deleteThumbnail(AsMap thumbnails) async {
     if (thumbnails.isEmpty) return;
 
     final path = thumbnails['path'].toString();
@@ -18,7 +18,7 @@ mixin HelperMixin {
   }
 
   /// Deletes a single media file and its thumbnail
-  Wait<void> _deleteSingleMedia(Media media) async {
+  AsWait _deleteSingleMedia(Media media) async {
     try {
       await prepo.deleteFile(media.path);
       await _deleteThumbnail(media.thumbnails);
@@ -31,7 +31,7 @@ mixin HelperMixin {
   }
 
   /// Deletes all media files and their thumbnails
-  Wait<void> deleteMediaFiles(List<Media> mediaList) async {
+  AsWait deleteMediaFiles(List<Media> mediaList) async {
     if (mediaList.isEmpty) return;
 
     await Wait.wait(

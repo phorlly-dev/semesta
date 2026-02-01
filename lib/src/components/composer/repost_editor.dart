@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:semesta/app/models/author.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/src/components/composer/post_editor.dart';
 import 'package:semesta/src/components/user/user_info.dart';
-import 'package:semesta/src/widgets/main/media_display.dart';
-import 'package:semesta/src/widgets/sub/avatar_animation.dart';
+import 'package:semesta/src/widgets/main/imaged_render.dart';
+import 'package:semesta/src/widgets/sub/animated_avatar.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
@@ -15,20 +16,20 @@ class RepostEditor extends StatelessWidget {
   final String? label;
   final Feed post;
   final Author actor;
-  final TextEditingController content;
+  final TextEditingController? content;
   final ValueChanged<int>? onRemove;
   final ValueChanged<String>? onChanged;
   final List<AssetEntity> assets;
   const RepostEditor({
     super.key,
-    required this.avatar,
+    this.avatar = '',
     this.label,
-    required this.content,
+    this.content,
     this.onChanged,
     required this.post,
-    this.onRemove,
-    required this.assets,
     required this.actor,
+    this.onRemove,
+    this.assets = const [],
   });
 
   @override
@@ -52,7 +53,7 @@ class RepostEditor extends StatelessWidget {
               DirectionX(
                 children: [
                   AvatarAnimation(
-                    actor.avatar,
+                    MediaSource.network(actor.avatar),
                     size: 32,
                     padding: EdgeInsets.only(top: 2),
                   ),
@@ -88,7 +89,7 @@ class RepostEditor extends StatelessWidget {
 
           if (post.media.isNotEmpty) ...[
             const SizedBox(height: 4),
-            MediaDisplay(
+            ImagedRender(
               post.media[0],
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(8),

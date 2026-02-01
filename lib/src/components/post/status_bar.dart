@@ -5,11 +5,11 @@ import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/audit_view.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/public/utils/comment_connector.dart';
+import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/src/components/global/expandable_text.dart';
 import 'package:semesta/src/components/user/user_info.dart';
-import 'package:semesta/src/widgets/sub/avatar_animation.dart';
+import 'package:semesta/src/widgets/sub/animated_avatar.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
 
@@ -59,10 +59,10 @@ class StatusBar extends StatelessWidget {
           padding: const EdgeInsets.only(left: 12, right: 8),
           children: [
             AvatarAnimation(
-              author.avatar,
+              MediaSource.network(author.avatar),
               padding: const EdgeInsets.only(top: 6),
               onTap: () async {
-                if (profiled && !canNavigateTo(author.id, uid)) {
+                if (profiled && !context.canNavigate(author.id, uid)) {
                   return;
                 }
 
@@ -79,11 +79,12 @@ class StatusBar extends StatelessWidget {
                     AnimatedBuilder(
                       animation: _status,
                       builder: (_, child) => DirectionX(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           DisplayName(author.name),
-                          const SizedBox(width: 6),
+                          // const SizedBox(width: 6),
 
-                          Username(author.uname),
+                          // Username(author.uname),
                           if (author.verified) ...[
                             const SizedBox(width: 4),
                             Icon(
@@ -95,13 +96,13 @@ class StatusBar extends StatelessWidget {
 
                           const SizedBox(width: 8),
                           Status(
-                            icon: context.tap.mapToIcon(_model.visible),
+                            icon: context.icon(_model.visible),
                             created: _model.createdAt,
                           ),
 
                           const Spacer(),
                           InkWell(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(32),
                             child: Icon(
                               Icons.more_vert_outlined,
                               size: 20,
@@ -109,14 +110,14 @@ class StatusBar extends StatelessWidget {
                             ),
                             onTap: () {
                               if (authed) {
-                                context.open.currentOptions(
+                                context.current(
                                   _model,
                                   target,
                                   active: saved,
                                   profiled: profiled,
                                 );
                               } else {
-                                context.open.anotherOptions(
+                                context.target(
                                   _model,
                                   target,
                                   status: _status,

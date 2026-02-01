@@ -5,7 +5,7 @@ import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/widgets/main/custom_button.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
-import 'package:semesta/src/widgets/sub/text_input.dart';
+import 'package:semesta/src/widgets/sub/inputable.dart';
 
 class SignIn extends StatefulWidget {
   final bool isLoading;
@@ -23,9 +23,11 @@ class _SignInState extends State<SignIn> {
   @override
   Widget build(BuildContext context) {
     return DirectionY(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        TextInput(
+        Inputable(
           'email',
+          hint: 'Email cannot be blank',
           keyboardType: TextInputType.emailAddress,
           prefixIcon: const Icon(Icons.email_outlined),
           validator: FormBuilderValidators.compose([
@@ -34,9 +36,10 @@ class _SignInState extends State<SignIn> {
           ]),
         ),
 
-        TextInput(
+        Inputable(
           'password',
           controller: _input,
+          hint: 'Password cannot be blank',
           keyboardType: TextInputType.visiblePassword,
           prefixIcon: const Icon(Icons.lock_outline_rounded),
           obscureText: !_visible,
@@ -65,15 +68,13 @@ class _SignInState extends State<SignIn> {
           icon: Icons.login_rounded,
           label: widget.isLoading ? 'Signing In...' : 'Sign In',
           color: context.colors.primary,
-          onPressed: widget.isLoading
-              ? null
-              : () async {
-                  final state = widget._formKey.currentState;
-                  if (state == null || !state.saveAndValidate()) return;
+          onPressed: () async {
+            final state = widget._formKey.currentState;
+            if (state == null || !state.saveAndValidate()) return;
 
-                  final data = state.value;
-                  await octrl.login(data['email'], data['password']);
-                },
+            final data = state.value;
+            await octrl.login(data['email'], data['password']);
+          },
         ),
 
         SizedBox(height: 24),

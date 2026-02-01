@@ -13,7 +13,7 @@ class PostComposer extends StatelessWidget {
   final StatusView audit;
   final List<AssetEntity> assets;
   final ValueChanged<int>? onRemove;
-  final TextEditingController content;
+  final TextEditingController? content;
   final ValueChanged<String>? onChanged;
   const PostComposer({
     super.key,
@@ -22,9 +22,9 @@ class PostComposer extends StatelessWidget {
     this.onChanged,
     required this.audit,
     required this.assets,
-    required this.content,
-    required this.isReply,
-    required this.onRemove,
+    this.content,
+    this.isReply = false,
+    this.onRemove,
   });
 
   @override

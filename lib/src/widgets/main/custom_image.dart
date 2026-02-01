@@ -1,81 +1,89 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/utils/params.dart';
 import 'package:semesta/src/widgets/main/animated.dart';
-import 'package:semesta/src/widgets/sub/loading_animated.dart';
+import 'package:semesta/src/widgets/sub/animated_loader.dart';
 
 class CustomImage extends StatelessWidget {
+  final MediaSource _source;
+  final double? height, width;
+  final Widget? errorWidget;
+  final BoxFit fit;
+  final String defaultAsset;
+  final bool enableFade, asIcon;
+  final VoidCallback? onTap;
   const CustomImage(
-    this._image, {
+    this._source, {
     super.key,
     this.height,
     this.width,
     this.errorWidget,
     this.fit = BoxFit.cover,
     this.enableFade = true,
-    this.spaceX = 0,
-    this.spaceY = 0,
     this.onTap,
+    this.defaultAsset = 'default.png',
+    this.asIcon = true,
   });
-
-  final String _image;
-  final double? height, width;
-  final double spaceX, spaceY;
-  final Widget? errorWidget;
-  final BoxFit fit;
-  final bool enableFade;
-  final VoidCallback? onTap;
-
-  bool get _isNetwork {
-    return _image.startsWith('http://') || _image.startsWith('https://');
-  }
 
   @override
   Widget build(BuildContext context) {
-    if (_image.isEmpty) {
+    if (_source.path.isEmpty) {
       return errorWidget ??
-          Container(
-            height: height,
-            width: width,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(8),
+          Animated(
+            onTap: onTap,
+            child: Container(
+              height: height,
+              width: width,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Image.asset(defaultAsset.asImage(asIcon), fit: fit),
             ),
-            child: const Icon(Icons.image_not_supported, color: Colors.grey),
           );
     }
 
-    final url = _isNetwork
-        ? CachedNetworkImage(
-            imageUrl: _image,
-            height: height,
-            width: width,
-            fit: fit,
-            placeholder: (ctx, str) => Center(
-              child: SizedBox(
-                height: 24,
-                width: 24,
-                child: LoadingAnimated(bold: 1.8),
-              ),
-            ),
-            errorWidget: (ctx, str, err) =>
-                errorWidget ??
-                const Icon(Icons.broken_image, color: Colors.grey),
-            fadeInDuration: enableFade
-                ? const Duration(milliseconds: 300)
-                : Duration.zero,
-            fadeOutDuration: enableFade
-                ? const Duration(milliseconds: 200)
-                : Duration.zero,
-          )
-        : Image.asset(_image, height: height, width: width, fit: fit);
-
-    // Apply rounded corners (optional)
     return Animated(
       onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: spaceX, vertical: spaceY),
-        child: url,
-      ),
+      child: switch (_source.type) {
+        MediaSourceType.network => CachedNetworkImage(
+          imageUrl: _source.path,
+          height: height,
+          width: width,
+          fit: fit,
+          placeholder: (_, str) => Center(
+            child: SizedBox(
+              height: 24,
+              width: 24,
+              child: AnimatedLoader(bold: 1.8),
+            ),
+          ),
+          errorWidget: (_, str, err) {
+            return errorWidget ??
+                const Icon(Icons.broken_image, color: Colors.grey);
+          },
+          fadeInDuration: enableFade
+              ? const Duration(milliseconds: 300)
+              : Duration.zero,
+          fadeOutDuration: enableFade
+              ? const Duration(milliseconds: 200)
+              : Duration.zero,
+        ),
+        MediaSourceType.file => Image.file(
+          File(_source.path),
+          fit: fit,
+          height: height,
+          width: width,
+        ),
+        MediaSourceType.asset => Image.asset(
+          _source.path,
+          height: height,
+          width: width,
+          fit: fit,
+        ),
+      },
     );
   }
 }

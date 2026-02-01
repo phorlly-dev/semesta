@@ -23,7 +23,7 @@ class AuthController extends GetxController {
 
   bool get isLoggedIn => currentUser.value != null;
 
-  Wait<void> login(String email, String password) async {
+  AsWait login(String email, String password) async {
     isLoading.value = true;
     try {
       final user = await _repo.signIn(email, password);
@@ -31,10 +31,10 @@ class AuthController extends GetxController {
       // Force currentUser refresh
       currentUser.value = user;
       CustomToast.success('Verify Successful');
-      await Wait.delayed(const Duration(milliseconds: 300));
+      await Wait.delayed(const Duration(milliseconds: 400));
       _bindAuthStream(); // ensure stream reconnected
     } on FirebaseAuthException catch (err) {
-      CustomToast.error(handleError(err));
+      CustomToast.error(_handleError(err));
       HandleLogger.track('Firebase Auth Exception', message: err);
     } catch (e, s) {
       HandleLogger.error('Someyhing Wrong', message: e, stack: s);
@@ -43,7 +43,7 @@ class AuthController extends GetxController {
     }
   }
 
-  Wait<void> register(
+  AsWait register(
     String email,
     String password,
     File file,
@@ -59,7 +59,7 @@ class AuthController extends GetxController {
       await Wait.delayed(const Duration(milliseconds: 300));
       _bindAuthStream(); // ensure stream reconnected
     } on FirebaseAuthException catch (err) {
-      CustomToast.error(handleError(err));
+      CustomToast.error(_handleError(err));
       HandleLogger.track('Firebase Auth Exception', message: err);
     } catch (e, s) {
       HandleLogger.error('Someyhing Wrong', message: e, stack: s);
@@ -68,11 +68,11 @@ class AuthController extends GetxController {
     }
   }
 
-  Wait<void> loginWithGoogle() async => await _repo.signInWithGoogle();
+  AsWait loginWithGoogle() async => await _repo.signInWithGoogle();
 
-  // Wait<void> loginWithFacebook() async => await _repo.signInWithFacebook();
+  // AsWait loginWithFacebook() async => await _repo.signInWithFacebook();
 
-  Wait<void> logout() async {
+  AsWait logout() async {
     isLoading.value = true;
     try {
       await _repo.signOut();
@@ -98,7 +98,7 @@ class AuthController extends GetxController {
   }
 
   // ---------- ERROR HANDLER ----------
-  String handleError(FirebaseAuthException e) {
+  String _handleError(FirebaseAuthException e) {
     switch (e.code) {
       case 'invalid-email':
         return 'Invalid email format';

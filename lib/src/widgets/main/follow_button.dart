@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/app/models/author.dart';
 import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/utils/params.dart';
 
 class FollowButton extends StatelessWidget {
   final Follow _state;
@@ -9,36 +9,13 @@ class FollowButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String label = "Follow";
-    Color bg = Colors.blueAccent;
-    Color text = Colors.white;
-
-    switch (_state) {
-      case Follow.following:
-        label = "Following";
-        bg = Colors.transparent;
-        text = context.primaryColor;
-        break;
-
-      case Follow.followBack:
-        label = "Follow back";
-        bg = context.primaryColor;
-        text = context.colors.onPrimary;
-        break;
-
-      default:
-        label = "Follow";
-        bg = context.primaryColor;
-        text = context.colors.onPrimary;
-        break;
-    }
-
+    final follow = context.state(_state);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       child: FilledButton.tonal(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          backgroundColor: bg,
+          backgroundColor: follow.background,
           minimumSize: Size(46, 12),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
           shape: RoundedRectangleBorder(
@@ -49,8 +26,11 @@ class FollowButton extends StatelessWidget {
           ),
         ),
         child: Text(
-          label,
-          style: TextStyle(color: text, fontWeight: FontWeight.w600),
+          follow.label,
+          style: TextStyle(
+            color: follow.foreground,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
