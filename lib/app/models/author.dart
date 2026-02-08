@@ -1,43 +1,46 @@
+import 'package:semesta/public/extensions/string_extension.dart';
+import 'package:semesta/public/functions/func_helper.dart';
+import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/app/models/model.dart';
 
 enum Gender { female, male, other }
 
-class Author extends Model<Author> {
+class Author extends IModel<Author> {
   final String avatar;
   final String name;
   final Gender gender;
-  final String? email;
+  final String email;
   final String uname;
   final String bio;
   final String website;
   final String location;
-  final String banner;
+  final String cover;
 
-  final int follower;
+  final int followers;
   final int following;
 
-  final DateTime? dob;
   final bool verified;
+  final DateTime birthdate;
 
-  const Author({
+  Author({
     super.id = '',
     this.avatar = '',
     this.name = '',
     this.gender = Gender.other,
-    this.email,
+    this.email = '',
     this.uname = '',
-    this.dob,
     this.bio = '',
     this.website = '',
     this.location = '',
-    this.banner = '',
-    this.follower = 0,
+    this.cover = '',
+    this.followers = 0,
     this.following = 0,
     this.verified = false,
     super.createdAt,
     super.updatedAt,
-  });
+    DateTime? birthdate,
+  }) : birthdate = birthdate ?? now.add(Duration(days: 365 * 16));
 
   @override
   List<Object?> get props => [
@@ -50,54 +53,51 @@ class Author extends Model<Author> {
     bio,
     website,
     location,
-    banner,
-    dob,
+    cover,
+    birthdate,
     verified,
-    follower,
+    followers,
     following,
   ];
 
   factory Author.from(AsMap json) {
-    final map = Model.convertJsonKeys(json, true);
+    final map = IModel.convert(json, true);
     return Author(
       id: map['id'],
       name: map['name'],
       avatar: map['avatar'],
-      dob: Model.toDateTime(map['dob']),
-      gender: Gender.values.firstWhere(
-        (e) => e.name == map['gender'],
-        orElse: () => Gender.other,
-      ),
-      follower: map['follower'] ?? 0,
+      birthdate: IModel.toDateTime(map['birthdate']),
+      gender: parseEnum(map['gender'], Gender.values, Gender.other),
+      followers: map['followers'] ?? 0,
       following: map['following'] ?? 0,
       email: map['email'],
-      banner: map['banner'],
+      cover: map['cover'],
       bio: map['bio'],
       verified: map['verified'] ?? false,
       location: map['location'],
       uname: map['uname'],
       website: map['website'],
-      createdAt: Model.createOrUpdate(map),
-      updatedAt: Model.createOrUpdate(map, false),
+      createdAt: IModel.make(map),
+      updatedAt: IModel.make(map, true),
     );
   }
 
   @override
-  AsMap to() => Model.convertJsonKeys({
+  AsMap to() => IModel.convert({
     ...general,
+    'bio': bio.trim(),
     'name': name.trim(),
+    'email': email.trim(),
+    'uname': uname.trim(),
+    'location': location.trim(),
+    'cover': cover,
     'avatar': avatar,
-    'gender': gender.name,
-    'dob': Model.toEpoch(dob),
-    'email': email?.trim(),
-    'bio': bio,
-    'banner': banner,
-    'follower': follower,
-    'following': following,
+    'website': website.normalizeUrl,
+    'followers': followers,
     'verified': verified,
-    'location': location,
-    'uname': uname.trim().toLowerCase(),
-    'website': website,
+    'gender': gender.name,
+    'following': following,
+    'birthdate': IModel.toEpoch(birthdate),
   });
 
   @override
@@ -105,12 +105,12 @@ class Author extends Model<Author> {
     String? name,
     String? id,
     String? avatar,
-    DateTime? dob,
+    DateTime? birthdate,
     Gender? gender,
     String? email,
-    String? banner,
+    String? cover,
     String? bio,
-    int? follower,
+    int? followers,
     int? following,
     bool? verified,
     String? location,
@@ -121,18 +121,18 @@ class Author extends Model<Author> {
     id: id ?? this.id,
     name: name ?? this.name,
     avatar: avatar ?? this.avatar,
-    dob: dob ?? this.dob,
+    birthdate: birthdate ?? this.birthdate,
     gender: gender ?? this.gender,
     email: email ?? this.email,
-    banner: banner ?? this.banner,
+    cover: cover ?? this.cover,
     bio: bio ?? this.bio,
-    follower: follower ?? this.follower,
+    followers: followers ?? this.followers,
     following: following ?? this.following,
     verified: verified ?? this.verified,
     location: location ?? this.location,
     uname: uname ?? this.uname,
     website: website ?? this.website,
     createdAt: createdAt ?? this.createdAt,
-    updatedAt: DateTime.now(),
+    updatedAt: now,
   );
 }

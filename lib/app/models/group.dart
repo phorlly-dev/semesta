@@ -1,19 +1,19 @@
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/app/models/model.dart';
 
-class Group extends Model<Group> {
+class Group extends IModel<Group> {
   final String logo;
   final String name;
-  final String cid;
+  final String creator;
   final String note;
   final bool privacy;
   const Group({
-    this.cid = '',
-    this.note = '',
-    this.privacy = true,
+    super.id = '',
     this.logo = '',
     this.name = '',
-    super.id = '',
+    this.note = '',
+    this.creator = '',
+    this.privacy = true,
     super.createdAt,
     super.updatedAt,
     super.deletedAt,
@@ -24,7 +24,7 @@ class Group extends Model<Group> {
     String? id,
     String? logo,
     String? name,
-    String? cid,
+    String? creator,
     String? note,
     bool? privacy,
     DateTime? createdAt,
@@ -32,7 +32,7 @@ class Group extends Model<Group> {
   }) => Group(
     id: id ?? this.id,
     logo: logo ?? this.logo,
-    cid: cid ?? this.cid,
+    creator: creator ?? this.creator,
     note: note ?? this.note,
     name: name ?? this.name,
     privacy: privacy ?? this.privacy,
@@ -42,28 +42,35 @@ class Group extends Model<Group> {
   );
 
   @override
-  List<Object?> get props => [...super.props, logo, name, privacy, cid, note];
+  List<Object?> get props => [
+    ...super.props,
+    logo,
+    name,
+    privacy,
+    creator,
+    note,
+  ];
 
   factory Group.from(AsMap json) {
-    final map = Model.convertJsonKeys(json, true);
+    final map = IModel.convert(json, true);
     return Group(
       id: map['id'],
       logo: map['logo'],
       name: map['name'],
       note: map['note'],
-      cid: map['cid'],
+      creator: map['creator'],
       privacy: map['privacy'] ?? true,
-      createdAt: Model.createOrUpdate(map),
-      updatedAt: Model.createOrUpdate(map, false),
+      createdAt: IModel.make(map),
+      updatedAt: IModel.make(map, true),
     );
   }
 
   @override
-  AsMap to() => Model.convertJsonKeys({
+  AsMap to() => IModel.convert({
     ...general,
     'logo': logo,
     'privacy': privacy,
-    'note': note,
-    'cid': cid,
+    'note': note.trim(),
+    'creator': creator,
   });
 }

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:semesta/app/models/feed.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
-import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/components/layout/_page.dart';
 import 'package:semesta/src/components/layout/nav_bar.dart';
 import 'package:semesta/src/widgets/main/option_button.dart';
@@ -87,8 +87,8 @@ class _EditPostPageState extends State<EditPostPage> {
                             title: _input.text.trim(),
                           );
 
-                          await pctrl.saveChange(post, updated.to());
-                          await pctrl.reloadPost;
+                          await pctrl.saveChange(updated);
+                          await pctrl.reloadPost();
                           if (context.mounted) context.pop();
                         }
                       : null,

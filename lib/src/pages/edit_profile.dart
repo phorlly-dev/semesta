@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:go_router/go_router.dart';
+import 'package:semesta/app/models/author.dart';
+import 'package:semesta/app/repositories/generic_repository.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/custom_modal.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/components/layout/_page.dart';
 import 'package:semesta/src/components/layout/nav_bar.dart';
 import 'package:semesta/src/components/user/profile_editable_header.dart';
@@ -13,6 +16,7 @@ import 'package:semesta/src/widgets/main/option_button.dart';
 import 'package:semesta/src/widgets/sub/block_overlay.dart';
 import 'package:semesta/src/widgets/sub/dated_picker.dart';
 import 'package:semesta/src/widgets/sub/animated_loader.dart';
+import 'package:semesta/src/widgets/sub/grouped_options.dart';
 import 'package:semesta/src/widgets/sub/inputable.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -50,7 +54,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (data == null) return const AnimatedLoader(cupertino: true);
 
       final name = uctrl.message.value;
-      final loading = pctrl.isLoading.value;
+      final has = name.isNotEmpty;
+      final loading = uctrl.isLoading.value;
       final avatar = grepo.cacheFor(_ka).value;
       final cover = grepo.cacheFor(_kc).value;
 
@@ -58,16 +63,36 @@ class _EditProfilePageState extends State<EditProfilePage> {
         children: [
           PageLayout(
             header: AppNavBar(
-              height: 42,
               middle: Text("Edit profile"),
               end: TextButton(
-                onPressed: () {},
+                onPressed: has
+                    ? () async {
+                        final state = _kf.currentState;
+                        if (state == null || !state.saveAndValidate()) return;
+
+                        final map = state.value;
+                        final model = data.copy(
+                          bio: map['bio'],
+                          name: map['name'],
+                          gender: map['gender'],
+                          website: map['website'],
+                          location: map['location'],
+                          birthdate: map['birthdate'],
+                        );
+
+                        await uctrl.modifyProfile(model, avatar, cover);
+                        if (context.mounted) context.pop();
+                      }
+                    : null,
+                style: TextButton.styleFrom(
+                  minimumSize: Size(16, 8),
+                  alignment: Alignment.center,
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                ),
                 child: Text(
                   loading ? 'Saving...' : 'Save',
                   style: TextStyle(
-                    color: name.isNotEmpty
-                        ? context.primaryColor
-                        : context.dividerColor,
+                    color: has ? context.primaryColor : context.dividerColor,
                   ),
                 ),
               ),
@@ -87,20 +112,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         OptionButton(
                           'Take photo',
                           icon: Icons.camera_alt_outlined,
-                          onTap: () => context.asset(_ka),
+                          onTap: () {
+                            context.imagePicker(_ka, from: PickMedia.camera);
+                          },
                         ),
                         OptionButton(
                           'Choose existing photo',
                           icon: Icons.camera,
-                          onTap: () async {
-                            await grepo.fromPicture(_ka);
-                          },
+                          onTap: () => context.imagePicker(_ka),
                         ),
                       ],
                     );
                   },
                   cover == null
-                      ? MediaSource.network(data.banner)
+                      ? MediaSource.network(data.cover)
                       : MediaSource.file(cover.path),
                   onCover: () {
                     CustomModal(
@@ -111,13 +136,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         OptionButton(
                           'Take photo',
                           icon: Icons.camera_alt_outlined,
-                          onTap: () => context.asset(_kc),
+                          onTap: () {
+                            context.imagePicker(
+                              _kc,
+                              width: 360,
+                              height: 180,
+                              from: PickMedia.camera,
+                            );
+                          },
                         ),
                         OptionButton(
                           'Choose existing photo',
                           icon: Icons.camera,
-                          onTap: () async {
-                            await grepo.fromPicture(_kc);
+                          onTap: () {
+                            context.imagePicker(_kc, width: 360, height: 180);
                           },
                         ),
                       ],
@@ -129,24 +161,47 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 SliverToBoxAdapter(
                   child: DataForm(
                     _kf,
+                    scrollable: false,
                     autovalidate: AutovalidateMode.onUserInteraction,
                     children: [
                       Inputable(
                         'name',
-                        // autofocus: true,
+                        icon: Icons.person,
                         initValue: data.name,
                         hint: 'Name cannot be blank',
+                        maxLength: 50,
+                        counterText: '${name.length}/50',
                         onChanged: (value) {
                           uctrl.message.value = value!;
                         },
                       ),
                       Inputable('bio', initValue: data.bio, maxLines: 3),
-                      Inputable('location', initValue: data.location),
-                      Inputable('website', initValue: data.website),
+                      Inputable(
+                        'location',
+                        initValue: data.location,
+                        icon: Icons.location_on_outlined,
+                      ),
+                      GroupedOptions<Gender>(
+                        'gender',
+                        icon: Icons.group_outlined,
+                        initValue: data.gender,
+                        options: Gender.values.map((gender) {
+                          return FormBuilderFieldOption(
+                            value: gender,
+                            child: Text(toCapitalize(gender.name)),
+                          );
+                        }).toList(),
+                      ),
+                      Inputable(
+                        'website',
+                        initValue: data.website,
+                        keyboardType: TextInputType.url,
+                      ),
                       DatedPicker(
-                        'dob',
-                        lable: 'Date of birth',
-                        initValue: data.dob ?? now,
+                        'birthdate',
+                        icon: Icons.calendar_month_outlined,
+                        lable: 'Birthdata',
+                        initValue: data.birthdate,
                       ),
                     ],
                   ),

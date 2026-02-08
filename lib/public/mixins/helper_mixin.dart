@@ -1,7 +1,9 @@
 import 'package:semesta/app/controllers/post_controller.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/app/models/media.dart';
+import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/functions/logger.dart';
+import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
@@ -12,9 +14,7 @@ mixin HelperMixin {
     if (thumbnails.isEmpty) return;
 
     final path = thumbnails['path'].toString();
-    if (path.isNotEmpty) {
-      await prepo.deleteFile(path);
-    }
+    if (path.isNotEmpty) await prepo.deleteFile(path);
   }
 
   /// Deletes a single media file and its thumbnail
@@ -25,7 +25,7 @@ mixin HelperMixin {
     } catch (e) {
       HandleLogger.error(
         "Failed to delete media file: ${media.path}",
-        message: e.toString(),
+        error: e.toString(),
       );
     }
   }
@@ -40,59 +40,59 @@ mixin HelperMixin {
     );
   }
 
-  void clearCache(Feed post, String uid, PostController ctrl) {
-    final key = getKey();
-    final pkey = getKey(id: uid, screen: Screen.post);
-    final ckey = getKey(id: uid, screen: Screen.comment);
+  void clearCached(Feed post, String uid, PostController ctrl) {
+    final kh = getKey();
+    final kp = getKey(id: uid, screen: Screen.post);
+    final kc = getKey(id: uid, screen: Screen.comment);
 
     switch (post.type) {
       case Create.quote:
-        ctrl.metaFor(key).dirty = true;
-        ctrl.metaFor(pkey).dirty = true;
-        ctrl.metaFor(ckey).dirty = true;
+        ctrl.metaFor(kh).dirty = true;
+        ctrl.metaFor(kp).dirty = true;
+        ctrl.metaFor(kc).dirty = true;
 
-        final rid = getRowId(pid: post.id, kind: FeedKind.quoted);
-        ctrl.clearFor(key, rid);
-        ctrl.clearFor(pkey, rid);
-        ctrl.clearFor(ckey, rid);
+        final rid = post.toId(kind: FeedKind.quoted);
+        ctrl.clearFor(kh, rid);
+        ctrl.clearFor(kp, rid);
+        ctrl.clearFor(kc, rid);
         break;
 
       case Create.reply:
-        ctrl.metaFor(key).dirty = true;
-        ctrl.metaFor(ckey).dirty = true;
+        ctrl.metaFor(kh).dirty = true;
+        ctrl.metaFor(kc).dirty = true;
 
-        final rid = getRowId(pid: post.id, uid: uid, kind: FeedKind.replied);
-        ctrl.clearFor(key, rid);
-        ctrl.clearFor(ckey, rid);
+        final rid = post.toId(puid: uid, kind: FeedKind.replied);
+        ctrl.clearFor(kh, rid);
+        ctrl.clearFor(kc, rid);
         break;
 
       default:
-        ctrl.metaFor(key).dirty = true;
-        ctrl.metaFor(pkey).dirty = true;
-        ctrl.metaFor(ckey).dirty = true;
+        ctrl.metaFor(kh).dirty = true;
+        ctrl.metaFor(kp).dirty = true;
+        ctrl.metaFor(kc).dirty = true;
 
-        final rid = getRowId(pid: post.id);
-        ctrl.clearFor(key, rid);
-        ctrl.clearFor(pkey, rid);
-        ctrl.clearFor(ckey, rid);
+        final rid = post.toId();
+        ctrl.clearFor(kh, rid);
+        ctrl.clearFor(kp, rid);
+        ctrl.clearFor(kc, rid);
     }
   }
 
-  void editCache(Feed post, String uid, PostController ctrl) {
-    final key = getKey();
-    final pkey = getKey(id: uid, screen: Screen.post);
-    final ckey = getKey(id: uid, screen: Screen.comment);
+  void editCached(Feed post, String uid, PostController ctrl) {
+    final kh = getKey();
+    final kp = getKey(id: uid, screen: Screen.post);
+    final kc = getKey(id: uid, screen: Screen.comment);
 
     switch (post.type) {
       case Create.reply:
-        ctrl.metaFor(key).dirty = true;
-        ctrl.metaFor(ckey).dirty = true;
+        ctrl.metaFor(kh).dirty = true;
+        ctrl.metaFor(kc).dirty = true;
         break;
 
       default:
-        ctrl.metaFor(key).dirty = true;
-        ctrl.metaFor(pkey).dirty = true;
-        ctrl.metaFor(ckey).dirty = true;
+        ctrl.metaFor(kh).dirty = true;
+        ctrl.metaFor(kp).dirty = true;
+        ctrl.metaFor(kc).dirty = true;
     }
   }
 }

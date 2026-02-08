@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
+import 'package:semesta/public/extensions/string_extension.dart';
 import 'package:semesta/public/functions/format_helper.dart';
+import 'package:semesta/src/widgets/main/animated.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 
 class ActionButton extends StatefulWidget {
   final dynamic icon;
   final dynamic label;
-  final Color? color;
+  final Color? iconColor, textColor;
   final double sizeIcon, textSize;
-  final bool isActive; // 🔥 for liked/reposted/saved state
+  final bool active; // 🔥 for liked/reposted/saved state
   final VoidCallback? onPressed;
   const ActionButton({
     super.key,
     this.icon,
     this.label,
-    this.color,
     this.sizeIcon = 22,
-    this.isActive = false,
+    this.active = false,
     this.onPressed,
     this.textSize = 16,
+    this.iconColor,
+    this.textColor,
   });
 
   @override
@@ -32,7 +35,7 @@ class _ActionButtonState extends State<ActionButton>
   bool _tapped = false; // 🔑 local-only flag
 
   void _animate() async {
-    if (!widget.isActive) return; // only animate on "like"
+    if (!widget.active) return; // only animate on "like"
     setState(() {
       _scale = 2;
       _opacity = 0.8;
@@ -52,7 +55,7 @@ class _ActionButtonState extends State<ActionButton>
   void didUpdateWidget(ActionButton oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (_tapped && !oldWidget.isActive && widget.isActive) {
+    if (_tapped && !oldWidget.active && widget.active) {
       _animate();
       _tapped = false; // reset
     }
@@ -64,33 +67,35 @@ class _ActionButtonState extends State<ActionButton>
         ? Icon(
             widget.icon,
             size: widget.sizeIcon,
-            color: widget.color ?? context.hintColor,
+            color: widget.iconColor ?? context.hintColor,
           )
         : Image.asset(
-            asImage(widget.icon, true),
+            '${widget.icon}'.toIcon(true),
             width: widget.sizeIcon,
             height: widget.sizeIcon,
-            color: widget.color ?? context.hintColor,
+            color: widget.iconColor ?? context.hintColor,
           );
 
-    return GestureDetector(
-      onTap: () {
-        _tapped = true;
-        widget.onPressed?.call();
-      },
-      behavior: HitTestBehavior.opaque,
+    return Animated(
+      onTap: widget.onPressed != null
+          ? () {
+              _tapped = true;
+              widget.onPressed!.call();
+            }
+          : null,
       child: DirectionX(
         mainAxisSize: MainAxisSize.min,
         children: [
           AnimatedScale(
-            duration: Durations.medium2,
             scale: _scale,
+            duration: Durations.medium2,
             child: AnimatedOpacity(
-              duration: Durations.medium2,
               opacity: _opacity,
+              duration: Durations.medium2,
               child: iconWidget,
             ),
           ),
+
           if (widget.label != null) ...[
             const SizedBox(width: 6),
             Text(
@@ -98,7 +103,7 @@ class _ActionButtonState extends State<ActionButton>
                   ? (widget.label > 0 ? toCount(widget.label ?? 0) : '')
                   : widget.label,
               style: TextStyle(
-                color: widget.color ?? context.hintColor,
+                color: widget.textColor ?? context.hintColor,
                 fontSize: widget.textSize,
                 fontWeight: FontWeight.w500,
               ),

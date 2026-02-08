@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
+import 'package:semesta/public/extensions/date_time_extension.dart';
 import 'package:semesta/public/helpers/audit_view.dart';
+import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/src/widgets/main/action_button.dart';
 import 'package:semesta/src/widgets/sub/animated_count.dart';
 import 'package:semesta/src/widgets/sub/break_section.dart';
@@ -34,8 +35,8 @@ class FooterSection extends StatelessWidget {
                 padding: padding,
                 children: [
                   Text(
-                    '${created?.format('h:mm a · dd MMM yy')}',
-                    style: TextStyle(color: context.outlineColor, fontSize: 15),
+                    '${created?.format('h:mm a · dd MMMM yyyy')}',
+                    style: TextStyle(color: context.outlineColor),
                   ),
 
                   if (_actions.views > 0) ...[
@@ -53,7 +54,7 @@ class FooterSection extends StatelessWidget {
 
               if (has) ...[
                 DirectionX(
-                  spacing: 8,
+                  spacing: 12,
                   padding: padding,
                   children: [
                     if (_actions.reposts > 0)
@@ -88,19 +89,16 @@ class FooterSection extends StatelessWidget {
                   // Comment
                   ActionButton(
                     icon: 'comment.png',
-                    color: context.hintColor,
                     onPressed: () async {
-                      await context.openById(route.comment, _actions.pid);
+                      await context.openById(routes.comment, _actions.pid);
                     },
                   ),
 
                   // Repost
                   ActionButton(
                     icon: Icons.autorenew_rounded,
-                    color: _actions.reposted
-                        ? Colors.redAccent
-                        : context.hintColor,
-                    isActive: _actions.reposted,
+                    iconColor: _actions.reposted ? Colors.redAccent : null,
+                    active: _actions.reposted,
                     onPressed: () => context.repost(_actions),
                   ),
 
@@ -109,17 +107,11 @@ class FooterSection extends StatelessWidget {
                     icon: _actions.favorited
                         ? Icons.favorite
                         : Icons.favorite_border,
-                    isActive: _actions.favorited,
-                    color: _actions.favorited
-                        ? Colors.redAccent
-                        : context.hintColor,
+                    active: _actions.favorited,
+                    iconColor: _actions.favorited ? Colors.redAccent : null,
                     onPressed: () {
                       _actions.toggleFavorite();
-                      actrl.toggleFavorite(
-                        _actions.target,
-                        _actions.pid,
-                        active: _actions.favorited,
-                      );
+                      actrl.toggleFavorite(_actions);
                     },
                   ),
 
@@ -127,22 +119,19 @@ class FooterSection extends StatelessWidget {
                     icon: _actions.bookmarked
                         ? Icons.bookmark
                         : Icons.bookmark_border_rounded,
-                    color: _actions.bookmarked
-                        ? Colors.blueAccent
-                        : context.hintColor,
-                    isActive: _actions.bookmarked,
+                    iconColor: _actions.bookmarked ? Colors.blueAccent : null,
+                    active: _actions.bookmarked,
                     onPressed: () {
-                      actrl.toggleBookmark(
-                        _actions.target,
-                        _actions.pid,
-                        active: _actions.bookmarked,
-                      );
                       _actions.toggleBookmark();
+                      actrl.toggleBookmark(_actions);
                     },
                   ),
 
                   // Share
-                  ActionButton(icon: Icons.share, color: context.hintColor),
+                  ActionButton(
+                    icon: 'share.png',
+                    onPressed: () => context.share(_actions),
+                  ),
                 ],
               ),
             ],

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/public/extensions/extension.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
+import 'package:semesta/public/extensions/integer_extension.dart';
+import 'package:semesta/public/helpers/feed_view.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/widgets/main/animated.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 

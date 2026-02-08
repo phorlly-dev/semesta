@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/string_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/components/auth/auth_foooter.dart';
 import 'package:semesta/src/components/auth/auth_header.dart';
@@ -28,7 +28,7 @@ class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final isLoading = octrl.isLoading.value;
+      final loading = octrl.loading.value;
       return Stack(
         children: [
           PageLayout(
@@ -41,7 +41,7 @@ class _AuthPageState extends State<AuthPage> {
                 if (!_primary) const SizedBox(height: 12),
 
                 //Input Fields
-                _primary ? SignUp(_kf) : SignIn(_kf, isLoading: isLoading),
+                _primary ? SignUp(_kf) : SignIn(_kf, loading: loading),
 
                 // Forgot Password
                 // if (!_primary)
@@ -73,7 +73,7 @@ class _AuthPageState extends State<AuthPage> {
           ),
 
           // ---- overlay ----
-          if (isLoading) BlockOverlay(_primary ? 'Signing Up' : 'Signing In'),
+          if (loading) BlockOverlay(_primary ? 'Signing Up' : 'Signing In'),
         ],
       );
     });
@@ -97,7 +97,7 @@ class _AuthPageState extends State<AuthPage> {
 
         // Social Sign-In Buttons
         CustomButton(
-          icon: 'google.png'.asImage(true),
+          icon: 'google.png'.toIcon(true),
           label: 'Continue with Google',
 
           // onPressed: controller.loginWithGoogle,

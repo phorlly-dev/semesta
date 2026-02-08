@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
+import 'package:semesta/public/extensions/date_time_extension.dart';
+import 'package:semesta/public/extensions/string_extension.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/app/models/author.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/widgets/main/custom_button.dart';
 import 'package:semesta/src/widgets/sub/dated_picker.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
@@ -14,15 +16,15 @@ import 'package:semesta/src/widgets/sub/avatar_editale.dart';
 import 'package:semesta/src/widgets/sub/inputable.dart';
 
 class SignUp extends StatefulWidget {
-  final GlobalKey<FormBuilderState> _formKey;
-  const SignUp(this._formKey, {super.key});
+  final GlobalKey<FormBuilderState> _key;
+  const SignUp(this._key, {super.key});
 
   @override
   State<SignUp> createState() => _SignUpState();
 }
 
 class _SignUpState extends State<SignUp> {
-  var _ckpassword = '';
+  var _ckpassword = '', _name = '';
   var _visible = false;
   var _confirm = false;
   final _pinput = TextEditingController();
@@ -34,23 +36,25 @@ class _SignUpState extends State<SignUp> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final form = widget._formKey;
+      final form = widget._key;
       final file = grepo.cacheFor(_key).value;
-      final isLoading = octrl.isLoading.value;
+      final loading = octrl.loading.value;
 
       return DirectionY(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           AvatarEditale(
             MediaSource.file(file?.path ?? ''),
-            onTap: () => grepo.fromPicture(_key),
+            onTap: () => context.imagePicker(_key, editable: false),
           ),
 
           Inputable(
             'name',
             focusNode: _focus,
             hint: 'Name cannot be blank',
-            prefixIcon: const Icon(Icons.person),
+            icon: Icons.person,
+            maxLength: 50,
+            counterText: '${_name.length}/50',
             validator: FormBuilderValidators.compose([
               FormBuilderValidators.required(errorText: 'Name is required'),
               FormBuilderValidators.minLength(
@@ -60,8 +64,9 @@ class _SignUpState extends State<SignUp> {
             ]),
             onChanged: (value) {
               final name = value?.trim() ?? '';
+              setState(() => _name = name);
               if (name.length >= 2) {
-                final suggestion = grepo.getUname(name);
+                final suggestion = name.toUsername;
                 if (_uinput.text != suggestion) {
                   _uinput.value = _uinput.value.copyWith(
                     text: suggestion,
@@ -79,9 +84,11 @@ class _SignUpState extends State<SignUp> {
 
           Inputable(
             'uname',
-            hint: 'Useraname cannot be blank',
+            hint: 'Username cannot be blank',
             controller: _uinput,
-            prefixIcon: const Icon(Icons.person_outline),
+            icon: Icons.person_outline,
+            maxLength: 56,
+            counterText: '${_cinput.text.length}/56',
             validator: FormBuilderValidators.compose([
               FormBuilderValidators.required(errorText: 'Username is required'),
               FormBuilderValidators.minLength(
@@ -97,43 +104,25 @@ class _SignUpState extends State<SignUp> {
                   CustomToast.warning(
                     'Oops',
                     title: 'This username is already taken',
-                    duration: 6,
+                    autoClose: 4,
                   );
                 }
               }
             },
           ),
 
-          // RadioGroupInput(
-          //   name: 'gender',
-          //   icon: Icons.group_outlined,
-          //   initValue: Gender.female.name,
-          //   items: Gender.values.map((g) {
-          //     return FormBuilderFieldOption(
-          //       value: g.name,
-          //       child: Text(toCapitalize(g.name)),
-          //     );
-          //   }).toList(),
-          // ),
           DatedPicker(
-            'dob',
-            lable: 'Date of birth',
+            'birthdate',
+            lable: 'Birthdate',
             icon: Icons.date_range,
             validator: FormBuilderValidators.compose([
               FormBuilderValidators.required(
-                errorText: 'Date of Birth is required',
+                errorText: 'Birthdate is required',
               ),
               (value) {
                 if (value == null) return null; // already handled by 'required'
-                final age =
-                    now.year -
-                    value.year -
-                    ((now.month < value.month ||
-                            (now.month == value.month && now.day < value.day))
-                        ? 1
-                        : 0);
 
-                if (age < 13) {
+                if (value.toAge < 13) {
                   return 'You must be at least 13 years old';
                 }
 
@@ -143,8 +132,10 @@ class _SignUpState extends State<SignUp> {
           ),
           Inputable(
             'email',
+            hint: 'Email cannot be blank',
+            maxLength: 50,
             keyboardType: TextInputType.emailAddress,
-            prefixIcon: const Icon(Icons.email_outlined),
+            icon: Icons.email_outlined,
             validator: FormBuilderValidators.compose([
               FormBuilderValidators.required(errorText: 'Email is required'),
               FormBuilderValidators.email(errorText: 'Enter a valid email'),
@@ -154,9 +145,10 @@ class _SignUpState extends State<SignUp> {
           Inputable(
             'password',
             controller: _pinput,
+            maxLength: 32,
             hint: 'Password cannot be blank',
             keyboardType: TextInputType.visiblePassword,
-            prefixIcon: const Icon(Icons.lock_outline_rounded),
+            icon: Icons.lock_outline_rounded,
             obscureText: !_visible,
             onChanged: (value) {
               setState(() => _ckpassword = value ?? '');
@@ -164,7 +156,7 @@ class _SignUpState extends State<SignUp> {
               // Trigger revalidation of confirm when password changes
               form.currentState?.fields['confirm']?.validate();
             },
-            suffixIcon: IconButton(
+            suffix: IconButton(
               icon: Icon(
                 _visible
                     ? Icons.visibility_outlined
@@ -184,15 +176,17 @@ class _SignUpState extends State<SignUp> {
           Inputable(
             'confirm',
             controller: _cinput,
+            maxLength: 32,
             hint: 'Confirm must be match password',
             keyboardType: TextInputType.visiblePassword,
-            prefixIcon: const Icon(Icons.lock_outline_rounded),
+            icon: Icons.lock_outline_rounded,
             obscureText: !_confirm,
-            suffixIcon: IconButton(
+            suffix: IconButton(
               icon: Icon(
                 _confirm
                     ? Icons.visibility_outlined
                     : Icons.visibility_off_outlined,
+                color: context.hintColor,
               ),
               onPressed: () => setState(() => _confirm = !_confirm),
             ),
@@ -200,40 +194,36 @@ class _SignUpState extends State<SignUp> {
               if (val == null || val.isEmpty) {
                 return 'Please confirm your password';
               }
-              if (val != _ckpassword) {
-                return 'Passwords do not match';
-              }
+
+              if (val != _ckpassword) return 'Passwords do not match';
+
               return null;
             },
           ),
-
           const SizedBox(height: 12),
 
           // Sign Up Button
           CustomButton(
             enableShadow: true,
             icon: Icons.create_new_folder,
-            label: isLoading ? 'Signing Up...' : 'Sign Up',
+            label: loading ? 'Signing Up...' : 'Sign Up',
             color: context.colors.secondary,
-            onPressed: isLoading
+            onPressed: loading
                 ? null
                 : () async {
                     final state = form.currentState;
                     if (state == null || !state.saveAndValidate()) return;
 
-                    final data = state.value;
-                    final email = data['email'];
-                    final password = data['password'];
-                    final uname = await grepo.getUniqueName(data['uname']);
-
+                    final map = state.value;
+                    final uname = await grepo.getUniqueName(map['uname']);
                     final model = Author(
                       uname: uname,
-                      email: email,
-                      dob: data['dob'],
-                      name: data['name'],
+                      name: map['name'],
+                      email: map['email'],
+                      birthdate: map['birthdate'],
                     );
 
-                    await octrl.register(email, password, file!, model);
+                    await octrl.register(model, map['password'], file);
                   },
           ),
         ],

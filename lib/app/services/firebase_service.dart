@@ -13,7 +13,9 @@ class FirebaseService {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     FirebaseAuth.instanceFor(app: app);
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     await FirebaseAppCheck.instance.activate();
     await gg.initialize(
       serverClientId:

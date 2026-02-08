@@ -89,7 +89,7 @@ To contribute or develop on Semesta, you'll need to set up your Flutter environm
         - **Xcode (macOS):** Install Xcode and configure your build settings.
 5. **Clone the Repository:**
     - Obtain the Semesta repository (assuming it exists on a platform like GitHub).
-    - Use `git clone <repository_url>` to download the code.
+    - Use `git clone https://github.com/phorlly-dev/semesta.git` to download the code.
 
 6. **Run the App:**
     - Navigate to the project directory in your terminal.

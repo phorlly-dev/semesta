@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:semesta/app/models/author.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/app/models/reaction.dart';
+import 'package:semesta/app/models/stats_count.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
 
 class AuthedView implements HasAttributes {
@@ -26,9 +27,9 @@ class StatusView with ChangeNotifier {
   bool iFollow;
   final bool theyFollow;
 
-  StatusView({
+  StatusView(
+    this.author, {
     this.actor,
-    required this.author,
     this.authed = false,
     this.iFollow = false,
     this.theyFollow = false,
@@ -41,7 +42,7 @@ class StatusView with ChangeNotifier {
     bool? iFollow,
     bool? theyFollow,
   }) => StatusView(
-    author: author ?? this.author,
+    author ?? this.author,
     actor: actor ?? this.actor,
     authed: authed ?? this.authed,
     iFollow: iFollow ?? this.iFollow,
@@ -49,7 +50,9 @@ class StatusView with ChangeNotifier {
   );
 
   void toggle() {
+    int v = author.following;
     iFollow = !iFollow;
+    author.copy(following: iFollow ? v++ : v--);
     notifyListeners();
   }
 }
@@ -57,52 +60,49 @@ class StatusView with ChangeNotifier {
 class ActionsView with ChangeNotifier {
   final String pid;
   final Feed feed;
+  final StatsCount stats;
   final ActionTarget target;
 
+  bool reposted;
   bool favorited;
   bool bookmarked;
-  bool reposted;
 
-  int favorites;
-  int bookmarks;
-  int reposts;
+  int get views => stats.viewed;
+  int get quotes => stats.quoted;
+  int get shares => stats.shared;
+  int get favorites => stats.liked;
+  int get bookmarks => stats.saved;
+  int get reposts => stats.reposted;
+  int get comments => stats.replied;
 
-  final int quotes;
-  final int views;
-  final int comments;
-  final int shares;
-
-  ActionsView({
-    required this.pid,
-    required this.feed,
-    required this.target,
-    this.views = 0,
-    this.shares = 0,
-    this.quotes = 0,
-    this.reposts = 0,
-    this.comments = 0,
-    this.favorites = 0,
-    this.bookmarks = 0,
+  ActionsView(
+    this.feed,
+    this.stats,
+    this.target, {
+    this.pid = '',
     this.reposted = false,
     this.favorited = false,
     this.bookmarked = false,
   });
 
   void toggleBookmark() {
+    int v = stats.saved;
     bookmarked = !bookmarked;
-    bookmarked ? bookmarks++ : bookmarks--;
+    stats.copy(saved: bookmarked ? v++ : v--);
     notifyListeners();
   }
 
   void toggleFavorite() {
+    int v = stats.liked;
     favorited = !favorited;
-    favorited ? favorites++ : favorites--;
+    stats.copy(liked: favorited ? v++ : v--);
     notifyListeners();
   }
 
   void toggleRepost() {
+    int v = stats.reposted;
     reposted = !reposted;
-    reposted ? reposts++ : reposts--;
+    stats.copy(reposted: reposted ? v++ : v--);
     notifyListeners();
   }
 }
@@ -110,5 +110,5 @@ class ActionsView with ChangeNotifier {
 class RepostView {
   final bool authed;
   final String uid, name;
-  const RepostView({this.authed = false, this.uid = '', this.name = ''});
+  const RepostView(this.uid, this.name, [this.authed = false]);
 }

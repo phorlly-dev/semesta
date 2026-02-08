@@ -1,36 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 
 mixin RouterMixin {
-  GoRoute goRoute(
-    RouteNode route, {
-    List<RouteBase>? routes,
-    List<RouteBase>? subRoutes,
+  GoRoute route(
+    RouteNode provider, {
     GoRouterRedirect? redirect,
     GoRouterWidgetBuilder? builder,
     GoRouterPageBuilder? pageBuilder,
+    List<RouteBase> routes = const <RouteBase>[],
   }) => GoRoute(
-    path: route.path,
-    name: route.name,
+    path: provider.path,
+    name: provider.name,
+    routes: routes,
     builder: builder,
-    pageBuilder: pageBuilder,
-    routes: subRoutes ?? routes ?? const [],
     redirect: redirect,
+    pageBuilder: pageBuilder,
   );
 
   StatefulShellBranch branch(
-    RouteNode route, {
-    required Widget child,
+    RouteNode provider,
+    Widget child, {
     List<RouteBase>? routes,
     ValueChanged<GoRouterState>? initPage,
   }) => StatefulShellBranch(
     routes: [
       ...?routes,
-      goRoute(
-        route,
-        pageBuilder: (context, state) {
-          if (initPage != null) initPage(state);
+      route(
+        provider,
+        pageBuilder: (_, state) {
+          initPage?.call(state);
           return NoTransitionPage(child: child);
         },
       ),

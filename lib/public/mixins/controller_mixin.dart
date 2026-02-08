@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import 'package:semesta/public/helpers/cached_helper.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
+import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/helpers/vendor_helper.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
 import 'package:semesta/app/models/reaction.dart';
@@ -18,17 +17,17 @@ mixin ControllerMixin on IController<FeedView> {
   final dataMapping = <String, Feed>{}.obs;
   final uCtrl = Get.put(UserController());
 
-  final Map<String, CachedState<FeedView>> _states = {};
-  CachedState<FeedView> stateFor(String key) {
-    return _states.putIfAbsent(key, () => CachedState<FeedView>());
+  final Mapper<Cacher<FeedView>> _states = {};
+  Cacher<FeedView> stateFor(String key) {
+    return _states.putIfAbsent(key, () => Cacher<FeedView>());
   }
 
-  final Map<String, TabMeta> _meta = {};
+  final Mapper<TabMeta> _meta = {};
   TabMeta metaFor(String key) => _meta.putIfAbsent(key, () => TabMeta());
 
   //User cached
   String get currentUid => uCtrl.currentUid.value;
-  bool isCurrentUser(String uid) {
+  bool currentedUser(String uid) {
     return currentUser.id.isNotEmpty && currentUid == uid;
   }
 
@@ -39,17 +38,10 @@ mixin ControllerMixin on IController<FeedView> {
     return uCtrl.currentUser.value!;
   }
 
-  StreamSubscription? _postSub, _commentSub;
-  void listenToPost(String pid) {
-    if (dataMapping.containsKey(pid)) return;
-    _postSub = prepo.sync$(pid).listen((p) => dataMapping[pid] = p);
-  }
-
-  void listenToComment(String cid, String pid) {
-    if (dataMapping.containsKey(cid)) return;
-    _commentSub = prepo
-        .sync$('$pid/$comments/$cid')
-        .listen((p) => dataMapping[cid] = p);
+  StreamSubscription? _postSub;
+  void listenToPost(Feed post) {
+    if (dataMapping.containsKey(post.id)) return;
+    _postSub = prepo.sync$(post.toDoc).listen((p) => dataMapping[post.id] = p);
   }
 
   void freeOldPosts({int keep = 50}) {
@@ -67,7 +59,7 @@ mixin ControllerMixin on IController<FeedView> {
 
   final _seen = <String>{};
   void markViewed(ActionTarget target) {
-    final key = getkey(target);
+    final key = target.toKey;
     if (_seen.contains(key)) return;
 
     _seen.add(key);
@@ -78,7 +70,7 @@ mixin ControllerMixin on IController<FeedView> {
     );
   }
 
-  Wait<List<Feed>> getSubcombined(
+  Waits<Feed> getSubcombined(
     List<Reaction> actions, [
     QueryMode mode = QueryMode.normal,
   ]) async {
@@ -88,11 +80,10 @@ mixin ControllerMixin on IController<FeedView> {
       ...await prepo.getInSuborder(ids, mode: mode),
     ].toList();
 
-    if (merged.isEmpty) return const [];
-    return merged;
+    return merged.isNotEmpty ? merged : const [];
   }
 
-  Wait<List<Feed>> getCombined(
+  Waits<Feed> getCombined(
     List<Reaction> actions, [
     QueryMode mode = QueryMode.normal,
   ]) async {
@@ -102,27 +93,21 @@ mixin ControllerMixin on IController<FeedView> {
       ...await prepo.getComments(ids, mode: mode),
     ].toList();
 
-    if (merged.isEmpty) return const [];
-    return merged;
+    return merged.isNotEmpty ? merged : const [];
   }
 
-  Wait<List<Feed>> getMerged(
-    String uid, [
-    QueryMode mode = QueryMode.normal,
-  ]) async {
+  Waits<Feed> getMerged(String uid, [QueryMode mode = QueryMode.normal]) async {
     final merged = [
       ...await prepo.getPosts(uid, mode: mode),
       ...await prepo.getComments(uid, mode: mode),
     ].toList();
 
-    if (merged.isEmpty) return const [];
-    return merged;
+    return merged.isNotEmpty ? merged : const [];
   }
 
   @override
   void onClose() {
     _postSub?.cancel();
-    _commentSub?.cancel();
     super.onClose();
   }
 }

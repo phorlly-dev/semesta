@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/route_extension.dart';
 import 'package:semesta/routes/router_refresh.dart';
 import 'package:semesta/routes/routes.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/transition_page.dart';
 import 'package:semesta/src/components/layout/_index.dart';
+import 'package:semesta/src/components/layout/_page.dart';
 import 'package:semesta/src/pages/auth.dart';
 import 'package:semesta/src/pages/avatar_preview.dart';
 import 'package:semesta/src/pages/commnet_post.dart';
@@ -36,28 +37,28 @@ class AppRouter extends Routes {
     navigatorKey: rootNavKey,
     initialLocation: splash.path,
     refreshListenable: RouterRefresh(
-      debounce(octrl.currentUser.stream, const Duration(milliseconds: 200)),
+      debounce(octrl.currentUser.stream, Durations.short4),
       appReady,
     ),
     redirect: (_, state) {
       final goingTo = state.matchedLocation;
-      final isLoggedIn = octrl.isLoggedIn;
-      final isReady = appReady.value;
+      final loggedIn = octrl.loggedIn;
+      final ready = appReady.value;
 
       // 1️⃣ Always go to Splash until appReady is true
-      if (!isReady && goingTo != splash.path) {
+      if (!ready && goingTo != splash.path) {
         return splash.path;
       }
 
       // 2️⃣ Once ready, control navigation by login state
-      if (isReady) {
+      if (ready) {
         // ✅ Logged in → go home unless already there
-        if (isLoggedIn && (goingTo == splash.path || goingTo == auth.path)) {
+        if (loggedIn && (goingTo == splash.path || goingTo == auth.path)) {
           return home.path;
         }
 
         // 🚪 Logged out → force auth unless already there
-        if (!isLoggedIn && (goingTo == splash.path || goingTo == home.path)) {
+        if (!loggedIn && (goingTo == splash.path || goingTo == home.path)) {
           return auth.path;
         }
       }
@@ -66,107 +67,98 @@ class AppRouter extends Routes {
       return null;
     },
     routes: [
-      goRoute(splash, builder: (_, sts) => SplashPage()),
-      goRoute(auth, builder: (_, sts) => const AuthPage()),
+      route(splash, builder: (_, state) => SplashPage()),
+      route(auth, builder: (_, state) => const AuthPage()),
 
       // Shell (tabs)
       StatefulShellRoute.indexedStack(
         builder: (_, state, shell) => AppLayout(shell),
         branches: [
-          branch(home, child: const HomeScreen()),
-          branch(reel, child: const ReelsScreen()),
-          branch(explore, child: const ExploreScreen()),
-          branch(notify, child: const NotificationsScreen()),
-          branch(messsage, child: const MessageScreen()),
+          branch(home, const HomeScreen()),
+          branch(reel, const ReelsScreen()),
+          branch(explore, const ExploreScreen()),
+          branch(notify, const NotificationsScreen()),
+          branch(messsage, const MessageScreen()),
         ],
       ),
 
       // ⚡ FULLSCREEN OUTSIDE TAB ROUTES ⚡
-      goRoute(
+      route(
         profile,
-        pageBuilder: (_, state) {
-          return TransitionPage(
-            child: ProfilePage(
-              state.pathOrQuery('id'),
-              bool.parse(state.pathOrQuery('yourself', true)),
-            ),
-          );
-        },
+        pageBuilder: (_, state) => TransitionPage(
+          child: ProfilePage(
+            state.pathOrQuery('id'),
+            bool.parse(state.pathOrQuery('yourself', true)),
+          ),
+        ),
       ),
-      goRoute(
+      route(
         bookmark,
         pageBuilder: (_, state) {
           return TransitionPage(child: SavedPostsPage(state.pathOrQuery('id')));
         },
       ),
-      goRoute(
+      route(
         favorite,
         pageBuilder: (_, state) {
           return TransitionPage(child: LikedPostsPage(state.pathOrQuery('id')));
         },
       ),
-      goRoute(
+      route(
         avatar,
-        pageBuilder: (_, state) {
-          return TransitionPage(
-            child: AvatarPreviewPage(state.pathOrQuery('id')),
-            fullscreenDialog: true,
-          );
-        },
+        pageBuilder: (_, state) => TransitionPage(
+          fullscreenDialog: true,
+          style: TransitionStyle.fade,
+          child: AvatarPreviewPage(state.pathOrQuery('id')),
+        ),
       ),
-      goRoute(
+      route(
         create,
-        pageBuilder: (_, state) {
-          return TransitionPage(
-            child: CreatePostPage(),
-            fullscreenDialog: true,
-          );
-        },
+        pageBuilder: (_, state) => TransitionPage(
+          fullscreenDialog: true,
+          style: TransitionStyle.bottomToTop,
+          child: CreatePostPage(),
+        ),
       ),
-      goRoute(
+      route(
         comment,
-        pageBuilder: (_, state) {
-          return TransitionPage(
-            fullscreenDialog: true,
-            child: CommnetPostPage(state.pathOrQuery('id')),
-          );
-        },
+        pageBuilder: (_, state) => TransitionPage(
+          fullscreenDialog: true,
+          style: TransitionStyle.bottomToTop,
+          child: CommnetPostPage(state.pathOrQuery('id')),
+        ),
       ),
-      goRoute(
+      route(
         repost,
-        pageBuilder: (_, state) {
-          return TransitionPage(
-            fullscreenDialog: true,
-            child: QuotePostPage(state.pathOrQuery('id')),
-          );
-        },
+        pageBuilder: (_, state) => TransitionPage(
+          fullscreenDialog: true,
+          style: TransitionStyle.bottomToTop,
+          child: QuotePostPage(state.pathOrQuery('id')),
+        ),
       ),
-      goRoute(
+      route(
         media,
-        pageBuilder: (_, state) {
-          return TransitionPage(
-            fullscreenDialog: true,
-            child: ImagePreviewPage(
-              state.pathOrQuery('id'),
-              index: int.parse(state.pathOrQuery('index', true)),
-            ),
-          );
-        },
+        pageBuilder: (_, state) => TransitionPage(
+          fullscreenDialog: true,
+          style: TransitionStyle.fade,
+          child: ImagePreviewPage(
+            state.pathOrQuery('id'),
+            index: int.parse(state.pathOrQuery('index', true)),
+          ),
+        ),
       ),
-      goRoute(
+      route(
         friendship,
-        pageBuilder: (_, state) {
-          return TransitionPage(
-            child: UserFollowPage(
-              state.pathOrQuery('id'),
-              state.pathOrQuery('name', true),
-              index: int.parse(state.pathOrQuery('index', true)),
-            ),
-          );
-        },
+        pageBuilder: (_, state) => TransitionPage(
+          child: UserFollowPage(
+            state.pathOrQuery('id'),
+            state.pathOrQuery('name', true),
+            index: int.parse(state.pathOrQuery('index', true)),
+          ),
+        ),
       ),
 
-      goRoute(
+      route(
         detail,
         pageBuilder: (_, state) {
           return TransitionPage(
@@ -174,26 +166,26 @@ class AppRouter extends Routes {
           );
         },
       ),
-      goRoute(
+      route(
         change,
-        pageBuilder: (_, state) {
-          return TransitionPage(child: EditPostPage(state.pathOrQuery('id')));
-        },
+        pageBuilder: (_, state) => TransitionPage(
+          fullscreenDialog: true,
+          style: TransitionStyle.bottomToTop,
+          child: EditPostPage(state.pathOrQuery('id')),
+        ),
       ),
-      goRoute(
+      route(
         edit,
-        pageBuilder: (_, state) {
-          return TransitionPage(
-            child: EditProfilePage(state.pathOrQuery('id')),
-          );
-        },
+        pageBuilder: (_, state) => TransitionPage(
+          fullscreenDialog: true,
+          style: TransitionStyle.bottomToTop,
+          child: EditProfilePage(state.pathOrQuery('id')),
+        ),
       ),
     ],
     extraCodec: const JsonCodec(),
-    errorBuilder: (ctx, sts) {
-      return Scaffold(
-        body: Center(child: Text('No route for: ${sts.uri.toString()}')),
-      );
-    },
+    errorBuilder: (_, sts) => PageLayout(
+      content: Center(child: Text('No route for: ${sts.uri.toString()}')),
+    ),
   );
 }

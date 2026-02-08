@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/app/models/media.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/model_extension.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/widgets/main/custom_image.dart';
 
 class ImagedRender extends StatelessWidget {
@@ -28,15 +29,12 @@ class ImagedRender extends StatelessWidget {
           children: [
             // Background
             Positioned.fill(
-              child: _media.mp4
-                  ? CustomImage(
-                      MediaSource.network(_media.thumbnails['url']),
-                      onTap: onTap,
-                    )
-                  : CustomImage(
-                      MediaSource.network(_media.display),
-                      onTap: onTap,
-                    ),
+              child: CustomImage(
+                MediaSource.network(
+                  _media.img ? _media.display : _media.thumbnails['url'],
+                ),
+                onTap: onTap,
+              ),
             ),
 
             // Video overlay
@@ -48,7 +46,7 @@ class ImagedRender extends StatelessWidget {
                 child: Icon(
                   Icons.play_circle_outline,
                   size: size ?? 64,
-                  color: Colors.white,
+                  color: context.defaultColor,
                 ),
               ),
           ],

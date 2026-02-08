@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/app/models/media.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/widgets/main/custom_image.dart';
 import 'package:semesta/src/widgets/main/video_playable.dart';
 
@@ -31,7 +31,7 @@ class MediaRender extends StatelessWidget {
           : CustomImage(
               MediaSource.network(_media.display),
               onTap: () async {
-                await context.openPreview(route.media, id, initIndex);
+                await context.openPreview(routes.media, id, initIndex);
               },
             ),
     );

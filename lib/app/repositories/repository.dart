@@ -1,6 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:semesta/public/functions/logger.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
+import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
@@ -20,45 +19,34 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
 
   /// Update an existing document
   AsWait modify(String id, AsMap data) async {
-    await collection(path).doc(id).update(data).catchError((e) {
-      HandleLogger.error('Failed to update data: $e', message: e);
-    });
+    final ref = collection(path).doc(id);
+    await execute((run) async => run.update(ref, data));
   }
 
   /// Delete a document
   AsWait destroy(String id) async {
-    await collection(path).doc(id).delete().catchError((e) {
-      HandleLogger.error('Failed to delete data: $e', message: e);
-    });
+    await execute((run) async => run.delete(collection(path).doc(id)));
   }
 
   AsWait incrementView(ActionTarget target, [String col = comments]) async {
-    try {
-      await db.runTransaction((txs) async {
-        final ref = collection(path);
-        switch (target) {
-          case ParentTarget(:final pid):
-            txs.update(ref.doc(pid), incrementStat(FeedKind.viewed));
-            break;
+    final ref = collection(path);
+    final view = toggleStats(FeedKind.viewed);
+    await execute((run) async {
+      switch (target) {
+        case ParentTarget(:final pid):
+          run.update(ref.doc(pid), view);
+          break;
 
-          case ChildTarget(:final pid, :final cid):
-            txs.update(
-              ref.doc(pid).collection(col).doc(cid),
-              incrementStat(FeedKind.viewed),
-            );
-            break;
-        }
-      });
-    } catch (e) {
-      // Log error or handle appropriately
-      HandleLogger.error('Failed to update view count: $e', message: e);
-      rethrow; // or handle gracefully
-    }
+        case ChildTarget(:final pid, :final cid):
+          run.update(ref.doc(pid).collection(col).doc(cid), view);
+          break;
+      }
+    });
   }
 
   /// [sdoc] - Source document ID (e.g., user ID)
   /// [edoc] - Edge/target document ID (e.g., post ID)
-  /// [key] - The reaction type key (default: 'favorites')
+  /// [kind] - The reaction type key (default: FeedKind.liked)
   /// [subcol] - The subcollection name (default: 'favorites')
   AsWait toggle(
     String sdoc,
@@ -69,53 +57,37 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
     final doc = collection(path).doc(sdoc);
     final edgeRef = doc.collection(subcol).doc(edoc);
 
-    try {
-      await db.runTransaction((txn) async {
-        // Fetch both documents in parallel for better performance
-        final edgeSnap = await txn.get(edgeRef);
-        final snap = await txn.get(doc);
+    await execute((run) async {
+      // Fetch both documents in parallel for better performance
+      final edgeSnap = await run.get(edgeRef);
+      final snap = await run.get(doc);
 
-        // Validate post document exists
-        if (!snap.exists) {
-          throw StateError('Document $sdoc does not exist');
-        }
+      // Validate post document exists
+      if (!snap.exists) {
+        throw StateError('Document $sdoc does not exist');
+      }
 
-        if (edgeSnap.exists) {
-          // Remove reaction
-          txn.delete(edgeRef).update(doc, incrementStat(kind, -1));
-        } else {
-          // Add reaction
-          final reaction = Reaction(
-            kind: kind,
-            exist: true,
-            targetId: edoc,
-            createdAt: now,
-            currentId: sdoc,
-          ).to();
-
-          txn.set(edgeRef, reaction).update(doc, incrementStat(kind));
-        }
-      });
-    } on FirebaseException catch (e) {
-      HandleLogger.error(
-        'Failed to toggle ${kind.name}',
-        message: 'Firebase error: ${e.code} - ${e.message}',
-      );
-      rethrow;
-    } catch (e, stackTrace) {
-      HandleLogger.error(
-        'Failed to toggle ${kind.name}',
-        message: e,
-        stack: stackTrace,
-      );
-      rethrow;
-    }
+      if (edgeSnap.exists) {
+        // Remove reaction
+        run.delete(edgeRef);
+        run.update(doc, toggleStats(kind, -1));
+      } else {
+        // Add reaction
+        final payload = Reaction(
+          kind: kind,
+          targetId: edoc,
+          currentId: sdoc,
+        ).to();
+        run.set(edgeRef, payload);
+        run.update(doc, toggleStats(kind));
+      }
+    });
   }
 
   /// [sdoc] - Source document ID (e.g., post ID)
   /// [bdoc] - Between/parent document ID (e.g., comment ID)
   /// [edoc] - Edge/target document ID (e.g., user ID performing the action)
-  /// [key] - The reaction type key (default: 'favorites')
+  /// [ kind] - The reaction type key (default: FeedKind.liked)
   /// [subcol] - The subcollection name for reactions (default: 'favorites')
   /// [inSubcol] - The intermediate subcollection name (default: 'comments')
   AsWait subtoggle(
@@ -129,46 +101,30 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
     final doc = collection(path).doc(sdoc).collection(inSubcol).doc(bdoc);
     final nestedRef = doc.collection(subcol).doc(edoc);
 
-    try {
-      await db.runTransaction((txn) async {
-        // Fetch both documents
-        final actionSnap = await txn.get(nestedRef);
-        final docSnap = await txn.get(doc);
+    await execute((run) async {
+      // Fetch both documents
+      final docSnap = await run.get(doc);
+      final actionSnap = await run.get(nestedRef);
 
-        // Validate source document exists
-        if (!docSnap.exists) {
-          throw StateError('Document $sdoc does not exist');
-        }
+      // Validate source document exists
+      if (!docSnap.exists) {
+        throw StateError('Document $sdoc does not exist');
+      }
 
-        if (actionSnap.exists) {
-          // Remove nested reaction
-          txn.delete(nestedRef).update(doc, incrementStat(kind, -1));
-        } else {
-          // Add nested reaction
-          final reaction = Reaction(
-            kind: kind,
-            exist: true,
-            currentId: bdoc,
-            targetId: edoc,
-            createdAt: now,
-          ).to();
-
-          txn.set(nestedRef, reaction).update(doc, incrementStat(kind));
-        }
-      });
-    } on FirebaseException catch (e) {
-      HandleLogger.error(
-        'Failed to toggle ${kind.name} on nested document',
-        message: 'Firebase error: ${e.code} - ${e.message}',
-      );
-      rethrow;
-    } catch (e, stackTrace) {
-      HandleLogger.error(
-        'Failed to toggle ${kind.name} on nested document',
-        message: e,
-        stack: stackTrace,
-      );
-      rethrow;
-    }
+      if (actionSnap.exists) {
+        // Remove nested reaction
+        run.delete(nestedRef);
+        run.update(doc, toggleStats(kind, -1));
+      } else {
+        // Add nested reaction
+        final payload = Reaction(
+          kind: kind,
+          currentId: bdoc,
+          targetId: edoc,
+        ).to();
+        run.set(nestedRef, payload);
+        run.update(doc, toggleStats(kind));
+      }
+    });
   }
 }

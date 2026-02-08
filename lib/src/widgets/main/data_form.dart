@@ -5,6 +5,7 @@ import 'package:semesta/src/widgets/sub/direction_y.dart';
 class DataForm extends StatelessWidget {
   final double spacing;
   final List<Widget> children;
+  final bool scrollable;
   final AutovalidateMode? autovalidate;
   final GlobalKey<FormBuilderState> _formKey;
   const DataForm(
@@ -13,11 +14,15 @@ class DataForm extends StatelessWidget {
     this.spacing = 12,
     this.autovalidate,
     this.children = const [],
+    this.scrollable = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      physics: scrollable
+          ? AlwaysScrollableScrollPhysics()
+          : NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: FormBuilder(

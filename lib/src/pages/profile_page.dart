@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
 import 'package:semesta/public/extensions/list_extension.dart';
-import 'package:semesta/public/helpers/cached_helper.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
+import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/src/components/layout/_page.dart';
 import 'package:semesta/src/partials/user_profile.dart';
 import 'package:semesta/src/partials/user_comments_tab.dart';
@@ -29,7 +29,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String get _pKey => getKey(id: _uid, screen: Screen.post);
   String get _cKey => getKey(id: _uid, screen: Screen.comment);
   String get _mKey => getKey(id: _uid, screen: Screen.media);
-  CachedState<FeedView> _state(String key) => pctrl.stateFor(key);
+  Cacher<FeedView> _state(String key) => pctrl.stateFor(key);
 
   @override
   void initState() {
@@ -43,7 +43,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final isLoading = pctrl.isLoading.value;
+      final loading = pctrl.isLoading.value;
 
       return Stack(
         children: [
@@ -87,7 +87,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
 
           // ---- overlay ----
-          if (isLoading) BlockOverlay('Processing'),
+          if (loading) BlockOverlay('Processing'),
         ],
       );
     });

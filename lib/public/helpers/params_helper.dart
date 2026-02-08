@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/app/models/feed.dart';
-import 'package:semesta/public/extensions/extension.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
+import 'package:semesta/public/helpers/feed_view.dart';
 
 class VisibleToPost {
   final String label;
@@ -169,4 +169,12 @@ class FollowState {
       ),
     };
   }
+}
+
+class ProfileMeta {
+  final String location;
+  final String website;
+  final DateTime? birthdate;
+  final DateTime? joined;
+  const ProfileMeta(this.location, this.website, {this.birthdate, this.joined});
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/components/global/animated_card.dart';
 import 'package:semesta/src/components/layout/nested_scrollable.dart';
@@ -44,7 +44,7 @@ class PostDetailsPage extends StatelessWidget {
               icon: Icons.read_more,
               canPop: false,
               onTap: () async {
-                await context.openById(route.comment, _pid);
+                await context.openById(routes.comment, _pid);
               },
             ),
             const SizedBox(height: 8),

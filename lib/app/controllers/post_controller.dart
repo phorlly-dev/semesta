@@ -1,24 +1,22 @@
+import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/app/controllers/feed_controller.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class PostController extends IFeedController {
-  void addRepostToTabs(String key, String pid) {
+  void addRepostToTabs(String key, Feed feed) {
     final state = stateFor(key);
-
-    final rowId = getRowId(pid: pid, kind: FeedKind.reposted, uid: currentUid);
+    final rowId = feed.toId(kind: FeedKind.reposted, puid: currentUid);
     if (state.any((e) => e.currentId == rowId)) return;
 
-    final post = dataMapping[pid];
+    final post = dataMapping[feed.id];
     if (post == null) return;
 
     state.insert(0, FeedView(post, rid: rowId, uid: currentUid, created: now));
-
     state.refresh();
   }
 
@@ -26,6 +24,7 @@ class PostController extends IFeedController {
     final state = stateFor(key);
 
     state.removeWhere((s) => s.currentId == rid);
+    metaFor(key).dirty = true; // next switch triggers refill
     state.refresh(); // notify RxList
   }
 
@@ -35,38 +34,31 @@ class PostController extends IFeedController {
   }
 
   AsWait save(Feed model, List<AssetEntity> files) async {
-    await handleAsync(
-      callback: () async {
-        final user = currentUser;
-        final media = await prepo.uploadMedia(currentUid, files.toList());
-        final data = model.copy(media: media, uid: user.id);
+    await handleAsync(() async {
+      final user = currentUser;
+      final media = await prepo.uploadMedia(currentUid, files.toList());
+      final data = model.copy(media: media, uid: user.id);
 
-        await prepo.insert(data);
-        CustomToast.info('Posted.!');
-      },
-      onError: (err, stx) => CustomToast.error(err.toString()),
-    );
+      await prepo.insert(data);
+      CustomToast.info('Posted.!');
+    }, onError: (err, stx) => CustomToast.error(err.toString()));
   }
 
-  AsWait saveChange(Feed post, AsMap data) async {
-    await handleAsync(
-      callback: () async {
-        await prepo.modifyPost(post, data);
-        editCache(post, currentUid, this);
-        CustomToast.info('Post updated.!');
-      },
-    );
+  AsWait saveChange(Feed model) async {
+    await handleAsync(() async {
+      await prepo.modifyPost(model);
+      editCached(model, currentUid, this);
+      CustomToast.info('Post updated.!');
+    });
   }
 
-  AsWait remove(Feed post) async {
-    await handleAsync(
-      callback: () async {
-        await deleteMediaFiles(post.media);
-        await prepo.destroyPost(post);
+  AsWait remove(Feed model) async {
+    await handleAsync(() async {
+      await prepo.destroyPost(model);
+      await deleteMediaFiles(model.media);
 
-        clearCache(post, currentUid, this);
-        CustomToast.success('Post deleted!');
-      },
-    );
+      clearCached(model, currentUid, this);
+      CustomToast.success('Post deleted!');
+    });
   }
 }

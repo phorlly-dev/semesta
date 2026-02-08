@@ -5,9 +5,9 @@ import 'package:get/get.dart';
 class DirectionController extends GetxController {
   final visible = true.obs;
   final index = 0.obs;
-  final controllers = List.generate(8, (_) => ScrollController());
+  final controllers = List.generate(3, (_) => ScrollController());
 
-  void get jump => controllers[index.value].animateTo(
+  void jump() => controllers[index.value].animateTo(
     0,
     duration: Durations.extralong4,
     curve: Curves.easeOut,
@@ -15,9 +15,7 @@ class DirectionController extends GetxController {
 
   @override
   void onInit() {
-    ever(index, (index) {
-      _attachListener(index);
-    });
+    ever(index, (index) => _attachListener(index));
     _attachListener(0); // default
 
     super.onInit();

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
-import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/custom_modal.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/components/global/animated_card.dart';
 import 'package:semesta/src/components/user/user_info.dart';
 import 'package:semesta/src/widgets/sub/animated_avatar.dart';
@@ -35,7 +35,7 @@ class FollowTile extends StatelessWidget {
                 // -------------------------------
                 // Another author follow you
                 // -------------------------------
-                if (state.theyFollow) FollowYouBanner(),
+                if (state.theyFollow) _FollowYouBanner(),
 
                 DirectionX(
                   spacing: 12,
@@ -56,7 +56,7 @@ class FollowTile extends StatelessWidget {
                       child: DirectionY(
                         children: [
                           DisplayName(author.name, maxChars: 32),
-                          Username(author.uname, maxChars: 32),
+                          Username(author.uname, maxChars: 50),
                           if (author.bio.isNotEmpty) ...[
                             SizedBox(height: 6),
                             Bio(author.bio),
@@ -71,19 +71,16 @@ class FollowTile extends StatelessWidget {
                     if (!state.authed)
                       FollowButton(
                         context.follow(state.iFollow, state.theyFollow),
-                        onPressed: () async {
+                        onPressed: () {
                           if (state.iFollow) {
                             CustomModal(
                               context,
                               title: 'Unfollow ${author.name}?',
                               children: [Text(unfollow)],
-                              onConfirm: () async {
+                              onConfirm: () {
                                 state.toggle();
                                 context.pop();
-                                await actrl.toggleFollow(
-                                  author.id,
-                                  state.iFollow,
-                                );
+                                actrl.toggleFollow(state);
                               },
                               label: 'Unfollow',
                               icon: Icons.person_remove_sharp,
@@ -91,7 +88,7 @@ class FollowTile extends StatelessWidget {
                             );
                           } else {
                             state.toggle();
-                            await actrl.toggleFollow(author.id, state.iFollow);
+                            actrl.toggleFollow(state);
                           }
                         },
                       ),
@@ -107,6 +104,26 @@ class FollowTile extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _FollowYouBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return DirectionX(
+      spacing: 8,
+      padding: const EdgeInsets.only(left: 30),
+      children: [
+        Icon(Icons.person, color: context.hintColor),
+        Text(
+          'Follows you',
+          style: context.text.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+            color: context.hintColor,
+          ),
+        ),
+      ],
     );
   }
 }

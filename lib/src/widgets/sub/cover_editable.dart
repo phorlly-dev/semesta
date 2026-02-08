@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/public/extensions/extension.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/widgets/main/custom_image.dart';
 
 class CoverEditable extends StatelessWidget {
@@ -17,12 +16,14 @@ class CoverEditable extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           // Banner image
-          CustomImage(
-            _source,
-            defaultAsset: 'bg-cover.jpg',
-            asIcon: false,
-            width: double.infinity,
-            height: 120,
+          ClipRRect(
+            child: CustomImage(
+              _source,
+              defaultAsset: 'bg-cover.jpg',
+              asIcon: false,
+              width: double.infinity,
+              height: 160,
+            ),
           ),
 
           // Dim overlay
@@ -37,7 +38,7 @@ class CoverEditable extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 child: Icon(
                   Icons.camera_alt_outlined,
-                  color: context.defaultColor,
+                  color: Colors.white,
                   size: 32,
                 ),
               ),

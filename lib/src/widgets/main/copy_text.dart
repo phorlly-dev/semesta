@@ -23,7 +23,7 @@ class CopyText extends StatelessWidget {
             type: MessageType.success,
           );
 
-          HandleLogger.info('Copied $message to clipboard', message: _data);
+          HandleLogger.info('Copied $message to clipboard', error: _data);
         }
       },
       child: DirectionX(

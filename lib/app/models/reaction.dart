@@ -1,38 +1,41 @@
+import 'package:semesta/public/functions/func_helper.dart';
+import 'package:semesta/public/helpers/feed_view.dart';
+import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/app/models/model.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
 
 class Reaction {
   final bool exist;
   final FeedKind kind;
   final DateTime createdAt;
   final String currentId, targetId;
-  const Reaction({
+
+  Reaction({
     this.exist = true,
     this.targetId = '',
     this.currentId = '',
-    required this.createdAt,
     this.kind = FeedKind.liked,
-  });
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? now;
 
-  factory Reaction.from(AsMap map) => Reaction(
-    exist: map['exist'],
-    targetId: map['target_id'],
-    currentId: map['current_id'],
-    kind: FeedKind.values.firstWhere(
-      (e) => e.name == map['kind'],
-      orElse: () => FeedKind.liked,
-    ),
-    createdAt: Model.toDateTime(map['created_at']),
-  );
+  factory Reaction.from(AsMap json) {
+    final map = IModel.convert(json, true);
+    return Reaction(
+      exist: map['exist'] ?? false,
+      targetId: map['targetId'],
+      currentId: map['currentId'],
+      kind: parseEnum(map['kind'], FeedKind.values, FeedKind.liked),
+      createdAt: IModel.make(map),
+    );
+  }
 
-  AsMap to() => {
-    'kind': kind.name,
+  AsMap to() => IModel.convert({
     'exist': exist,
-    'target_id': targetId,
-    'current_id': currentId,
-    'created_at': Model.toEpoch(createdAt),
-  };
+    'kind': kind.name,
+    'targetId': targetId,
+    'currentId': currentId,
+    'createdAt': IModel.toEpoch(createdAt),
+  });
 
   Reaction copy({
     bool? exist,

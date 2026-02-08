@@ -1,9 +1,23 @@
 import 'package:semesta/app/models/author.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/app/models/reaction.dart';
+import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/helpers/audit_view.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
+
+enum FeedKind {
+  posted,
+  reposted,
+  quoted,
+  replied,
+  liked,
+  saved,
+  media,
+  viewed,
+  shared,
+  following,
+  follower,
+}
 
 class FeedView implements HasAttributes {
   final String uid;
@@ -35,12 +49,6 @@ class FeedView implements HasAttributes {
   @override
   String get targetId => uid;
 
-  bool get allowed {
-    return kind == FeedKind.replied ||
-        kind == FeedKind.posted ||
-        kind == FeedKind.following;
-  }
-
   FeedView copy({
     Feed? feed,
     String? uid,
@@ -62,21 +70,17 @@ class FeedView implements HasAttributes {
   );
 
   factory FeedView.from(
-    Feed state, {
+    Feed payload, {
     String? uid,
     Reaction? action,
     FeedKind kind = FeedKind.posted,
   }) => FeedView(
-    state,
+    payload,
     action: action,
-    rid: getRowId(
-      pid: state.id,
-      uid: uid ?? state.uid,
-      kind: action?.kind ?? kind,
-    ),
-    uid: uid ?? action?.targetId ?? state.uid,
+    rid: payload.toId(puid: uid ?? payload.uid, kind: action?.kind ?? kind),
+    uid: uid ?? action?.targetId ?? payload.uid,
     kind: action?.kind ?? kind,
-    created: action?.createdAt ?? state.createdAt,
+    created: action?.createdAt ?? payload.createdAt,
   );
 }
 
@@ -84,11 +88,7 @@ class FeedStateView {
   final StatusView status;
   final FeedView content;
   final ActionsView actions;
-  const FeedStateView({
-    required this.actions,
-    required this.status,
-    required this.content,
-  });
+  const FeedStateView(this.status, this.content, this.actions);
 }
 
 class StateView {

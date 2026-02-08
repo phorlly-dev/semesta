@@ -78,7 +78,7 @@ class _CommentedView extends StatelessWidget {
               _state,
               parent: parent,
               hasActions: false,
-              ededLine: 388,
+              endedLine: 388,
             );
     });
   }

@@ -12,9 +12,9 @@ abstract class IController<T> extends GetxController with PagerMixin<T> {
   final RxString message = ''.obs;
 
   /// A reusable async handler for try/catch/finally logic.
-  AsWait handleAsync({
+  AsWait handleAsync(
+    AsDef callback, {
     AsError? onError,
-    required AsDef callback,
     ValueChanged<bool>? onFinal,
   }) async {
     // 1. Set loading state to true *before* the operation starts.
@@ -31,7 +31,7 @@ abstract class IController<T> extends GetxController with PagerMixin<T> {
     } catch (e, s) {
       if (onError != null) onError(e, s);
       hasError.value = e.toString();
-      HandleLogger.error('Operation Failed on $T', message: e, stack: s);
+      HandleLogger.error('Operation Failed on $T', error: e, stack: s);
     } finally {
       // 5. This now correctly runs *after* the async operation is done.
       isLoading.value = false;
@@ -39,16 +39,16 @@ abstract class IController<T> extends GetxController with PagerMixin<T> {
     }
   }
 
-  AsWait tryCatch({
+  AsWait tryCatch(
+    AsDef callback, {
     AsError? onError,
-    required AsDef callback,
     ValueChanged<bool>? onFinal,
   }) async {
     try {
       await callback();
     } catch (e, s) {
       onError?.call(e, s);
-      HandleLogger.error('Operation Failed on $T', message: e, stack: s);
+      HandleLogger.error('Operation Failed on $T', error: e, stack: s);
     } finally {
       onFinal?.call(false);
     }

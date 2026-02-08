@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 class Inputable extends StatelessWidget {
   final String _name;
-  final String? label, initValue, hint;
-  final Widget? prefixIcon, suffixIcon;
+  final int? maxLength;
+  final String? label, initValue, hint, counterText;
+  final IconData? icon;
+  final Widget? suffix;
   final Defo<String?, String?>? validator;
   final TextInputType keyboardType;
   final bool readOnly, obscureText, autofocus;
@@ -19,8 +22,8 @@ class Inputable extends StatelessWidget {
     this._name, {
     super.key,
     this.label,
-    this.prefixIcon,
-    this.suffixIcon,
+    this.icon,
+    this.suffix,
     this.validator,
     this.keyboardType = TextInputType.text,
     this.readOnly = false,
@@ -34,6 +37,8 @@ class Inputable extends StatelessWidget {
     this.onCompleted,
     this.focusNode,
     this.hint,
+    this.counterText,
+    this.maxLength,
   });
 
   @override
@@ -51,11 +56,16 @@ class Inputable extends StatelessWidget {
       valueTransformer: formedValue,
       focusNode: focusNode,
       maxLines: maxLines,
+      maxLength: maxLength,
       decoration: InputDecoration(
-        hint: hint != null ? Text(hint!) : null,
+        hintText: hint,
+        hintStyle: TextStyle(color: context.hintColor),
         labelText: label ?? toCapitalize(_name),
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
+        prefixIcon: icon != null
+            ? Icon(icon, color: context.hintColor, size: 20)
+            : null,
+        suffixIcon: suffix,
+        counterText: counterText,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(),

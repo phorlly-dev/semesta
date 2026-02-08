@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get_rx/get_rx.dart';
 import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
@@ -13,7 +14,7 @@ import 'package:semesta/public/utils/type_def.dart';
 class AuthController extends GetxController {
   final _repo = AuthRepository();
   final currentUser = Rxn<User>(null);
-  final isLoading = false.obs;
+  final loading = false.obs;
 
   @override
   void onInit() {
@@ -21,71 +22,50 @@ class AuthController extends GetxController {
     super.onInit();
   }
 
-  bool get isLoggedIn => currentUser.value != null;
+  bool get loggedIn => currentUser.value != null;
 
-  AsWait login(String email, String password) async {
-    isLoading.value = true;
-    try {
-      final user = await _repo.signIn(email, password);
+  AsWait login(String email, String password) => _exhandler(() async {
+    currentUser.value = await _repo.signIn(email, password);
+  });
 
-      // Force currentUser refresh
-      currentUser.value = user;
-      CustomToast.success('Verify Successful');
-      await Wait.delayed(const Duration(milliseconds: 400));
-      _bindAuthStream(); // ensure stream reconnected
-    } on FirebaseAuthException catch (err) {
-      CustomToast.error(_handleError(err));
-      HandleLogger.track('Firebase Auth Exception', message: err);
-    } catch (e, s) {
-      HandleLogger.error('Someyhing Wrong', message: e, stack: s);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  AsWait register(
-    String email,
-    String password,
-    File file,
-    Author model,
-  ) async {
-    isLoading.value = true;
-    try {
-      final user = await _repo.signUp(email, password, file, model);
-
-      // Force currentUser refresh
-      currentUser.value = user;
-      CustomToast.info('Account Created');
-      await Wait.delayed(const Duration(milliseconds: 300));
-      _bindAuthStream(); // ensure stream reconnected
-    } on FirebaseAuthException catch (err) {
-      CustomToast.error(_handleError(err));
-      HandleLogger.track('Firebase Auth Exception', message: err);
-    } catch (e, s) {
-      HandleLogger.error('Someyhing Wrong', message: e, stack: s);
-    } finally {
-      isLoading.value = false;
-    }
-  }
+  AsWait register(Author model, String password, [File? file]) => _exhandler(
+    () async {
+      currentUser.value = await _repo.signUp(model, password, file);
+    },
+    type: ToastType.info,
+    message: 'Account Created',
+  );
 
   AsWait loginWithGoogle() async => await _repo.signInWithGoogle();
 
   // AsWait loginWithFacebook() async => await _repo.signInWithFacebook();
 
-  AsWait logout() async {
-    isLoading.value = true;
-    try {
+  AsWait logout() => _exhandler(
+    () async {
       await _repo.signOut();
       currentUser.value = null;
-      CustomToast.warning('You have been signed out');
-      await Wait.delayed(const Duration(milliseconds: 300));
-      _bindAuthStream();
+    },
+    type: ToastType.warning,
+    message: 'Signed out',
+  );
+
+  AsWait _exhandler(
+    AsDef callback, {
+    String message = 'Verify Successful',
+    ToastType type = ToastType.success,
+  }) async {
+    loading.value = true;
+    try {
+      await callback();
+      await Wait.delayed(Durations.medium2, () => _bindAuthStream());
+      CustomToast.render(message, type: type);
     } on FirebaseAuthException catch (err) {
-      HandleLogger.track('Firebase Auth Exception', message: err);
+      CustomToast.error(_handleError(err));
+      HandleLogger.track('Firebase auth exception', error: err);
     } catch (e, s) {
-      HandleLogger.error('Someyhing Wrong', message: e, stack: s);
+      HandleLogger.error('Something when wrong', error: e, stack: s);
     } finally {
-      isLoading.value = false;
+      loading.value = false;
     }
   }
 

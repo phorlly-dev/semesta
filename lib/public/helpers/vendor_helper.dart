@@ -2,10 +2,11 @@ import 'package:semesta/app/models/author.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/app/models/reaction.dart';
 import 'package:semesta/public/extensions/list_extension.dart';
+import 'package:semesta/public/extensions/model_extension.dart';
+import 'package:semesta/public/functions/func_helper.dart';
 import 'package:semesta/public/helpers/audit_view.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 List<FeedView> mapFollowActions(
@@ -48,7 +49,7 @@ List<FeedView> mapToFeed(List<Feed> feeds, [String? uid]) => feeds
           kind: FeedKind.quoted,
           created: post.createdAt,
           uid: uid ?? actor?.id ?? post.uid,
-          rid: getRowId(kind: FeedKind.quoted, pid: post.id),
+          rid: post.toId(kind: FeedKind.quoted),
         ),
 
         Create.reply => FeedView(
@@ -58,13 +59,13 @@ List<FeedView> mapToFeed(List<Feed> feeds, [String? uid]) => feeds
           kind: FeedKind.replied,
           created: post.createdAt,
           uid: uid ?? actor?.id ?? post.uid,
-          rid: getRowId(kind: FeedKind.replied, pid: post.id),
+          rid: post.toId(kind: FeedKind.replied),
         ),
 
         Create.post => FeedView(
           post,
           created: post.createdAt,
-          rid: getRowId(pid: post.id),
+          rid: post.toId(),
           uid: uid ?? actor?.id ?? post.uid,
         ),
       };
@@ -72,10 +73,10 @@ List<FeedView> mapToFeed(List<Feed> feeds, [String? uid]) => feeds
     .whereType<FeedView>()
     .toList();
 
-Map<String, Reaction> followActions(
+Mapper<Reaction> followActions(
   List<Reaction> actions,
   Defo<Reaction, String> selector,
-) => {for (final action in actions) selector(action): action};
+) => getMap<Reaction>(actions, selector);
 
 AsList getKeys(List<Reaction> actions, Defo<Reaction, String> selector) {
   return actions.map(selector).toSet().toList();

@@ -5,13 +5,13 @@ import 'package:semesta/src/widgets/sub/animated_loader.dart';
 import 'package:semesta/src/widgets/sub/empty_data.dart';
 
 class DataBinder extends StatelessWidget {
-  final bool isLoading, isEmpty;
+  final bool loading, isEmpty;
   final String? message, hasError;
   final Widget child;
   final VoidCallback? onRetry;
   const DataBinder({
     super.key,
-    this.isLoading = false,
+    this.loading = false,
     this.isEmpty = false,
     this.message,
     required this.child,
@@ -21,17 +21,17 @@ class DataBinder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return SizedBox(
-        height: context.height,
-        child: AnimatedLoader(cupertino: true),
-      );
-    } else if (isEmpty) {
-      return EmptyData(message ?? "There's no data yet.");
-    } else if (hasError != null) {
-      return OccurredError(onRetry: onRetry, message: hasError);
-    }
-
-    return child;
+    return Container(
+      child: loading
+          ? SizedBox(
+              height: context.height,
+              child: AnimatedLoader(cupertino: true),
+            )
+          : isEmpty
+          ? EmptyData(message ?? "There's no data yet.")
+          : hasError != null
+          ? OccurredError(onRetry: onRetry, message: hasError)
+          : child,
+    );
   }
 }

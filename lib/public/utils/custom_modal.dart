@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
 
-class CustomModal<T> {
+class CustomModal<T extends Object> {
   final BuildContext _context;
   final bool hidable, full, hasAction;
   final MainAxisSize size;

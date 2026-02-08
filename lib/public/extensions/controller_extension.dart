@@ -1,10 +1,11 @@
 import 'package:get/get.dart';
 import 'package:rxdart/streams.dart';
 import 'package:semesta/public/extensions/list_extension.dart';
+import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
-import 'package:semesta/public/helpers/cached_helper.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/app/controllers/action_controller.dart';
+import 'package:semesta/public/mixins/post_mixin.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
 import 'package:semesta/app/controllers/post_controller.dart';
 import 'package:semesta/app/models/feed.dart';
@@ -18,28 +19,30 @@ import 'package:semesta/public/utils/type_def.dart';
 extension ActionControllerX on ActionController {
   Sync<StatusView> status$(String uid) => CombineLatestStream.combine3(
     urepo.sync$(uid),
-    urepo.iFollow$(currentUid, uid),
-    urepo.theyFollow$(currentUid, uid),
-    (author, me, them) => StatusView(
-      iFollow: me,
-      author: author,
-      theyFollow: them,
-      authed: isCurrentUser(uid),
-    ),
+    urepo.follow$(currentUid, uid),
+    urepo.follow$(currentUid, uid, false),
+    (author, me, them) {
+      return StatusView(
+        author,
+        iFollow: me,
+        theyFollow: them,
+        authed: currentedUser(uid),
+      );
+    },
   ).shareReplay(maxSize: 1);
 
-  Sync<RepostView> repost$(ActionTarget target, [String? uid]) {
-    return prepo.syncDoc$(repostPath(target, uid ?? currentUid)).map((event) {
-      final rxs = Reaction.from(event.data()!);
-      final data = uCtrl.dataMapping[rxs.targetId]!;
+  Sync<RepostView> repost$(ActionTarget target, [String? uid]) => prepo
+      .syncDoc$(target.toPath(uid ?? currentUid, ccol: reposts))
+      .map((event) {
+        final state = Reaction.from(event.data()!);
+        final data = uCtrl.dataMapping[state.targetId]!;
 
-      return RepostView(
-        name: data.name,
-        uid: rxs.targetId,
-        authed: isCurrentUser(rxs.targetId),
-      );
-    });
-  }
+        return RepostView(
+          state.targetId,
+          data.name,
+          currentedUser(state.targetId),
+        );
+      });
 
   Sync<StateView> state$(Feed item) => CombineLatestStream.combine2(
     status$(item.uid),
@@ -48,48 +51,44 @@ extension ActionControllerX on ActionController {
   ).shareReplay(maxSize: 1);
 
   Sync<ActionsView> actions$(Feed item) {
-    final target = getTarget(item);
+    final target = item.getTarget;
     return CombineLatestStream.combine4(
-      prepo.sync$(feedPath(item)),
-      prepo.favorited$(target, currentUid),
-      prepo.bookmarked$(target, currentUid),
-      prepo.reposted$(target, currentUid),
-      (post, favorited, bookmarked, reposted) {
-        final stats = post.stats;
-        return ActionsView(
-          feed: post,
-          pid: post.id,
-          target: target,
-          reposted: reposted,
-          favorited: favorited,
-          bookmarked: bookmarked,
-          views: stats.viewed,
-          shares: stats.shared,
-          reposts: stats.reposted,
-          comments: stats.replied,
-          favorites: stats.liked,
-          bookmarks: stats.saved,
-          quotes: stats.quoted,
-        );
-      },
+      prepo.sync$(item.toDoc),
+      prepo.reaction$(target, currentUid),
+      prepo.reaction$(target, currentUid, ActionType.save),
+      prepo.reaction$(target, currentUid, ActionType.repost),
+      (post, favorited, bookmarked, reposted) => ActionsView(
+        post,
+        post.stats,
+        target,
+        pid: post.id,
+        reposted: reposted,
+        favorited: favorited,
+        bookmarked: bookmarked,
+      ),
     ).shareReplay(maxSize: 1);
   }
 
-  Sync<FeedStateView> feed$(FeedView state) => CombineLatestStream.combine2(
-    status$(state.feed.uid),
-    actions$(state.feed),
-    (status, rxs) => FeedStateView(
-      actions: rxs,
-      status: status.copy(actor: state.actor),
-      content: state.copy(parent: state.parent, actor: state.actor),
-    ),
-  ).shareReplay(maxSize: 1);
+  Sync<FeedStateView> feed$(FeedView state) {
+    final post = state.feed;
+    final parent = pCtrl.dataMapping[post.pid];
+    final actor = uCtrl.dataMapping[parent?.uid ?? post.uid];
+    return CombineLatestStream.combine2(
+      status$(post.uid),
+      actions$(post),
+      (status, rxs) => FeedStateView(
+        status.copy(actor: state.actor ?? actor),
+        state.copy(parent: state.parent ?? parent, actor: state.actor ?? actor),
+        rxs,
+      ),
+    ).shareReplay(maxSize: 1);
+  }
 }
 
 extension PostControllerX on PostController {
-  CachedState<FeedView> _state(String key) => stateFor(key);
+  Cacher<FeedView> _state(String key) => stateFor(key);
 
-  Wait<List<FeedView>> combinePosts(
+  Waits<FeedView> combinePosts(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {
@@ -101,7 +100,7 @@ extension PostControllerX on PostController {
     return items.sortOrder;
   }
 
-  Wait<List<FeedView>> combineFeeds(
+  Waits<FeedView> combineFeeds(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {
@@ -114,7 +113,7 @@ extension PostControllerX on PostController {
     return items.sortOrder;
   }
 
-  AsWait get reloadPost async {
+  AsWait reloadPost() async {
     final pstate = _state(getKey(id: currentUid, screen: Screen.post));
     pstate.clear();
 
@@ -136,7 +135,7 @@ extension PostControllerX on PostController {
     ]);
   }
 
-  AsWait get refreshPost async {
+  AsWait refreshPost() async {
     await loadLatest(
       fetch: () => loadMoreForYou(QueryMode.refresh),
       apply: (items) => _state(getKey()).set(items.rankFeed(refreshSeed)),
@@ -144,7 +143,7 @@ extension PostControllerX on PostController {
     );
   }
 
-  AsWait get refreshFollowing async {
+  AsWait refreshFollowing() async {
     await loadLatest(
       fetch: () => loadMoreFollowing(QueryMode.refresh),
       apply: (items) => _state(getKey(screen: Screen.following)).merge(items),
@@ -153,7 +152,7 @@ extension PostControllerX on PostController {
   }
 
   void _showError(String title) {
-    final errorMessage = error.value ?? 'Unknown error';
-    CustomToast.error(errorMessage, title: title);
+    final message = error.value ?? 'Unknown error';
+    CustomToast.error(message, title: title);
   }
 }

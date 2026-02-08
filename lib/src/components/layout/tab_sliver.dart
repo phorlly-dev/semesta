@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/utils/delegate.dart';
 import 'package:semesta/src/components/layout/tab_bar.dart';
 

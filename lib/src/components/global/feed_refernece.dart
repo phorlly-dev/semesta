@@ -31,6 +31,8 @@ class SyncFeedRefernece extends StatelessWidget {
           Create.quote => CorePostCard(
             view,
             profiled: profiled,
+            uid: content.uid,
+            above: RepostedBanner(actions.target, uid: content.uid),
             middle: QuotedContext(quoted: content.parent, actor: content.actor),
           ),
 

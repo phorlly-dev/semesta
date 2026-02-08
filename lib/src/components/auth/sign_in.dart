@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/widgets/main/custom_button.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
 import 'package:semesta/src/widgets/sub/inputable.dart';
 
 class SignIn extends StatefulWidget {
-  final bool isLoading;
-  final GlobalKey<FormBuilderState> _formKey;
-  const SignIn(this._formKey, {super.key, this.isLoading = false});
+  final bool loading;
+  final GlobalKey<FormBuilderState> _key;
+  const SignIn(this._key, {super.key, this.loading = false});
 
   @override
   State<SignIn> createState() => _SignInState();
@@ -29,7 +29,7 @@ class _SignInState extends State<SignIn> {
           'email',
           hint: 'Email cannot be blank',
           keyboardType: TextInputType.emailAddress,
-          prefixIcon: const Icon(Icons.email_outlined),
+          icon: Icons.email_outlined,
           validator: FormBuilderValidators.compose([
             FormBuilderValidators.required(errorText: 'Email is required'),
             FormBuilderValidators.email(errorText: 'Enter a valid email'),
@@ -41,9 +41,9 @@ class _SignInState extends State<SignIn> {
           controller: _input,
           hint: 'Password cannot be blank',
           keyboardType: TextInputType.visiblePassword,
-          prefixIcon: const Icon(Icons.lock_outline_rounded),
+          icon: Icons.lock_outline_rounded,
           obscureText: !_visible,
-          suffixIcon: IconButton(
+          suffix: IconButton(
             icon: Icon(
               _visible
                   ? Icons.visibility_outlined
@@ -59,17 +59,16 @@ class _SignInState extends State<SignIn> {
             ),
           ]),
         ),
-
         const SizedBox(height: 12),
 
         // Sign In Button
         CustomButton(
           enableShadow: true,
           icon: Icons.login_rounded,
-          label: widget.isLoading ? 'Signing In...' : 'Sign In',
-          color: context.colors.primary,
+          label: widget.loading ? 'Signing In...' : 'Sign In',
+          color: context.primaryColor,
           onPressed: () async {
-            final state = widget._formKey.currentState;
+            final state = widget._key.currentState;
             if (state == null || !state.saveAndValidate()) return;
 
             final data = state.value;

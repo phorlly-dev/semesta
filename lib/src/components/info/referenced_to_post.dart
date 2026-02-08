@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/components/user/user_info.dart';
 import 'package:semesta/src/widgets/main/animated.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 
-class ReferenceToPost extends StatelessWidget {
+class ReferencedToPost extends StatelessWidget {
   final String _uid;
-  const ReferenceToPost(this._uid, {super.key});
+  const ReferencedToPost(this._uid, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class ReferenceToPost extends StatelessWidget {
               onTap: () async {
                 await context.openProfile(
                   data.id,
-                  pctrl.isCurrentUser(data.id),
+                  pctrl.currentedUser(data.id),
                 );
               },
             );

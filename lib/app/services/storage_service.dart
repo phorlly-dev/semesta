@@ -1,27 +1,26 @@
 import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:semesta/public/functions/logger.dart';
-import 'package:path/path.dart' as p;
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
+import 'package:semesta/public/extensions/string_extension.dart';
+import 'package:semesta/public/functions/func_helper.dart';
 import 'package:semesta/public/mixins/filer_mixin.dart';
 import 'package:semesta/app/models/media.dart';
 import 'package:semesta/app/services/firebase_service.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
+enum StoredIn { avatar, image, video, cover, thumbnail }
+
 abstract class IStorageService extends FirebaseService with FilerMixin {
-  // final _dio = Dio();
+  final _dio = Dio();
 
   /// Upload a file and return its public download URL
-  Wait<Media?> uploadFile(
-    File file, {
-    required String folderName,
-    required String fileName,
-  }) async {
-    try {
+  Wait<Media> uploadFile(File file, String folderName, String fileName) {
+    return handler(() async {
       final path = '$folderName/$fileName';
-      final ref = ud.ref().child(path);
 
       // Upload file to Firebase Storage
-      final uploadTask = await ref.putFile(file);
+      final uploadTask = await ud.ref(path).putFile(file);
 
       // Get download URL
       final downloadUrl = await uploadTask.ref.getDownloadURL();
@@ -29,100 +28,45 @@ abstract class IStorageService extends FirebaseService with FilerMixin {
       return Media(
         display: downloadUrl,
         path: path,
-        type: MediaType.values.firstWhere(
-          (e) => folderName.contains(e.name),
-          orElse: () => MediaType.image,
-        ),
+        type: parseEnum(folderName, MediaType.values, MediaType.image),
       );
-    } on FirebaseException catch (e, stack) {
-      HandleLogger.error("Failed to upload ", message: e.message, stack: stack);
-      rethrow;
-    }
+    }, message: "Failed to upload");
   }
 
   /// Get a file's public download URL if you already know its path
-  Wait<String> getPublicDownloadUrl(String path) async {
-    try {
-      final ref = ud.ref().child(path);
+  AsWait downloadFile(
+    String path, [
+    void Function(int received, int total)? onProgress,
+  ]) => handler(() async {
+    // Permission
+    final status = await requestPermissions();
+    if (!status) throw StateError('Permission denied');
 
-      return ref.getDownloadURL();
-    } catch (e, stack) {
-      HandleLogger.error(
-        "Failed to download",
-        message: 'Failed to get download URL: $e',
-        stack: stack,
-      );
-      rethrow;
-    }
-  }
+    // Resolve Firebase URL
+    final url = await ud.ref(path).getDownloadURL();
+    if (url.isEmpty) return;
+
+    // Download
+    final res = await _dio.get(
+      url,
+      onReceiveProgress: onProgress,
+      options: Options(responseType: ResponseType.bytes, followRedirects: true),
+    );
+
+    // Save to gallery
+    final state = await ImageGallerySaverPlus.saveImage(
+      Uint8List.fromList(res.data),
+      quality: 100,
+      isReturnImagePathOfIOS: true,
+      name: url.contains('.mp4') ? 'VIDEO'.toName : 'IMAGE'.toName,
+    );
+
+    // Feedback
+    if (state["isSuccess"] == false) throw StateError('Failed to save image');
+  }, message: "Failed to download");
 
   /// Delete a file by its storage path
-  AsWait deleteFile(String path) async {
-    try {
-      final ref = ud.ref().child(path);
-      await ref.delete();
-
-      HandleLogger.warn(
-        "Succeed to delete file",
-        message: 'File deleted: $path',
-      );
-    } catch (e, st) {
-      HandleLogger.error("Failed to delete file", message: e, stack: st);
-      rethrow;
-    }
-  }
-
-  // AsWait saveImageToGallery(
-  //   String storagePath, {
-  //   void Function(int received, int total)? onProgress,
-  // }) async {
-  //   try {
-  //     // 1️⃣ Permission
-  //     final status = await requestPermissions();
-  //     if (!status) throw 'Permission denied';
-
-  //     // 2️⃣ Resolve Firebase URL
-  //     final url = await getPublicDownloadUrl(storagePath);
-
-  //     // 3️⃣ Temp file
-  //     final dir = await getTemporaryDirectory();
-  //     final filePath =
-  //         '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-  //     // 4️⃣ Download
-  //     final response = await _dio.get(
-  //       url,
-  //       onReceiveProgress: onProgress,
-  //       options: Options(
-  //         responseType: ResponseType.bytes,
-  //         followRedirects: true,
-  //       ),
-  //     );
-
-  //     // 5️⃣ Save to gallery
-  //     final success = await ImageGallerySaver.saveImage(
-  //       Uint8List.fromList(response.data),
-  //       quality: 100,
-  //       name: filePath,
-  //     );
-
-  //     if (success != true) {
-  //       throw 'Failed to save image';
-  //     }
-
-  //     // 5️⃣ Feedback
-  //     debugPrint('Image saved to gallery');
-  //   } catch (e) {
-  //     debugPrint('Save image error: $e');
-  //     rethrow;
-  //   }
-  // }
-
-  /// Generate a unique filename with timestamp and optional extension
-  String genFileName(String baseName, {File? file}) {
-    final extension = p.extension(file?.path ?? '');
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-
-    return '${baseName}_$timestamp$extension';
+  AsWait deleteFile(String path) {
+    return handler(() => ud.ref(path).delete(), message: "Failed to delete");
   }
 }

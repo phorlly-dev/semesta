@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/public/extensions/extension.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 
 class FollowButton extends StatelessWidget {
   final Follow _state;
@@ -11,7 +11,7 @@ class FollowButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final follow = context.state(_state);
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: Durations.short4,
       child: FilledButton.tonal(
         onPressed: onPressed,
         style: TextButton.styleFrom(

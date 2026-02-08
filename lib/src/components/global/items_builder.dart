@@ -9,7 +9,7 @@ import 'package:semesta/src/widgets/sub/empty_data.dart';
 class ItemsBuilder extends StatefulWidget {
   final int counter;
   final IndexedWidgetBuilder builder;
-  final bool isLoading, isLoadingNext, isEmpty, isGrid, isBreak;
+  final bool loading, loadingNext, isEmpty, isGrid, isBreak, scrollable;
   final AsDef? onRefresh;
   final ScrollController? scroller;
   final VoidCallback onMore;
@@ -20,15 +20,16 @@ class ItemsBuilder extends StatefulWidget {
     this.isGrid = false,
     this.isBreak = false,
     this.isEmpty = false,
-    this.isLoading = false,
-    this.isLoadingNext = false,
+    this.loading = false,
+    this.scrollable = true,
+    this.loadingNext = false,
     this.onRetry,
     this.scroller,
     this.onRefresh,
     this.message,
     this.hasError,
+    this.counter = 1,
     required this.onMore,
-    required this.counter,
     required this.builder,
   });
 
@@ -52,19 +53,22 @@ class _ItemsBuilderState extends State<ItemsBuilder>
       child: LazyLoadScrollView(
         scrollOffset: 180,
         onEndOfPage: widget.onMore,
-        isLoading: widget.isLoadingNext,
+        isLoading: widget.loadingNext,
         child: widget.onRefresh != null
             ? RefreshIndicator(
                 onRefresh: () => widget.onRefresh!(),
                 child: CustomScrollView(
                   controller: widget.scroller,
+                  physics: widget.scrollable
+                      ? const AlwaysScrollableScrollPhysics()
+                      : const NeverScrollableScrollPhysics(),
                   slivers: [
                     if (widget.isBreak)
                       SliverToBoxAdapter(child: BreakSection()),
 
-                    if (widget.isLoading && widget.isEmpty)
+                    if (widget.loading && widget.isEmpty)
                       SliverFillRemaining(child: AnimatedCard())
-                    else if (widget.isEmpty && !widget.isLoading)
+                    else if (widget.isEmpty && !widget.loading)
                       SliverFillRemaining(
                         child: EmptyData(
                           widget.message ?? "There's no data yet.",
@@ -102,10 +106,13 @@ class _ItemsBuilderState extends State<ItemsBuilder>
               )
             : CustomScrollView(
                 controller: widget.scroller,
+                physics: widget.scrollable
+                    ? const AlwaysScrollableScrollPhysics()
+                    : const NeverScrollableScrollPhysics(),
                 slivers: [
-                  if (widget.isLoading && widget.isEmpty)
+                  if (widget.loading && widget.isEmpty)
                     SliverFillRemaining(child: AnimatedCard())
-                  else if (widget.isEmpty && !widget.isLoading)
+                  else if (widget.isEmpty && !widget.loading)
                     SliverFillRemaining(
                       child: EmptyData(
                         widget.message ?? "There's no data yet.",

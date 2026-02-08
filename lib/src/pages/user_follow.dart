@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/public/extensions/extension.dart';
-import 'package:semesta/public/utils/scroll_aware_app_bar.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
+import 'package:semesta/public/utils/scroll_aware.dart';
 import 'package:semesta/src/components/layout/tab_sliver.dart';
 import 'package:semesta/src/components/layout/nav_bar_sliver.dart';
 import 'package:semesta/src/components/layout/nested_scrollable.dart';
@@ -22,7 +22,7 @@ class UserFollowPage extends StatelessWidget {
         tabs: ['Followers', 'Following'],
         builder: (ctrl, tab) => NestedScrollable(
           builder: (_) => [
-            ScrollAwareAppBar(
+            ScrollAware(
               (visible) => AppNavBarSliver(
                 middle: Text(_name),
                 end: IconButton(
@@ -30,7 +30,7 @@ class UserFollowPage extends StatelessWidget {
                   icon: Icon(Icons.person_add_alt_1_outlined),
                   color: context.outlineColor,
                 ),
-                toolbarHeight: visible ? kToolbarHeight : 0,
+                toolbar: visible ? kToolbarHeight : 0,
               ),
             ),
 

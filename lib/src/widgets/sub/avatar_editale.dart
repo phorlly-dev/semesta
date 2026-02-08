@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/public/extensions/extension.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/widgets/sub/animated_avatar.dart';
 
 class AvatarEditale extends StatelessWidget {
@@ -51,7 +50,7 @@ class AvatarEditale extends StatelessWidget {
               alignment: Alignment.center,
               child: Icon(
                 Icons.camera_alt_outlined,
-                color: context.defaultColor,
+                color: Colors.white,
                 size: 24,
               ),
             ),

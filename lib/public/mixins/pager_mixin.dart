@@ -34,7 +34,7 @@ mixin PagerMixin<T> on GetxController {
       onSuccess?.call();
     } catch (e, stack) {
       error.value = e.toString();
-      HandleLogger.error('Failed to load $T', message: e, stack: stack);
+      HandleLogger.error('Failed to load $T', error: e, stack: stack);
       onError?.call();
     } finally {
       loading.value = false;
@@ -71,7 +71,7 @@ mixin PagerMixin<T> on GetxController {
       onSuccess?.call();
     } catch (e, stack) {
       error.value = e.toString();
-      HandleLogger.error('Failed to load more $T', message: e, stack: stack);
+      HandleLogger.error('Failed to load more $T', error: e, stack: stack);
       onError?.call();
     } finally {
       loadingMore.value = false;
@@ -102,7 +102,7 @@ mixin PagerMixin<T> on GetxController {
       onSuccess?.call();
     } catch (e, stack) {
       error.value = e.toString();
-      HandleLogger.error('Failed to refresh $T', message: e, stack: stack);
+      HandleLogger.error('Failed to refresh $T', error: e, stack: stack);
       onError?.call();
     } finally {
       refreshing.value = false;

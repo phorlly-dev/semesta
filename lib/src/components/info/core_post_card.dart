@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/components/global/media_gallery.dart';
@@ -41,27 +41,25 @@ class CorePostCard extends StatelessWidget {
           ?above,
           StatusBar(
             _state.status,
-            model,
+            actions,
             uid: uid,
             end: endedLine,
             primary: primary,
             start: startedLine,
             profiled: profiled,
-            reference: reference,
-            target: actions.target,
-            saved: actions.bookmarked,
+            child: reference,
           ),
 
           InkWell(
             child: DirectionY(
               children: [
-                if (media.isNotEmpty) MediaGallery(media: media, id: model.id),
+                if (media.isNotEmpty) MediaGallery(media, id: model.id),
 
                 ?middle,
               ],
             ),
             onTap: () async {
-              await context.openById(route.detail, model.id);
+              await context.openById(routes.detail, model.id);
             },
           ),
           ActionsBar(actions),

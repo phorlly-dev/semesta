@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
-import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/widgets/main/animated.dart';
@@ -18,8 +18,8 @@ class RepostedBanner extends StatelessWidget {
       builder: (_, snapshot) {
         if (!snapshot.hasData) return const SizedBox.shrink();
 
-        final rxs = snapshot.data!;
-        final displayName = rxs.authed ? 'You' : rxs.name;
+        final state = snapshot.data!;
+        final displayName = state.authed ? 'You' : state.name;
 
         return Animated(
           child: DirectionX(
@@ -37,7 +37,7 @@ class RepostedBanner extends StatelessWidget {
             ],
           ),
           onTap: () async {
-            await context.openProfile(rxs.uid, rxs.authed);
+            await context.openProfile(state.uid, state.authed);
           },
         );
       },

@@ -1,10 +1,13 @@
 import 'package:get/get.dart';
+import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
+import 'package:semesta/public/helpers/audit_view.dart';
+import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/app/controllers/post_controller.dart';
 import 'package:semesta/app/controllers/user_controller.dart';
-import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
+import 'package:semesta/public/mixins/post_mixin.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 class ActionController extends GetxController {
@@ -13,64 +16,51 @@ class ActionController extends GetxController {
   UserController get uCtrl => pCtrl.uCtrl;
 
   String get currentUid => pCtrl.currentUid;
-  bool isCurrentUser(String uid) => pCtrl.isCurrentUser(uid);
-  String get _hKey => getKey();
-  String get _pKey => getKey(id: currentUid, screen: Screen.post);
-  String get _fKey => getKey(id: currentUid, screen: Screen.favorite);
-  String get _bKey => getKey(id: currentUid, screen: Screen.bookmark);
-  String get _cKey => getKey(id: currentUid, screen: Screen.comment);
+  bool currentedUser(String uid) => pCtrl.currentedUser(uid);
+  String get _kh => getKey();
+  String get _kf => getKey(screen: Screen.following);
+  String get _kp => getKey(id: currentUid, screen: Screen.post);
+  String get _kl => getKey(id: currentUid, screen: Screen.favorite);
+  String get _kb => getKey(id: currentUid, screen: Screen.bookmark);
+  String get _kc => getKey(id: currentUid, screen: Screen.comment);
 
-  AsWait toggleFollow(String uid, bool active) async {
-    await uCtrl.toggleFollow(uid);
-    if (!active) pCtrl.metaFor(getKey(screen: Screen.following)).dirty = true;
+  AsWait toggleFollow(StatusView status) async {
+    await uCtrl.toggleFollow(status.author.id);
+    if (!status.authed) pCtrl.metaFor(_kf).dirty = true;
   }
 
-  AsWait toggleFavorite(
-    ActionTarget target,
-    String pid, {
-    bool active = false,
-  }) async {
-    await prepo.toggleFavorite(target, currentUid);
-    if (active) {
-      final rid = getRowId(pid: pid, uid: currentUid, kind: FeedKind.liked);
-      pCtrl.clearFor(_fKey, rid);
-    }
+  AsWait toggleFavorite(ActionsView actions) async {
+    await prepo.toggleReaction(actions.target, currentUid);
+    final rid = actions.feed.toId(puid: currentUid, kind: FeedKind.liked);
+    if (!actions.favorited) pCtrl.clearFor(_kl, rid);
   }
 
-  AsWait toggleBookmark(
-    ActionTarget target,
-    String pid, {
-    bool active = false,
-  }) async {
-    await prepo.toggleBookmark(target, currentUid);
-    final rid = getRowId(pid: pid, uid: currentUid, kind: FeedKind.saved);
-    if (active) {
-      pCtrl.clearFor(_bKey, rid);
-      CustomToast.warning('Removed from Saved', title: 'Saved');
-    } else {
+  AsWait toggleBookmark(ActionsView actions) async {
+    await prepo.toggleReaction(actions.target, currentUid, ActionType.save);
+    if (actions.bookmarked) {
       CustomToast.info('Added to Saved', title: 'Saved');
+    } else {
+      final rid = actions.feed.toId(puid: currentUid, kind: FeedKind.saved);
+      pCtrl.clearFor(_kb, rid);
+      CustomToast.warning('Removed from Saved', title: 'Saved');
     }
   }
 
-  AsWait toggleRepost(
-    ActionTarget target,
-    String pid, {
-    bool active = false,
-  }) async {
-    await prepo.toggleRepost(target, currentUid);
-    pCtrl.metaFor(_fKey).dirty = true;
-    pCtrl.metaFor(_cKey).dirty = true;
+  AsWait toggleRepost(ActionsView actions) async {
+    await prepo.toggleReaction(actions.target, currentUid, ActionType.repost);
+    pCtrl.metaFor(_kf).dirty = true;
+    pCtrl.metaFor(_kc).dirty = true;
 
-    if (active) {
-      final rid = getRowId(pid: pid, uid: currentUid, kind: FeedKind.reposted);
-      pCtrl.clearFor(_hKey, rid);
-      pCtrl.clearFor(_pKey, rid);
-      pCtrl.clearFor(_cKey, rid);
-      CustomToast.warning('Removed from Posts', title: 'Reposts');
-    } else {
-      pCtrl.addRepostToTabs(_pKey, pid);
-      pCtrl.addRepostToTabs(_cKey, pid);
+    if (actions.reposted) {
+      pCtrl.addRepostToTabs(_kp, actions.feed);
+      pCtrl.addRepostToTabs(_kc, actions.feed);
       CustomToast.info('Added to Posts', title: 'Reposts');
+    } else {
+      final rid = actions.feed.toId(puid: currentUid, kind: FeedKind.reposted);
+      pCtrl.clearFor(_kh, rid);
+      pCtrl.clearFor(_kp, rid);
+      pCtrl.clearFor(_kc, rid);
+      CustomToast.warning('Removed from Posts', title: 'Reposts');
     }
   }
 }

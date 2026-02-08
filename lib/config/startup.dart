@@ -1,8 +1,8 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/routes/router.dart';
-import 'package:semesta/public/functions/theme_manager.dart';
 import 'package:toastification/toastification.dart';
 
 class Startup extends StatelessWidget {
@@ -23,9 +23,23 @@ class Startup extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData.light(),
         darkTheme: ThemeData.dark(),
-        themeMode: context.watch<ThemeManager>().themeMode,
+        themeMode: context.themeMode,
         routerConfig: AppRouter().router,
+        scrollBehavior: ScrollBehavior(),
       ),
     );
+  }
+}
+
+class ScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+  };
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const BouncingScrollPhysics();
   }
 }

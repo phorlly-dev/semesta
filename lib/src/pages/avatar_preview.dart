@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/src/partials/image_preview.dart';
+import 'package:semesta/src/partials/imaged_preview.dart';
 import 'package:semesta/src/widgets/main/data_binder.dart';
 
 class AvatarPreviewPage extends StatelessWidget {
@@ -16,9 +16,9 @@ class AvatarPreviewPage extends StatelessWidget {
 
       return DataBinder(
         isEmpty: avatar.isEmpty,
-        isLoading: data == null,
+        loading: data == null,
         message: 'No avatar available',
-        child: ImagePreview([avatar]),
+        child: ImagedPreview([avatar]),
       );
     });
   }

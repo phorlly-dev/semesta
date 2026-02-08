@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:semesta/public/extensions/list_extension.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
-import 'package:semesta/public/helpers/cached_helper.dart';
 import 'package:semesta/public/mixins/pager_mixin.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
@@ -12,8 +11,8 @@ typedef Load<T> = Def<List<T>>;
 
 class CachedTab<T extends HasAttributes> extends StatefulWidget {
   final PagerMixin<T> controller;
-  final CachedState<T> cache;
-  final bool isGrid, autoLoad, isBreak;
+  final Cacher<T> cache;
+  final bool isGrid, autoLoad, isBreak, scrollable;
 
   final Load<T> onInit;
   final Load<T> onMore;
@@ -36,6 +35,7 @@ class CachedTab<T extends HasAttributes> extends StatefulWidget {
     this.isGrid = false,
     this.autoLoad = true,
     this.isBreak = false,
+    this.scrollable = true,
     this.message = 'No data available',
   });
 
@@ -74,7 +74,7 @@ class _CachedTabState<T extends HasAttributes> extends State<CachedTab<T>> {
   Future<void> _handleRefresh() async {
     await widget.controller.loadLatest(
       fetch: widget.onRefresh!,
-      apply: (items) => widget.cache.merge(items),
+      apply: (items) => widget.cache.set(items),
       onError: () => _showError('Failed to refresh'),
     );
   }
@@ -97,10 +97,11 @@ class _CachedTabState<T extends HasAttributes> extends State<CachedTab<T>> {
         scroller: widget.scroller,
 
         // State
+        scrollable: widget.scrollable,
         isGrid: widget.isGrid,
         isBreak: widget.isBreak,
-        isLoading: ctrl.anyLoading,
-        isLoadingNext: ctrl.loadingMore.value,
+        loading: ctrl.anyLoading,
+        loadingNext: ctrl.loadingMore.value,
 
         // Data
         counter: items.length,

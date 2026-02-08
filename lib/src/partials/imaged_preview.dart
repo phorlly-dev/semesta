@@ -5,40 +5,45 @@ import 'package:flutter/services.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
-import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
+import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/src/components/layout/_page.dart';
 import 'package:semesta/src/components/post/actions_bar.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
+import 'package:sn_progress_dialog/progress_dialog.dart';
 
-class ImagePreview extends StatefulWidget {
+class ImagedPreview extends StatefulWidget {
   final String id;
   final int initIndex;
-  final List<String> _images;
-  const ImagePreview(
+  final AsList _images, media;
+  const ImagedPreview(
     this._images, {
     super.key,
     this.id = '',
     this.initIndex = 0,
+    this.media = const [],
   });
 
   @override
-  State<ImagePreview> createState() => _ImagePreviewState();
+  State<ImagedPreview> createState() => _ImagedPreviewState();
 }
 
-class _ImagePreviewState extends State<ImagePreview> {
+class _ImagedPreviewState extends State<ImagedPreview> {
   late final PageController _pageController;
   double _dragOffset = 0;
   int _currentIndex = 0;
   bool _toggle = true;
-  List<String> get _media => widget._images;
+  AsList get _media => widget._images;
+  late ProgressDialog _pd;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: widget.initIndex);
     _currentIndex = widget.initIndex;
+    _pd = ProgressDialog(context: context);
+    _pageController = PageController(initialPage: _currentIndex);
   }
 
   void _onVerticalDragUpdate(DragUpdateDetails details) {
@@ -72,29 +77,12 @@ class _ImagePreviewState extends State<ImagePreview> {
           onVerticalDragEnd: _onVerticalDragEnd,
           onTap: () => setState(() => _toggle = !_toggle),
           onLongPress: () {
-            context.image(_media[_currentIndex]);
+            context.image(widget.media[_currentIndex], _pd);
           },
           child: Stack(
             children: [
               // Fullscreen media (background)
-              Transform.translate(
-                offset: Offset(0, _dragOffset),
-                child: PhotoViewGallery.builder(
-                  pageController: _pageController,
-                  scrollPhysics: const BouncingScrollPhysics(),
-                  backgroundDecoration: const BoxDecoration(
-                    color: Colors.transparent,
-                  ),
-                  itemCount: _media.length,
-                  builder: (_, index) => PhotoViewGalleryPageOptions(
-                    imageProvider: NetworkImage(_media[index]),
-                    minScale: PhotoViewComputedScale.contained,
-                    maxScale: PhotoViewComputedScale.covered * 2,
-                    heroAttributes: PhotoViewHeroAttributes(tag: _media[index]),
-                  ),
-                  onPageChanged: (i) => setState(() => _currentIndex = i),
-                ),
-              ),
+              _background,
 
               // Index indicator (optional)
               if (_media.length > 1)
@@ -138,7 +126,7 @@ class _ImagePreviewState extends State<ImagePreview> {
                       _CircleButton(
                         Icons.more_horiz,
                         onTap: () {
-                          context.image(_media[_currentIndex]);
+                          context.image(widget.media[_currentIndex], _pd);
                         },
                       ),
                     ],
@@ -146,54 +134,72 @@ class _ImagePreviewState extends State<ImagePreview> {
                 ),
 
               //  Bottom actions
-              if (_toggle)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: SafeArea(
-                    top: false,
-                    child: Obx(() {
-                      final data = pctrl.dataMapping[widget.id];
-                      if (data == null) return const SizedBox.shrink();
-
-                      return StreamBuilder(
-                        stream: actrl.actions$(data),
-                        builder: (_, snapshot) {
-                          if (!snapshot.hasData) return const SizedBox.shrink();
-
-                          return ClipRect(
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withValues(alpha: 0.35),
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(12),
-                                  ),
-                                ),
-                                child: ActionsBar(
-                                  snapshot.data!,
-                                  start: 24,
-                                  end: 24,
-                                  top: 24,
-                                  bottom: 32,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    }),
-                  ),
-                ),
+              if (_toggle) _bottom,
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget get _background => Transform.translate(
+    offset: Offset(0, _dragOffset),
+    child: PhotoViewGallery.builder(
+      pageController: _pageController,
+      scrollPhysics: const BouncingScrollPhysics(),
+      backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+      itemCount: _media.length,
+      builder: (_, index) => PhotoViewGalleryPageOptions(
+        imageProvider: NetworkImage(_media[index]),
+        minScale: PhotoViewComputedScale.contained,
+        maxScale: PhotoViewComputedScale.covered * 2,
+        heroAttributes: PhotoViewHeroAttributes(tag: _media[index]),
+      ),
+      onPageChanged: (i) => setState(() => _currentIndex = i),
+    ),
+  );
+
+  Widget get _bottom => Positioned(
+    left: 0,
+    right: 0,
+    bottom: 0,
+    child: SafeArea(
+      top: false,
+      child: Obx(() {
+        final data = pctrl.dataMapping[widget.id];
+        if (data == null) return const SizedBox.shrink();
+
+        return StreamBuilder(
+          stream: actrl.actions$(data),
+          builder: (_, snapshot) {
+            if (!snapshot.hasData) return const SizedBox.shrink();
+
+            return ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                  ),
+                  child: ActionsBar(
+                    snapshot.data!,
+                    start: 24,
+                    end: 24,
+                    top: 24,
+                    bottom: 32,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      }),
+    ),
+  );
 
   @override
   void dispose() {

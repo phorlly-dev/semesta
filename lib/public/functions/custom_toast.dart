@@ -4,77 +4,98 @@ import 'package:toastification/toastification.dart';
 enum ToastType { success, info, warning, error }
 
 class CustomToast {
-  CustomToast._();
+  final String _message;
+  final String? _title;
+  final ToastType _type;
+  final int _autoClose;
 
-  static void _show(
-    String message, {
-    String? title,
-    ToastType type = ToastType.success,
-    int autoCloseSeconds = 2,
-  }) {
+  CustomToast._(this._message, this._title, this._type, this._autoClose) {
     // Map ToastType to toastification’s type
     final toastType = {
       ToastType.success: ToastificationType.success,
       ToastType.info: ToastificationType.info,
       ToastType.warning: ToastificationType.warning,
       ToastType.error: ToastificationType.error,
-    }[type]!;
+    }[_type]!;
 
     final defaultTitle = {
       ToastType.success: 'Success',
       ToastType.info: 'Info',
       ToastType.warning: 'Warning',
       ToastType.error: 'Error',
-    }[type]!;
+    }[_type]!;
 
     toastification.show(
       title: Center(
-        child: Column(
-          children: [
-            Text(
-              title ?? defaultTitle,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 4),
-            Text(message, style: const TextStyle(fontSize: 14)),
-          ],
+        child: Text(
+          _title ?? defaultTitle,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
-      type: toastType,
-      style: ToastificationStyle.fillColored,
-      alignment: Alignment.topCenter,
-      autoCloseDuration: Duration(seconds: autoCloseSeconds),
-      showProgressBar: true,
+      description: Center(
+        child: Text(
+          _message,
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+      ),
       showIcon: true,
+      type: toastType,
+      showProgressBar: true,
+      alignment: Alignment.topCenter,
+      style: ToastificationStyle.fillColored,
+      autoCloseDuration: Duration(seconds: _autoClose),
     );
   }
 
-  // Convenience shortcuts
-  static void success(String msg, {String? title, int duration = 2}) => _show(
-    msg,
-    title: title,
-    type: ToastType.success,
-    autoCloseSeconds: duration,
-  );
+  factory CustomToast.render(
+    String message, {
+    String? title,
+    int autoClose = 2,
+    ToastType type = ToastType.success,
+  }) => switch (type) {
+    ToastType.success => CustomToast.success(
+      message,
+      title: title,
+      autoClose: autoClose,
+    ),
+    ToastType.info => CustomToast.info(
+      message,
+      title: title,
+      autoClose: autoClose,
+    ),
+    ToastType.warning => CustomToast.warning(
+      message,
+      title: title,
+      autoClose: autoClose,
+    ),
+    ToastType.error => CustomToast.error(
+      message,
+      title: title,
+      autoClose: autoClose,
+    ),
+  };
 
-  static void info(String msg, {String? title, int duration = 2}) => _show(
-    msg,
-    title: title,
-    type: ToastType.info,
-    autoCloseSeconds: duration,
-  );
+  factory CustomToast.success(
+    String message, {
+    String? title,
+    int autoClose = 2,
+  }) => CustomToast._(message, title, ToastType.success, autoClose);
 
-  static void warning(String msg, {String? title, int duration = 2}) => _show(
-    msg,
-    title: title,
-    type: ToastType.warning,
-    autoCloseSeconds: duration,
-  );
+  factory CustomToast.info(
+    String message, {
+    String? title,
+    int autoClose = 2,
+  }) => CustomToast._(message, title, ToastType.info, autoClose);
 
-  static void error(String msg, {String? title, int duration = 6}) => _show(
-    msg,
-    title: title,
-    type: ToastType.error,
-    autoCloseSeconds: duration,
-  );
+  factory CustomToast.warning(
+    String message, {
+    String? title,
+    int autoClose = 2,
+  }) => CustomToast._(message, title, ToastType.warning, autoClose);
+
+  factory CustomToast.error(
+    String message, {
+    String? title,
+    int autoClose = 3,
+  }) => CustomToast._(message, title, ToastType.error, autoClose);
 }

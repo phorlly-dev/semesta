@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 
 class DatedPicker extends StatelessWidget {
@@ -35,7 +36,9 @@ class DatedPicker extends StatelessWidget {
       initialDatePickerMode: DatePickerMode.year,
       decoration: InputDecoration(
         labelText: lable ?? toCapitalize(_name),
-        prefixIcon: icon != null ? Icon(icon) : null,
+        prefixIcon: icon != null
+            ? Icon(icon, size: 18, color: context.hintColor)
+            : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(),

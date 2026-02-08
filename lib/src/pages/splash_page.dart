@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:semesta/public/bindings/post_bindings.dart';
-import 'package:semesta/public/extensions/extension.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/extensions/string_extension.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/routes/router.dart';
 import 'package:semesta/src/components/layout/_page.dart';
 import 'package:semesta/src/widgets/main/custom_image.dart';
@@ -43,7 +43,7 @@ class _SplashPageState extends State<SplashPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             CustomImage(
-              MediaSource.asset('logo.png'.asImage(true)),
+              MediaSource.asset('logo.png'.toIcon(true)),
               height: 120.h,
             ),
             Text(

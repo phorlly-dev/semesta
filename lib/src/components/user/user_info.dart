@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
+import 'package:semesta/public/extensions/date_time_extension.dart';
+import 'package:semesta/public/extensions/string_extension.dart';
+import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/src/widgets/main/animated.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DisplayName extends StatelessWidget {
   final String _data;
@@ -42,10 +46,9 @@ class Username extends StatelessWidget {
       onTap: onTap,
       child: Text(
         '@${_data.limitText(maxChars)}',
-        style: TextStyle(
+        style: context.text.titleMedium?.copyWith(
           overflow: TextOverflow.ellipsis,
           color: color ?? context.secondaryColor,
-          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -101,32 +104,74 @@ class Bio extends StatelessWidget {
       _data,
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
-      style: TextStyle(
-        fontSize: 16,
-        color: color ?? context.colors.onSurface.withValues(alpha: 0.7),
-      ),
+      style: context.text.bodyLarge?.copyWith(color: color),
     );
   }
 }
 
-class FollowYouBanner extends StatelessWidget {
-  const FollowYouBanner({super.key});
+class MetaItem extends StatelessWidget {
+  final IconData _icon;
+  final String _text;
+  final double? size;
+  const MetaItem(this._icon, this._text, {super.key, this.size});
 
   @override
   Widget build(BuildContext context) {
     return DirectionX(
-      spacing: 8,
-      padding: const EdgeInsets.only(left: 30),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Icon(Icons.person, color: context.hintColor),
+        Icon(_icon, size: size ?? 16, color: context.hintColor),
+        const SizedBox(width: 4),
         Text(
-          'Follows you',
-          style: context.text.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-            color: context.hintColor,
+          _text,
+          style: context.text.bodyLarge?.copyWith(color: context.hintColor),
+        ),
+      ],
+    );
+  }
+}
+
+class MetaLink extends StatelessWidget {
+  final dynamic icon;
+  final String _data;
+  final double size;
+  const MetaLink(
+    this._data, {
+    super.key,
+    this.icon = 'link.png',
+    this.size = 14,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DirectionX(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        icon is IconData
+            ? Icon(icon, size: size, color: context.hintColor)
+            : Image.asset(
+                '$icon'.toIcon(true),
+                width: size,
+                height: size,
+                color: context.hintColor,
+              ),
+        const SizedBox(width: 6),
+        InkWell(
+          onTap: () => _launchUrl(_data),
+          child: Text(
+            _data.toUrl,
+            style: context.text.bodyLarge?.copyWith(color: Colors.blue),
           ),
         ),
       ],
     );
+  }
+
+  AsWait _launchUrl(String url) async {
+    if (!await launchUrl(Uri.parse(url))) {
+      throw Exception('Could not launch $url');
+    }
   }
 }

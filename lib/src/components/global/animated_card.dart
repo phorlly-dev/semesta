@@ -90,25 +90,23 @@ class _SkeletonWaveState extends State<_SkeletonWave>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (_, child) {
-        return Container(
-          width: widget.width,
-          height: widget.height,
-          decoration: BoxDecoration(
-            borderRadius: widget.radius,
-            gradient: LinearGradient(
-              begin: Alignment(-1.0 - _ctrl.value * 2, 0),
-              end: Alignment(1.0 + _ctrl.value * 2, 0),
-              colors: [
-                Colors.grey.shade300,
-                Colors.grey.shade200,
-                Colors.grey.shade300,
-              ],
-              stops: const [0.35, 0.5, 0.65],
-            ),
+      builder: (_, child) => Container(
+        width: widget.width,
+        height: widget.height,
+        decoration: BoxDecoration(
+          borderRadius: widget.radius,
+          gradient: LinearGradient(
+            begin: Alignment(-1.0 - _ctrl.value * 2, 0),
+            end: Alignment(1.0 + _ctrl.value * 2, 0),
+            colors: [
+              Colors.grey.shade300,
+              Colors.grey.shade200,
+              Colors.grey.shade300,
+            ],
+            stops: const [0.35, 0.5, 0.65],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

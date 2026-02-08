@@ -3,24 +3,24 @@ import 'package:get/get.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
 import 'package:semesta/public/extensions/list_extension.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
-import 'package:semesta/public/helpers/cached_helper.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
+import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/src/components/global/items_builder.dart';
 import 'package:semesta/src/components/global/feed_threaded.dart';
 
 class FeedsTab extends StatefulWidget {
-  final ScrollController _scroller;
-  const FeedsTab(this._scroller, {super.key});
+  final ScrollController? scroller;
+  const FeedsTab({super.key, this.scroller});
 
   @override
   State<FeedsTab> createState() => _FeedsTabState();
 }
 
 class _FeedsTabState extends State<FeedsTab> {
-  CachedState<FeedView> get _states => pctrl.stateFor(getKey());
+  Cacher<FeedView> get _states => pctrl.stateFor(getKey());
 
   @override
   void initState() {
@@ -61,15 +61,15 @@ class _FeedsTabState extends State<FeedsTab> {
   Widget build(BuildContext context) {
     return Obx(() {
       return ItemsBuilder(
-        scroller: widget._scroller,
+        scroller: widget.scroller,
         counter: _states.length,
         isEmpty: _states.isEmpty,
-        isLoading: pctrl.anyLoading,
-        isLoadingNext: pctrl.loadingMore.value,
+        loading: pctrl.anyLoading,
+        loadingNext: pctrl.loadingMore.value,
         message: "There's no posts yet.",
         hasError: pctrl.error.value,
         onMore: _loadMore,
-        onRefresh: () => pctrl.refreshPost,
+        onRefresh: pctrl.refreshPost,
         onRetry: () => _load(retry: true),
         builder: (ctx, idx) => SyncFeedThreaded(_states[idx]),
       );

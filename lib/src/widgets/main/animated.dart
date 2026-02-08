@@ -20,8 +20,8 @@ class _AnimatedState extends State<Animated> {
 
   void _animateTap() async {
     setState(() {
-      _opacity = 0.6;
-      _scale = 0.98;
+      _opacity = .6;
+      _scale = .96;
     });
 
     await Future.delayed(const Duration(milliseconds: 120));
@@ -39,12 +39,13 @@ class _AnimatedState extends State<Animated> {
     return GestureDetector(
       onTap: widget.onTap != null ? _animateTap : null,
       onLongPress: widget.onLongPress,
+      behavior: HitTestBehavior.translucent,
       child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 180),
+        duration: Durations.short4,
         opacity: _opacity,
         child: AnimatedScale(
           scale: _scale,
-          duration: const Duration(milliseconds: 180),
+          duration: Durations.short4,
           curve: Curves.easeOut,
           child: widget.child,
         ),

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 
 class AuthFoooter extends StatelessWidget {
-  final bool isCreate;
+  final bool make;
   final VoidCallback? onPressed;
-  const AuthFoooter(this.isCreate, {super.key, this.onPressed});
+  const AuthFoooter(this.make, {super.key, this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +13,7 @@ class AuthFoooter extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
-          isCreate ? 'Already have an account? ' : "Don't have an account? ",
+          make ? 'Already have an account? ' : "Don't have an account? ",
           style: TextStyle(
             color: Colors.grey[500],
             fontWeight: FontWeight.w600,
@@ -22,7 +22,7 @@ class AuthFoooter extends StatelessWidget {
         TextButton(
           onPressed: onPressed,
           child: Text(
-            isCreate ? 'Sign In' : 'Sign Up',
+            make ? 'Sign In' : 'Sign Up',
             style: const TextStyle(
               color: Color(0xFF4A9EFF),
               fontWeight: FontWeight.bold,

@@ -1,24 +1,24 @@
+import 'package:semesta/public/functions/func_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/app/models/model.dart';
 
 enum NotifyType { favorite, comment, repost, mention, follow }
 
-class Notification extends Model<Notification> {
+class Notification extends IModel<Notification> {
   final String sender;
   final String reciever;
   final NotifyType type;
   final String pid;
   final bool readed;
-
   const Notification({
-    required this.sender,
-    required this.reciever,
-    this.type = NotifyType.favorite,
     this.pid = '',
-    this.readed = false,
     super.id = '',
+    this.sender = '',
+    this.reciever = '',
+    this.readed = false,
     super.createdAt,
     super.updatedAt,
+    this.type = NotifyType.favorite,
   });
 
   @override
@@ -52,24 +52,21 @@ class Notification extends Model<Notification> {
   ];
 
   factory Notification.from(AsMap json) {
-    final map = Model.convertJsonKeys(json, true);
+    final map = IModel.convert(json, true);
     return Notification(
       id: map['id'],
       sender: map['sender'],
       reciever: map['reciever'],
       pid: map['pid'],
-      type: NotifyType.values.firstWhere(
-        (e) => e.name == map['type'],
-        orElse: () => NotifyType.favorite,
-      ),
+      type: parseEnum(map['type'], NotifyType.values, NotifyType.favorite),
       readed: map['readed'] ?? false,
-      createdAt: Model.createOrUpdate(map),
-      updatedAt: Model.createOrUpdate(map, false),
+      createdAt: IModel.make(map),
+      updatedAt: IModel.make(map, true),
     );
   }
 
   @override
-  AsMap to() => Model.convertJsonKeys({
+  AsMap to() => IModel.convert({
     ...general,
     'pid': pid,
     'reciever': reciever,

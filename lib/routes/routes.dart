@@ -1,4 +1,4 @@
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/public/mixins/router_mixin.dart';
 
 class Routes with RouterMixin, UserRoutes, PostRoutes {
@@ -30,7 +30,7 @@ class Routes with RouterMixin, UserRoutes, PostRoutes {
     messsage.name,
   ];
 
-  int getIndexFromLocation(String location) {
+  int getIndex(String location) {
     return paths.indexWhere((p) => location.startsWith(p));
   }
 }

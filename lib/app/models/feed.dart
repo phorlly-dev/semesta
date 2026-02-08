@@ -9,7 +9,7 @@ enum Create { post, reply, quote }
 
 enum Visible { everyone, verified, following, mentioned }
 
-class Feed extends Model<Feed> {
+class Feed extends IModel<Feed> {
   final String uid;
 
   final String title;
@@ -100,7 +100,7 @@ class Feed extends Model<Feed> {
   ];
 
   factory Feed.from(AsMap json) {
-    final map = Model.convertJsonKeys(json, true);
+    final map = IModel.convert(json, true);
     return Feed(
       id: map['id'],
       uid: map['uid'],
@@ -109,36 +109,30 @@ class Feed extends Model<Feed> {
       pid: map['pid'],
       edited: map['edited'] ?? false,
       removed: map['removed'] ?? false,
-      stats: castToMap<StatsCount>(map['stats'], StatsCount.from),
+      stats: castToMap(map['stats'], StatsCount.from),
       hashtags: parseToList(map['hashtags']),
       mentions: parseToList(map['mentions']),
-      media: parseJsonList<Media>(map['media'], Media.from),
-      visible: Visible.values.firstWhere(
-        (e) => e.name == map['visible'],
-        orElse: () => Visible.everyone,
-      ),
-      type: Create.values.firstWhere(
-        (e) => e.name == map['type'],
-        orElse: () => Create.post,
-      ),
-      createdAt: Model.createOrUpdate(map),
-      updatedAt: Model.createOrUpdate(map, false),
+      media: parseJsonList(map['media'], Media.from),
+      type: parseEnum(map['type'], Create.values, Create.post),
+      visible: parseEnum(map['visible'], Visible.values, Visible.everyone),
+      createdAt: IModel.make(map),
+      updatedAt: IModel.make(map, true),
     );
   }
 
   @override
-  AsMap to() => Model.convertJsonKeys({
+  AsMap to() => IModel.convert({
     ...general,
-    'title': title,
     'uid': uid,
-    'edited': edited,
-    'removed': removed,
-    'location': location,
     'pid': pid,
-    'hashtags': hashtags.toList(),
-    'mentions': mentions.toList(),
-    'media': media.map((e) => e.to()),
+    'edited': edited,
     'type': type.name,
+    'removed': removed,
+    'title': title.trim(),
+    'location': location.trim(),
+    'hashtags': hashtags,
+    'mentions': mentions,
+    'media': media.map((e) => e.to()),
     'stats': stats.to(),
     'visible': visible.name,
   });

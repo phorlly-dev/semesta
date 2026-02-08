@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
@@ -26,7 +26,7 @@ class UserMediaTab extends StatelessWidget {
           post.media[0],
           size: 32,
           onTap: () async {
-            await context.openPreview(route.media, post.id, 0);
+            await context.openPreview(routes.media, post.id, 0);
           },
         );
       },

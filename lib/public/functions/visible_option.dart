@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/public/utils/custom_bottom_sheet.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/src/widgets/main/option_button.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
@@ -12,8 +12,7 @@ class VisibleOption {
   void showModal([
     Visible option = Visible.everyone,
     ValueChanged<Visible>? onChanged,
-  ]) => CustomBottomSheet<VisibleToPost>(
-    _context,
+  ]) => _context.sheet(
     children: [
       DirectionY(
         mainAxisSize: MainAxisSize.min,

@@ -1,77 +1,111 @@
 import 'package:logger/logger.dart';
 import 'package:semesta/public/functions/format_helper.dart';
 
-enum LogType { error, warning, track, info, debug }
+enum HandleStyle { error, warning, track, info, debug }
 
 class HandleLogger {
-  Logger get _logger => Logger(
-    printer: PrettyPrinter(
-      methodCount: 2, // number of stacktrace lines
-      errorMethodCount: 6,
-      lineLength: 80,
-      colors: true,
-      printEmojis: true,
-      dateTimeFormat: DateTimeFormat.dateAndTime,
-    ),
-    level: Level.all,
-  );
+  final String _message;
+  final HandleStyle _style;
+  final Object? _error;
+  final StackTrace? _stack;
 
-  final String message;
-  final LogType type;
-  final Object? err;
-  final StackTrace? stack;
+  HandleLogger._(this._message, this._style, this._error, this._stack) {
+    final log = Logger(
+      printer: PrettyPrinter(
+        methodCount: 2, // number of stacktrace lines
+        errorMethodCount: 6,
+        lineLength: 80,
+        colors: true,
+        printEmojis: true,
+        dateTimeFormat: DateTimeFormat.dateAndTime,
+      ),
+      level: Level.all,
+    );
 
-  HandleLogger._(
-    this.message, {
-    this.type = LogType.error,
-    this.err,
-    this.stack,
-  }) {
-    _log();
-  }
-
-  void _log() {
-    final tag = '[${type.name.toUpperCase()}]';
+    final tag = '[${_style.name.toUpperCase()}]';
     final time = syncDate(); // assuming your custom formatter
-    final formattedMsg = '$tag [$time] $message';
+    final formattedMsg = '$tag [$time] $_message';
 
-    switch (type) {
-      case LogType.error:
-        _logger.e(formattedMsg, error: err, stackTrace: stack);
+    switch (_style) {
+      case HandleStyle.error:
+        log.e(formattedMsg, error: _error, stackTrace: _stack, time: time);
         break;
-      case LogType.warning:
-        _logger.w(formattedMsg, error: err, stackTrace: stack);
+
+      case HandleStyle.warning:
+        log.w(formattedMsg, error: _error, stackTrace: _stack, time: time);
         break;
-      case LogType.track:
-        _logger.t(formattedMsg, error: err, stackTrace: stack);
+
+      case HandleStyle.track:
+        log.t(formattedMsg, error: _error, stackTrace: _stack, time: time);
         break;
-      case LogType.info:
-        _logger.i(formattedMsg, error: err, stackTrace: stack);
+
+      case HandleStyle.info:
+        log.i(formattedMsg, error: _error, stackTrace: _stack, time: time);
         break;
-      case LogType.debug:
-        _logger.d(formattedMsg, error: err, stackTrace: stack);
+
+      case HandleStyle.debug:
+        log.d(formattedMsg, error: _error, stackTrace: _stack, time: time);
         break;
     }
   }
 
   // --- Static shortcuts for easy use anywhere ---
-  static void error(String title, {Object? message, StackTrace? stack}) {
-    HandleLogger._(title, type: LogType.error, err: message, stack: stack);
-  }
+  factory HandleLogger.render(
+    String message, {
+    Object? error,
+    StackTrace? stack,
+    HandleStyle style = HandleStyle.error,
+  }) => switch (style) {
+    HandleStyle.error => HandleLogger.error(
+      message,
+      error: error,
+      stack: stack,
+    ),
+    HandleStyle.warning => HandleLogger.warning(
+      message,
+      error: error,
+      stack: stack,
+    ),
+    HandleStyle.track => HandleLogger.track(
+      message,
+      error: error,
+      stack: stack,
+    ),
+    HandleStyle.info => HandleLogger.info(message, error: error, stack: stack),
+    HandleStyle.debug => HandleLogger.debug(
+      message,
+      error: error,
+      stack: stack,
+    ),
+  };
 
-  static void warn(String title, {Object? message, StackTrace? stack}) {
-    HandleLogger._(title, type: LogType.warning, err: message, stack: stack);
-  }
+  factory HandleLogger.error(
+    String message, {
+    Object? error,
+    StackTrace? stack,
+  }) => HandleLogger._(message, HandleStyle.error, error, stack);
 
-  static void info(String title, {Object? message, StackTrace? stack}) {
-    HandleLogger._(title, type: LogType.info, err: message, stack: stack);
-  }
+  factory HandleLogger.info(
+    String message, {
+    Object? error,
+    StackTrace? stack,
+  }) => HandleLogger._(message, HandleStyle.info, error, stack);
 
-  static void debug(String title, {Object? message, StackTrace? stack}) {
-    HandleLogger._(title, type: LogType.debug, err: message, stack: stack);
-  }
+  factory HandleLogger.warning(
+    String message, {
+    Object? error,
+    StackTrace? stack,
+  }) => HandleLogger._(message, HandleStyle.warning, error, stack);
 
-  static void track(String title, {Object? message, StackTrace? stack}) {
-    HandleLogger._(title, type: LogType.track, err: message, stack: stack);
-  }
+  factory HandleLogger.track(
+    String message, {
+    Object? error,
+    StackTrace? stack,
+  }) => HandleLogger._(message, HandleStyle.track, error, stack);
+
+  factory HandleLogger.debug(
+    String message, {
+    Object? error,
+    StackTrace? stack,
+  }) => HandleLogger._(message, HandleStyle.debug, error, stack);
 }

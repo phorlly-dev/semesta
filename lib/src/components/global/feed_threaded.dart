@@ -30,6 +30,7 @@ class SyncFeedThreaded extends StatelessWidget {
         return switch (content.feed.type) {
           Create.quote => CorePostCard(
             view,
+            uid: content.uid,
             profiled: profiled,
             middle: QuotedContext(quoted: content.parent, actor: content.actor),
           ),

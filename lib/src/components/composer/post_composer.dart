@@ -10,18 +10,18 @@ class PostComposer extends StatelessWidget {
   final Feed? parent;
   final bool isReply;
   final String? label;
-  final StatusView audit;
+  final StatusView _audit;
   final List<AssetEntity> assets;
   final ValueChanged<int>? onRemove;
   final TextEditingController? content;
   final ValueChanged<String>? onChanged;
-  const PostComposer({
+  const PostComposer(
+    this._audit, {
     super.key,
     this.label,
     this.parent,
     this.onChanged,
-    required this.audit,
-    required this.assets,
+    this.assets = const [],
     this.content,
     this.isReply = false,
     this.onRemove,
@@ -29,34 +29,36 @@ class PostComposer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasParent = parent != null && audit.actor != null;
+    final hasParent = parent != null && _audit.actor != null;
+    final avatar = _audit.author.avatar;
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(12),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: hasParent && isReply
           ? CommentEditor(
-              avatar: audit.author.avatar,
+              parent!,
+              _audit.actor!,
+              avatar: avatar,
               content: content,
-              post: parent!,
               label: label,
               onChanged: onChanged,
               assets: assets,
               onRemove: onRemove,
-              actor: audit.actor!,
             )
           : hasParent
           ? RepostEditor(
-              avatar: audit.author.avatar,
+              parent!,
+              _audit.actor!,
+              avatar: avatar,
               content: content,
-              post: parent!,
               label: label,
               onChanged: onChanged,
               assets: assets,
               onRemove: onRemove,
-              actor: audit.actor!,
             )
           : PostEditor(
-              avatar: audit.author.avatar,
+              avatar: avatar,
               onChanged: onChanged,
               content: content,
               assets: assets,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
-import 'package:semesta/public/utils/params.dart';
-import 'package:semesta/public/utils/scroll_aware_app_bar.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
+import 'package:semesta/public/utils/scroll_aware.dart';
 import 'package:semesta/src/components/layout/tab_sliver.dart';
 import 'package:semesta/src/components/layout/nav_bar_sliver.dart';
 import 'package:semesta/src/components/layout/nested_scrollable.dart';
@@ -55,7 +55,7 @@ class UserProfile extends StatelessWidget {
             animation: state,
             builder: (_, child) => NestedScrollable(
               builder: (_) => [
-                ScrollAwareAppBar(
+                ScrollAware(
                   (visible) => AppNavBarSliver(
                     middle: Text(authed ? 'Your profile' : author.name),
                     end: authed
@@ -69,7 +69,7 @@ class UserProfile extends StatelessWidget {
                             icon: Icon(Icons.search),
                             color: context.outlineColor,
                           ),
-                    toolbarHeight: visible ? kToolbarHeight : 0,
+                    toolbar: visible ? kToolbarHeight : 0,
                   ),
                 ),
 

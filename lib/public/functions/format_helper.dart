@@ -8,10 +8,6 @@ DateTime syncDate([DateTime? date, bool isLocal = true]) {
   return isLocal ? local : utc;
 }
 
-String asImage(String path, [bool isIcon = false]) {
-  return isIcon ? 'assets/icons/$path' : 'assets/images/$path';
-}
-
 String toCount(int count) {
   String formatted;
   if (count >= 1000000000) {

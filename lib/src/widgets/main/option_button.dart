@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
+import 'package:semesta/public/extensions/string_extension.dart';
 
 class OptionButton extends StatelessWidget {
   final dynamic icon;
@@ -17,7 +18,7 @@ class OptionButton extends StatelessWidget {
     super.key,
     this.icon,
     this.color,
-    this.sizeIcon = 24,
+    this.sizeIcon = 20,
     this.onTap,
     this.status,
     this.padding,
@@ -27,29 +28,19 @@ class OptionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theColor = color ?? context.secondaryColor;
     final iconWidget = icon is IconData
-        ? Icon(icon, size: sizeIcon, color: theColor)
+        ? Icon(icon, size: sizeIcon, color: color)
         : Image.asset(
-            '$icon'.asImage(true),
+            '$icon'.toIcon(true),
             width: sizeIcon,
             height: sizeIcon,
-            color: theColor,
+            color: color,
           );
 
     return ListTile(
       contentPadding: padding,
       leading: iconWidget,
-      title: Text(
-        _label,
-        style:
-            style ??
-            TextStyle(
-              fontSize: 16,
-              color: theColor,
-              fontWeight: FontWeight.w500,
-            ),
-      ),
+      title: Text(_label, style: style ?? context.text.bodyLarge),
       trailing: status,
       onTap: onTap != null
           ? () {

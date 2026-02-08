@@ -10,17 +10,11 @@ class MediaPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     if (_assets.isEmpty) return const SizedBox.shrink();
 
-    if (_assets.length == 1) {
-      return _buildSingle(context);
-    } else if (_assets.length == 2) {
-      return _buildMultiple(context);
-    } else {
-      return _buildMultiple(context);
-    }
+    return _assets.length == 1 ? _single(context) : _multiple(context);
   }
 
   // === One image full preview ===
-  Widget _buildSingle(BuildContext context) {
+  Widget _single(BuildContext context) {
     final asset = _assets.first;
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
@@ -48,7 +42,7 @@ class MediaPreview extends StatelessWidget {
             Positioned(
               top: 8,
               right: 8,
-              child: _removeButton(() => onRemove?.call(0)),
+              child: _remove(() => onRemove?.call(0)),
             ),
         ],
       ),
@@ -56,7 +50,7 @@ class MediaPreview extends StatelessWidget {
   }
 
   // === Multiple images, horizontal scroll ===
-  Widget _buildMultiple(BuildContext context) {
+  Widget _multiple(BuildContext context) {
     return SizedBox(
       height: 210,
       child: ListView.separated(
@@ -89,7 +83,7 @@ class MediaPreview extends StatelessWidget {
                   Positioned(
                     top: 6,
                     right: 6,
-                    child: _removeButton(() => onRemove?.call(index)),
+                    child: _remove(() => onRemove?.call(index)),
                   ),
               ],
             ),
@@ -99,7 +93,7 @@ class MediaPreview extends StatelessWidget {
     );
   }
 
-  Widget _removeButton(VoidCallback onTap) {
+  Widget _remove(VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(

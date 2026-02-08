@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
+import 'package:semesta/app/repositories/generic_repository.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
-import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/functions/resolve_action.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/helpers/audit_view.dart';
 import 'package:semesta/public/utils/type_def.dart';
@@ -20,8 +21,8 @@ import 'package:semesta/src/widgets/sub/animated_button.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
 
 class GenericComposer extends StatefulWidget {
-  final ComposerType _type;
   final Feed? parent;
+  final ComposerType _type;
   const GenericComposer(this._type, {super.key, this.parent});
 
   @override
@@ -31,8 +32,8 @@ class GenericComposer extends StatefulWidget {
 class _GenericComposerState extends State<GenericComposer> {
   late ResolveAction _action;
   final _input = TextEditingController();
-  Visible _option = Visible.everyone;
-  VisibleToPost _visible = VisibleToPost.public();
+  var _option = Visible.everyone;
+  var _visible = VisibleToPost.public();
 
   @override
   void initState() {
@@ -40,42 +41,42 @@ class _GenericComposerState extends State<GenericComposer> {
     super.initState();
   }
 
-  AsWait get _submit async {
+  AsWait _submit() async {
     final text = _input.text.trim();
     final files = grepo.assets.toList();
-    final parent = widget.parent;
+    final pid = widget.parent?.id ?? '';
 
     _action.onSubmit(
       onPost: () async {
         final post = Feed(title: text, visible: _option);
 
         await pctrl.save(post, files);
+        await pctrl.refreshPost();
         if (mounted) context.pop();
-        await pctrl.refreshPost;
       },
       onQuote: () async {
         final post = Feed(
           title: text,
           visible: _option,
-          pid: parent?.id ?? '',
+          pid: pid,
           type: Create.quote,
         );
 
         await pctrl.save(post, files);
+        await pctrl.refreshPost();
         if (mounted) context.pop();
-        await pctrl.refreshPost;
       },
       onReply: () async {
         final post = Feed(
           title: text,
           visible: _option,
-          pid: parent?.id ?? '',
+          pid: pid,
           type: Create.reply,
         );
 
         await pctrl.save(post, files);
+        await pctrl.refreshPost();
         if (mounted) context.pop();
-        await pctrl.refreshPost;
       },
     );
   }
@@ -94,7 +95,7 @@ class _GenericComposerState extends State<GenericComposer> {
       final files = grepo.assets;
       final author = pctrl.currentUser;
       final content = pctrl.message.value;
-      final isLoading = pctrl.isLoading.value;
+      final loading = pctrl.isLoading.value;
       final actor = pctrl.uCtrl.dataMapping[widget.parent?.uid ?? author.id];
 
       // ✅ hide or disable button if text + files empty
@@ -111,11 +112,11 @@ class _GenericComposerState extends State<GenericComposer> {
               end: Container(
                 margin: EdgeInsets.only(right: 12),
                 child: AnimatedButton(
-                  onPressed: () => !hasContent ? null : _submit,
+                  onPressed: !hasContent ? null : _submit,
                   bgColor: !hasContent
                       ? Colors.lightBlueAccent
                       : Colors.blueAccent,
-                  label: isLoading ? 'Posting...' : _action.getActionLabel,
+                  label: loading ? 'Posting...' : _action.getActionLabel,
                   textColor: Colors.white,
                 ),
               ),
@@ -123,7 +124,7 @@ class _GenericComposerState extends State<GenericComposer> {
 
             // ---- Main content ----
             content: PostComposer(
-              audit: StatusView(author: author, actor: actor),
+              StatusView(author, actor: actor),
               content: _input,
               parent: widget.parent,
               assets: files.toList(),
@@ -164,8 +165,8 @@ class _GenericComposerState extends State<GenericComposer> {
                 const BreakSection(),
 
                 GroupedAction(
-                  onCamera: () => context.camera,
-                  onMedia: () => context.gallery,
+                  onMedia: () => context.mediaPicker(),
+                  onCamera: () => context.mediaPicker(from: PickMedia.camera),
                 ),
 
                 const SizedBox(height: 18),
@@ -174,7 +175,7 @@ class _GenericComposerState extends State<GenericComposer> {
           ),
 
           // ---- overlay ----
-          if (isLoading) BlockOverlay('Posting'),
+          if (loading) BlockOverlay('Posting'),
         ],
       );
     });

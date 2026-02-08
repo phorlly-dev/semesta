@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/custom_modal.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/components/info/reposted_banner.dart';
 import 'package:semesta/src/components/user/user_info.dart';
 import 'package:semesta/src/widgets/main/follow_button.dart';
@@ -24,7 +24,6 @@ class HeaderSection extends StatelessWidget {
 
     final user = status.author;
     final actions = _state.actions;
-    final model = actions.feed;
 
     return DirectionY(
       children: [
@@ -75,16 +74,16 @@ class HeaderSection extends StatelessWidget {
                   if (!authed)
                     FollowButton(
                       context.follow(iFollow, status.theyFollow),
-                      onPressed: () async {
+                      onPressed: () {
                         if (iFollow) {
                           CustomModal<String>(
                             context,
                             title: 'Unfollow ${user.name}?',
                             children: [Text(unfollow)],
-                            onConfirm: () async {
+                            onConfirm: () {
                               status.toggle();
                               context.pop();
-                              await actrl.toggleFollow(user.id, iFollow);
+                              actrl.toggleFollow(status);
                             },
                             label: 'Unfollow',
                             icon: Icons.person_remove_sharp,
@@ -92,7 +91,7 @@ class HeaderSection extends StatelessWidget {
                           );
                         } else {
                           status.toggle();
-                          await actrl.toggleFollow(user.id, iFollow);
+                          actrl.toggleFollow(status);
                         }
                       },
                     ),
@@ -106,22 +105,9 @@ class HeaderSection extends StatelessWidget {
                     ),
                     onTap: () {
                       if (authed) {
-                        context.current(
-                          model,
-                          actions.target,
-                          active: actions.bookmarked,
-                          profiled: false,
-                        );
+                        context.current(actions, profiled: false);
                       } else {
-                        context.target(
-                          model,
-                          actions.target,
-                          status: status,
-                          profiled: false,
-                          name: user.name,
-                          iFollow: iFollow,
-                          active: actions.bookmarked,
-                        );
+                        context.target(status, actions, profiled: false);
                       }
                     },
                   ),

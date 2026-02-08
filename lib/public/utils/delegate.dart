@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
-typedef DelegateBuilder =
-    Widget Function(double min, double max, double shrink);
+typedef DBuilder = Widget Function(double min, double max, double shrink);
 
 class Delegate extends SliverPersistentHeaderDelegate {
   final bool rebuild;
   final double min, max;
-  final DelegateBuilder builder;
+  final DBuilder builder;
   const Delegate({
     this.rebuild = false,
     this.min = 0,

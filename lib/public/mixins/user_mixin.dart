@@ -5,23 +5,15 @@ import 'package:semesta/app/repositories/repository.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 mixin UserMixin on IRepository<Author> {
-  Sync<bool> iFollow$(String me, String them) {
-    return has$('$users/$me/$following/$them');
-  }
+  Sync<bool> follow$(String me, String them, [bool i = true]) => i
+      ? has$('$users/$me/$following/$them')
+      : has$('$users/$them/$following/$me');
 
-  Sync<bool> theyFollow$(String me, String them) {
-    return has$('$users/$them/$following/$me');
-  }
+  Waits<Reaction> getFollow(String uid, {int limit = 30, bool i = true}) => i
+      ? getReactions({currentId: uid}, limit: limit, col: following)
+      : getReactions({targetId: uid}, limit: limit);
 
-  Wait<List<Reaction>> getFollowing(String uid, [int limit = 30]) {
-    return getReactions(
-      limit: limit,
-      col: following,
-      conditions: {currentId: uid},
-    );
-  }
-
-  Wait<List<Reaction>> getFollowers(String uid, [int limit = 30]) {
-    return getReactions(conditions: {targetId: uid}, limit: limit);
+  Waits<Reaction> getFollowing(String uid, [int limit = 30]) {
+    return getReactions({currentId: uid}, limit: limit, col: following);
   }
 }

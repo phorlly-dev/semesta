@@ -1,10 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/helpers/vendor_helper.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
-import 'package:semesta/public/helpers/cached_helper.dart';
 import 'package:semesta/app/controllers/auth_controller.dart';
 import 'package:semesta/app/controllers/controller.dart';
 import 'package:semesta/app/models/author.dart';
@@ -19,33 +19,37 @@ class UserController extends IController<AuthedView> {
   final dataMapping = <String, Author>{}.obs;
   final currentUser = Rxn<Author>(null);
 
-  final Map<String, CachedState<AuthedView>> _states = {};
-  CachedState<AuthedView> stateFor(String key) {
-    return _states.putIfAbsent(key, () => CachedState<AuthedView>());
+  final Mapper<Cacher<AuthedView>> _states = {};
+  Cacher<AuthedView> stateFor(String key) {
+    return _states.putIfAbsent(key, () => Cacher<AuthedView>());
   }
 
   @override
   void onInit() {
     ever(_loggedUser, _onAuthChanged);
-    loadInfo();
+    _loadInfo();
     super.onInit();
   }
 
-  void _onAuthChanged(User? firebaseUser) {
-    if (firebaseUser == null) {
+  void _onAuthChanged(User? loggedIn) {
+    if (loggedIn == null) {
       // Logged out → clear data
       currentUser.value = null;
       currentUid.value = '';
     } else {
       // Logged in → fetch new data
-      _currentUserSub = urepo.sync$(firebaseUser.uid).listen((u) {
+      _currentUserSub = urepo.sync$(loggedIn.uid).listen((u) {
         currentUid.value = u.id;
         currentUser.value = u;
       });
     }
   }
 
-  AsWait loadInfo() async {
+  AsWait modifyProfile(Author model, [File? avatar, File? cover]) async {
+    await handleAsync(() => urepo.updateUser(model, avatar, cover));
+  }
+
+  AsWait _loadInfo() async {
     final data = await urepo.index(limit: 100);
     if (data.isEmpty) return;
 
@@ -65,30 +69,34 @@ class UserController extends IController<AuthedView> {
     _userSub = urepo.sync$(uid).listen((u) => dataMapping[uid] = u);
   }
 
-  Wait<List<AuthedView>> loadUserFollowing(
+  Waits<AuthedView> loadUserFollowing(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {
-    final actions = await urepo.getFollowing(uid);
-    final ids = actions.map((a) => a.targetId).toList();
-    final users = await urepo.getInOrder(ids, mode: mode);
+    final actions = await urepo.getFollow(uid);
+    final users = await urepo.getInOrder(
+      getKeys(actions, (value) => value.targetId),
+      mode: mode,
+    );
 
-    if (users.isEmpty) return const [];
-
-    return mapToFollow(users, actions, (value) => value.targetId);
+    return users.isNotEmpty
+        ? mapToFollow(users, actions, (value) => value.targetId)
+        : const [];
   }
 
-  Wait<List<AuthedView>> loadUserFollowers(
+  Waits<AuthedView> loadUserFollowers(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {
-    final actions = await urepo.getFollowers(uid);
-    final ids = actions.map((a) => a.currentId).toList();
-    final users = await urepo.getInOrder(ids, mode: mode);
+    final actions = await urepo.getFollow(uid, i: false);
+    final users = await urepo.getInOrder(
+      getKeys(actions, (value) => value.currentId),
+      mode: mode,
+    );
 
-    if (users.isEmpty) return const [];
-
-    return mapToFollow(users, actions, (value) => value.currentId);
+    return users.isNotEmpty
+        ? mapToFollow(users, actions, (value) => value.currentId)
+        : const [];
   }
 
   @override

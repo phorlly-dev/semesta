@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/app/models/author.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
+import 'package:semesta/public/extensions/string_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/delegate.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/widgets/main/custom_image.dart';
 import 'package:semesta/src/widgets/sub/animated_avatar.dart';
 
@@ -33,30 +34,27 @@ class ProfileHeader extends StatelessWidget {
         min: collapsed,
         max: expanded,
         builder: (min, max, shrink) {
-          final pTop = context.query.padding.top;
+          final ptop = context.query.padding.top;
           final progress = (shrink / (max - min)).clamp(0.0, 1.0);
 
           // Avatar sizes (X-like)
-          final double avatarMax = 72;
-          final double avatarMin = 36;
-          final double avatarSize =
-              avatarMax - (avatarMax - avatarMin) * progress;
+          final amax = 72.0;
+          final amin = 36.0;
+          final asize = amax - (amax - amin) * progress;
 
           // Vertical movement
-          final double avatarStartY = max - avatarMax / 2 - 16;
-          final double avatarEndY = pTop + (kToolbarHeight - avatarMin) / 2;
-
-          final double avatarY =
-              avatarStartY - (avatarStartY - avatarEndY) * progress;
+          final astartY = max - amax / 2 - 16;
+          final avatarEndY = ptop + (kToolbarHeight - amin) / 2;
+          final avatarY = astartY - (astartY - avatarEndY) * progress;
 
           return Stack(
             clipBehavior: Clip.none,
             children: [
               // Cover image
               Positioned.fill(
-                child: _user.banner.isNotEmpty
-                    ? CustomImage(MediaSource.network(_user.banner))
-                    : CustomImage(MediaSource.asset('bg-cover.jpg'.asImage())),
+                child: _user.cover.isNotEmpty
+                    ? CustomImage(MediaSource.network(_user.cover))
+                    : CustomImage(MediaSource.asset('bg-cover.jpg'.toIcon())),
               ),
 
               // Dark overlay (optional, X-like)
@@ -72,9 +70,9 @@ class ProfileHeader extends StatelessWidget {
                 top: avatarY,
                 child: AvatarAnimation(
                   MediaSource.network(_user.avatar),
-                  size: avatarSize,
+                  size: asize,
                   onTap: () async {
-                    await context.openById(route.avatar, _user.id);
+                    await context.openById(routes.avatar, _user.id);
                   },
                 ),
               ),

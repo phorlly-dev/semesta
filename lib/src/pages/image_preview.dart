@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/src/partials/image_preview.dart';
+import 'package:semesta/src/partials/imaged_preview.dart';
 import 'package:semesta/src/widgets/main/data_binder.dart';
 
 class ImagePreviewPage extends StatelessWidget {
@@ -17,16 +17,21 @@ class ImagePreviewPage extends StatelessWidget {
       final mediaList = data?.media;
 
       return DataBinder(
-        isLoading: data == null,
+        loading: data == null,
         isEmpty: mediaList?.isEmpty ?? false,
         message: 'No media available',
-        child: ImagePreview(
+        child: ImagedPreview(
           mediaList?.map<String>((e) {
                 return e.img ? e.display : e.thumbnails['url'];
               }).toList() ??
               const [],
           id: _pid,
           initIndex: index,
+          media:
+              mediaList?.map<String>((e) {
+                return e.img ? e.path : e.thumbnails['path'];
+              }).toList() ??
+              const [],
         ),
       );
     });

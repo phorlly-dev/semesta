@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
-import 'package:semesta/public/extensions/extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/components/layout/_page.dart';
 import 'package:semesta/src/components/layout/drawer.dart';
@@ -13,7 +13,7 @@ class AppLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final index = route.getIndexFromLocation(context.location);
+    final index = routes.getIndex(context.location);
 
     return Obx(() {
       final user = pctrl.currentUser;
@@ -36,7 +36,7 @@ class AppLayout extends StatelessWidget {
                   unselectedItemColor: context.iconColor?.withValues(alpha: .6),
                   onTap: (idx) async {
                     if (curScroller.hasClients && idx == index) {
-                      dctrl.jump;
+                      dctrl.jump();
 
                       switch (idx) {
                         case 0:
@@ -44,17 +44,17 @@ class AppLayout extends StatelessWidget {
                         default:
                           if (!pctrl.anyLoading) {
                             if (curIdx == 0) {
-                              await pctrl.refreshPost;
+                              await pctrl.refreshPost();
                             } else {
-                              await pctrl.refreshFollowing;
+                              await pctrl.refreshFollowing();
                             }
                           }
                       }
                     }
 
-                    if (context.mounted) context.go(route.paths[idx]);
+                    if (context.mounted) context.go(routes.paths[idx]);
                   },
-                  items: route.items,
+                  items: routes.items,
                   type: BottomNavigationBarType.shifting,
                 )
               : null,
@@ -67,10 +67,10 @@ class AppLayout extends StatelessWidget {
                   duration: const Duration(milliseconds: 260),
                   opacity: visible ? 1 : 0,
                   child: FloatingActionButton(
-                    onPressed: () => context.pushNamed(route.create.name),
-                    backgroundColor: const Color(0xFF1D9BF0),
-                    shape: const CircleBorder(),
                     elevation: 4,
+                    shape: const CircleBorder(),
+                    backgroundColor: const Color(0xFF1D9BF0),
+                    onPressed: () => context.pushNamed(routes.create.name),
                     child: const Icon(Icons.add, color: Colors.white, size: 28),
                   ),
                 ),

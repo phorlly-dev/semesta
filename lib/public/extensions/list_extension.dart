@@ -1,23 +1,9 @@
 import 'package:get/get.dart';
-import 'package:semesta/public/functions/custom_toast.dart';
-import 'package:semesta/public/helpers/cached_helper.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
-extension Lists<T> on List<T> {
-  List<List<T>> chunked(int size) {
-    if (size <= 0) throw ArgumentError('Chunk size must be greater than 0');
-    final chunks = <List<T>>[];
-    for (var i = 0; i < length; i += size) {
-      final end = (i + size < length) ? i + size : length;
-      chunks.add(sublist(i, end));
-    }
-
-    return chunks;
-  }
-}
-
-extension CachedStateX<T extends HasAttributes> on CachedState<T> {
+extension CacherX<T extends HasAttributes> on Cacher<T> {
   void set(List<T> initing) {
     assignAll(List<T>.from(initing));
     refresh();
@@ -89,62 +75,5 @@ extension ListX<T extends HasAttributes> on List<T> {
     list.sort((a, b) => b.created?.compareTo(a.created ?? now) ?? 0);
 
     return list;
-  }
-}
-
-extension RxListX<T> on RxList<T> {
-  void setList(List<T> items) {
-    assignAll(List<T>.from(items));
-    refresh();
-  }
-
-  void addTo(T data) {
-    insert(0, data);
-    refresh();
-  }
-
-  void merge(List<T> incoming) {
-    final seen = <String>{};
-    final result = <T>[];
-
-    for (final item in [...incoming, ...this]) {
-      final id = (item as dynamic).id;
-      if (seen.add(id)) result.add(item);
-    }
-
-    setList(result);
-  }
-
-  void addToAll(List<T> items) {
-    insertAll(0, items);
-    refresh();
-  }
-
-  void append(List<T> incoming) {
-    addAll(incoming);
-  }
-
-  void removeFrom(String pkId) {
-    removeWhere((e) => (e as dynamic).id == pkId);
-    refresh();
-  }
-
-  void toggle(
-    String pkId, {
-    required bool isActive,
-    required T data,
-    bool hasMessage = false,
-  }) {
-    if (isActive) {
-      // remove
-      removeFrom(pkId);
-      if (hasMessage) CustomToast.warning('Removed from List');
-    } else {
-      // add
-      addTo(data);
-      if (hasMessage) CustomToast.info('Added to List');
-    }
-
-    refresh();
   }
 }

@@ -1,3 +1,4 @@
+import 'package:faker/faker.dart';
 import 'package:get/get.dart';
 import 'package:semesta/app/controllers/auth_controller.dart';
 import 'package:semesta/routes/routes.dart';
@@ -21,13 +22,14 @@ const followers = 'followers';
 const following = 'following';
 const messages = 'messages';
 const settings = 'settings';
-const unames = 'usernames';
+const assets = 'assets';
 
 //Storage
-const avatars = 'avatars';
-const images = 'images';
-const thumbnails = 'thumbnails';
 const videos = 'videos';
+const covers = 'covers';
+const images = 'images';
+const avatars = 'avatars';
+const thumbnails = 'thumbnails';
 
 ///Key Field
 const keyId = 'id';
@@ -43,7 +45,7 @@ const types = {
 };
 
 ///Helpers
-Routes get route => Routes();
+Routes get routes => Routes();
 DateTime get now => DateTime.now();
 PostRepository get prepo => Get.put(PostRepository());
 UserRepository get urepo => Get.put(UserRepository());
@@ -55,6 +57,8 @@ GenericRepository get grepo => Get.put(GenericRepository());
 DirectionController get dctrl => Get.find<DirectionController>();
 
 ///Misc
+String get fakeName => faker.person.name();
+String get fakeTitle => faker.lorem.sentence();
 String toCapitalize(String? name) => name?.capitalize ?? '';
 String get unfollow {
   return 'Their posts will no longer show up in your home timeline. You can still view their profile, unless their posts are proteted.';

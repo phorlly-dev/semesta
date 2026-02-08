@@ -1,31 +1,29 @@
-import 'package:semesta/app/models/media.dart';
 import 'package:semesta/public/extensions/list_extension.dart';
+import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/helpers/vendor_helper.dart';
 import 'package:semesta/public/mixins/controller_mixin.dart';
 import 'package:semesta/public/mixins/helper_mixin.dart';
+import 'package:semesta/public/mixins/post_mixin.dart';
 import 'package:semesta/public/mixins/repo_mixin.dart';
 import 'package:semesta/app/controllers/controller.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
-import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 abstract class IFeedController extends IController<FeedView>
     with ControllerMixin, HelperMixin {
-  Wait<List<FeedView>> loadMoreForYou([
-    QueryMode mode = QueryMode.normal,
-  ]) async {
+  Waits<FeedView> loadMoreForYou([QueryMode mode = QueryMode.normal]) async {
     final actions = await prepo.getForYouActions();
     final reposts = await getSubcombined(actions, mode);
 
     final posts = await prepo.getForYou(mode: mode);
     for (final p in posts) {
-      listenToPost(p.id);
+      listenToPost(p);
     }
 
     final comments = await prepo.subindex(mode: mode);
     for (final c in comments) {
-      listenToComment(c.id, c.pid);
+      listenToPost(c);
     }
 
     final merged = [
@@ -34,131 +32,139 @@ abstract class IFeedController extends IController<FeedView>
       ...mapFollowActions(reposts, actions: actions, type: FeedKind.reposted),
     ];
 
-    if (merged.isEmpty) return const [];
-
-    return merged;
+    return merged.isNotEmpty ? merged : const [];
   }
 
-  Wait<List<FeedView>> loadMoreFollowing([
-    QueryMode mode = QueryMode.normal,
-  ]) async {
-    final actions = await prepo.getFollowing(currentUid);
+  Waits<FeedView> loadMoreFollowing([QueryMode mode = QueryMode.normal]) async {
+    final actions = await urepo.getFollowing(currentUid);
     final ids = getKeys(actions, (value) => value.targetId);
-    final ractions = await prepo.getReposts(ids);
+    final ractions = await prepo.getActions(ids, type: ActionType.repost);
 
     final merged = [
       ...await getCombined(actions, mode),
       ...await getSubcombined(ractions, mode),
     ];
 
-    if (merged.isEmpty) return const [];
-
-    return mapFollowActions(
-      merged,
-      actions: ractions,
-      type: FeedKind.following,
-    ).sortOrder;
+    return merged.isNotEmpty
+        ? mapFollowActions(
+            merged,
+            actions: ractions,
+            type: FeedKind.following,
+          ).sortOrder
+        : const [];
   }
 
-  Wait<List<FeedView>> loadUserPosts(
+  Waits<FeedView> loadUserPosts(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) => prepo.getPosts(uid, mode: mode).then((value) {
     for (final p in value) {
-      listenToPost(p.id);
+      listenToPost(p);
     }
 
-    return mapToFeed(value, uid);
+    return value.isNotEmpty ? mapToFeed(value, uid) : const [];
   });
 
-  Wait<List<FeedView>> loadUserReposts(
+  Waits<FeedView> loadUserReposts(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {
-    final actions = await prepo.getReposts(uid);
+    final actions = await prepo.getActions(uid, type: ActionType.repost);
     final merged = await getSubcombined(actions, mode);
 
-    return mapFollowActions(
-      merged,
-      uid: uid,
-      actions: actions,
-      type: FeedKind.reposted,
-    );
+    return merged.isNotEmpty
+        ? mapFollowActions(
+            merged,
+            uid: uid,
+            actions: actions,
+            type: FeedKind.reposted,
+          )
+        : const [];
   }
 
-  Wait<List<FeedView>> loadUserComments(
+  Waits<FeedView> loadUserComments(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) => prepo.getComments(uid, mode: mode).then((value) {
     for (final c in value) {
-      listenToComment(c.id, c.pid);
+      listenToPost(c);
     }
 
-    return mapToFeed(value.where((v) => v.pid.isNotEmpty).toList(), uid);
+    return value.isNotEmpty
+        ? mapToFeed(value.where((v) => v.pid.isNotEmpty).toList(), uid)
+        : const [];
   });
 
-  Wait<List<FeedView>> loadPostComments(
+  Waits<FeedView> loadPostComments(
     String pid, [
     QueryMode mode = QueryMode.normal,
   ]) => prepo.getReplies(pid, mode: mode).then((value) {
-    return mapToFeed(value.where((v) => v.pid.isNotEmpty).toList());
+    return value.isNotEmpty
+        ? mapToFeed(value.where((v) => v.pid.isNotEmpty).toList())
+        : const [];
   });
 
-  Wait<List<FeedView>> loadUserMedia(
+  Waits<FeedView> loadUserMedia(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) => getMerged(uid, mode).then(
-    (value) => mapFollowActions(
-      uid: uid,
-      type: FeedKind.media,
-      value.where((m) => m.media.isNotEmpty).toList(),
-    ),
+    (value) => value.isNotEmpty
+        ? mapFollowActions(
+            uid: uid,
+            type: FeedKind.media,
+            value.where((f) => f.media.isNotEmpty).toList(),
+          )
+        : const [],
   );
 
-  Wait<List<FeedView>> loadReelsMedia([
-    QueryMode mode = QueryMode.normal,
-  ]) async {
+  Waits<FeedView> loadReelsMedia([QueryMode mode = QueryMode.normal]) async {
     final merged = [
       ...await prepo.getForYou(mode: mode),
       ...await prepo.subindex(mode: mode),
     ];
 
-    return mapToFeed(
-      merged.where((e) {
-        return e.media.isNotEmpty && e.media[0].type == MediaType.video;
-      }).toList(),
-    );
+    return merged.isNotEmpty
+        ? mapToFeed(
+            merged.where((e) {
+              return e.media.isNotEmpty && e.media[0].mp4;
+            }).toList(),
+          )
+        : const [];
   }
 
   //Load Favorites
-  Wait<List<FeedView>> loadUserFavorites(
+  Waits<FeedView> loadUserFavorites(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {
-    final actions = await prepo.getFavorites(uid);
+    final actions = await prepo.getActions(uid);
     final merged = await getSubcombined(actions, mode);
 
-    return mapFollowActions(
-      merged,
-      uid: uid,
-      actions: actions,
-      type: FeedKind.liked,
-    );
+    return merged.isNotEmpty
+        ? mapFollowActions(
+            merged,
+            uid: uid,
+            actions: actions,
+            type: FeedKind.liked,
+          )
+        : const [];
   }
 
   ///Load Bookmarks
-  Wait<List<FeedView>> loadUserBookmarks(
+  Waits<FeedView> loadUserBookmarks(
     String uid, [
     QueryMode mode = QueryMode.normal,
   ]) async {
-    final actions = await prepo.getBookmarks(uid);
+    final actions = await prepo.getActions(uid, type: ActionType.save);
     final merged = await getSubcombined(actions, mode);
 
-    return mapFollowActions(
-      merged,
-      uid: uid,
-      actions: actions,
-      type: FeedKind.saved,
-    );
+    return merged.isNotEmpty
+        ? mapFollowActions(
+            merged,
+            uid: uid,
+            actions: actions,
+            type: FeedKind.saved,
+          )
+        : const [];
   }
 }

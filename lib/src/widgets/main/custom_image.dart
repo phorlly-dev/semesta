@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:semesta/public/extensions/extension.dart';
-import 'package:semesta/public/utils/params.dart';
+import 'package:semesta/public/extensions/string_extension.dart';
+import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/widgets/main/animated.dart';
 import 'package:semesta/src/widgets/sub/animated_loader.dart';
 
@@ -40,7 +40,7 @@ class CustomImage extends StatelessWidget {
                 color: Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Image.asset(defaultAsset.asImage(asIcon), fit: fit),
+              child: Image.asset(defaultAsset.toIcon(asIcon), fit: fit),
             ),
           );
     }

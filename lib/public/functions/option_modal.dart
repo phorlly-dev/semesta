@@ -1,202 +1,203 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:semesta/public/extensions/extension.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/model_extension.dart';
-import 'package:semesta/public/utils/custom_bottom_sheet.dart';
+import 'package:semesta/public/extensions/string_extension.dart';
+import 'package:semesta/public/functions/custom_toast.dart';
 import 'package:semesta/public/utils/custom_modal.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/helpers/audit_view.dart';
-import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/src/widgets/main/option_button.dart';
+import 'package:sn_progress_dialog/sn_progress_dialog.dart';
 
 class OptionModal {
   final BuildContext _context;
   const OptionModal(this._context);
 
   void tagetOptions(
-    Feed post,
-    ActionTarget target, {
-    bool iFollow = false,
-    bool active = false,
+    StatusView status,
+    ActionsView actions, {
     bool profiled = true,
-    required String name,
-    required StatusView status,
-  }) => CustomBottomSheet<Feed>(
-    _context,
-    children: [
-      if (!profiled)
+  }) {
+    final author = status.author;
+    final active = actions.bookmarked;
+    final uid = author.id;
+    final name = author.name;
+    final iFollow = status.iFollow;
+
+    _context.sheet(
+      children: [
+        if (!profiled)
+          OptionButton(
+            'Go to profile',
+            icon: Icons.person,
+            onTap: () async {
+              await _context.openProfile(uid, false);
+            },
+          ),
+
         OptionButton(
-          'Go to profile',
-          icon: Icons.person,
-          onTap: () async {
-            await _context.openProfile(post.uid, false);
+          active ? 'Unsave' : 'Save',
+          icon: active ? Icons.bookmark_remove_outlined : Icons.bookmark_border,
+          onTap: () {
+            actions.toggleBookmark();
+            actrl.toggleBookmark(actions);
           },
         ),
 
-      OptionButton(
-        active ? 'Unbookmark' : 'Bookmark',
-        icon: active ? Icons.bookmark_remove_outlined : Icons.bookmark_border,
-        onTap: () async {
-          await actrl.toggleBookmark(target, post.id, active: active);
-        },
-      ),
-
-      OptionButton(
-        iFollow ? 'Unfollow $name' : 'Follow $name',
-        icon: iFollow ? Icons.person_remove_alt_1 : Icons.person_add,
-        onTap: () async {
-          if (iFollow) {
-            CustomModal<String>(
-              _context,
-              title: 'Unfollow $name',
-              children: [Text(unfollow)],
-              onConfirm: () async {
-                status.toggle();
-                _context.pop();
-                await actrl.toggleFollow(post.uid, iFollow);
-              },
-              icon: Icons.person_remove_sharp,
-              color: _context.primaryColor,
-              label: 'Unfollow',
-            );
-          } else {
-            status.toggle();
-            await actrl.toggleFollow(post.uid, iFollow);
-          }
-        },
-      ),
-
-      OptionButton(
-        'Not interested',
-        icon: Icons.visibility_off_outlined,
-        onTap: () {},
-      ),
-
-      OptionButton(
-        'Block',
-        icon: Icons.person_off,
-        color: _context.errorColor,
-        onTap: () {},
-      ),
-
-      OptionButton(
-        'Report',
-        icon: Icons.report_problem_outlined,
-        color: _context.errorColor,
-        onTap: () {},
-      ),
-    ],
-  );
-
-  void currentOptions(
-    Feed post,
-    ActionTarget target, {
-    bool profiled = false,
-    bool active = false,
-  }) => CustomBottomSheet<Feed>(
-    _context,
-    children: [
-      if (profiled && post.isEditable)
-        StreamBuilder(
-          stream: post.editCountdown$,
-          builder: (_, snap) {
-            if (!snap.hasData || snap.data == Duration.zero) {
-              return const SizedBox.shrink();
-            }
-
-            final remaining = snap.data!;
-            final opacity = remaining.inSeconds <= 10 ? 0.6 : 1.0;
-
-            return Opacity(
-              opacity: opacity,
-              child: OptionButton(
-                'Edit post',
-                icon: Icons.edit_square,
-                status: Text(
-                  post.formatMMSS(remaining),
-                  style: _context.text.bodyMedium?.copyWith(
-                    color: _context.outlineColor,
-                  ),
-                ),
-                onTap: () async {
-                  await _context.openById(route.change, post.id);
+        OptionButton(
+          iFollow ? 'Unfollow $name' : 'Follow $name',
+          icon: iFollow ? Icons.person_remove_alt_1 : Icons.person_add,
+          onTap: () {
+            if (iFollow) {
+              CustomModal<String>(
+                _context,
+                title: 'Unfollow $name',
+                children: [Text(unfollow)],
+                onConfirm: () {
+                  status.toggle();
+                  _context.pop();
+                  actrl.toggleFollow(status);
                 },
-              ),
-            );
+                icon: Icons.person_remove_sharp,
+                color: _context.primaryColor,
+                label: 'Unfollow',
+              );
+            } else {
+              status.toggle();
+              actrl.toggleFollow(status);
+            }
           },
         ),
 
-      if (!profiled)
         OptionButton(
-          icon: Icons.person,
-          'Go to profile',
-          onTap: () async {
-            await _context.openProfile(post.uid, true);
-          },
+          'Not interested',
+          icon: Icons.visibility_off_outlined,
+          onTap: () {},
         ),
 
-      OptionButton(
-        active ? 'Unbookmark' : 'Bookmark',
-        icon: active ? Icons.bookmark_remove_outlined : Icons.bookmark_border,
-        onTap: () async {
-          await actrl.toggleBookmark(target, post.id, active: active);
-        },
-      ),
+        OptionButton(
+          'Block',
+          icon: Icons.person_off,
+          color: _context.errorColor,
+          onTap: () {},
+        ),
 
-      OptionButton(
-        'Change who can reply',
-        icon: 'comment.png',
-        color: _context.primaryColor,
-        onTap: () {
-          _context.show(
-            post.visible,
-            onChanged: (opt) async {
-              await pctrl.saveChange(
-                post,
-                post.copy(visible: opt, edited: true).to(),
+        OptionButton(
+          'Report',
+          icon: Icons.report_problem_outlined,
+          color: _context.errorColor,
+          onTap: () {},
+        ),
+      ],
+    );
+  }
+
+  void currentOptions(ActionsView actions, {bool profiled = false}) {
+    final post = actions.feed;
+    final active = actions.bookmarked;
+
+    _context.sheet(
+      children: [
+        if (profiled && post.editable)
+          StreamBuilder(
+            stream: post.editCountdown$,
+            builder: (_, snap) {
+              if (!snap.hasData || snap.data == Duration.zero) {
+                return const SizedBox.shrink();
+              }
+
+              final remaining = snap.data!;
+              final opacity = remaining.inSeconds <= 10 ? 0.6 : 1.0;
+
+              return Opacity(
+                opacity: opacity,
+                child: OptionButton(
+                  'Edit post',
+                  icon: Icons.edit_square,
+                  status: Text(
+                    post.formatMMSS(remaining),
+                    style: _context.text.bodyMedium?.copyWith(
+                      color: _context.outlineColor,
+                    ),
+                  ),
+                  onTap: () async {
+                    await _context.openById(routes.change, post.id);
+                  },
+                ),
               );
             },
-          );
-        },
-      ),
+          ),
 
-      if (profiled)
+        if (!profiled)
+          OptionButton(
+            icon: Icons.person,
+            'Go to profile',
+            onTap: () async {
+              await _context.openProfile(post.uid, true);
+            },
+          ),
+
         OptionButton(
-          'Delete post',
-          icon: Icons.delete_outline,
-          color: _context.errorColor,
+          active ? 'Unsave' : 'Save',
+          icon: active ? Icons.bookmark_remove_outlined : Icons.bookmark_border,
           onTap: () {
-            CustomModal<String>(
-              _context,
-              title: 'Delete Post?',
-              children: [
-                const Text(
-                  "If you delete this post, you won't be able to restore it.",
-                ),
-              ],
-              onConfirm: () async {
-                _context.pop();
-                await pctrl.remove(post);
-              },
-              color: _context.errorColor,
-            );
+            actions.toggleBookmark();
+            actrl.toggleBookmark(actions);
           },
         ),
 
-      const SizedBox(height: 12),
-    ],
-  );
+        if (profiled)
+          OptionButton(
+            'Change who can reply',
+            icon: 'comment.png',
+            color: _context.primaryColor,
+            onTap: () {
+              _context.show(
+                post.visible,
+                onChanged: (opt) async {
+                  await pctrl.saveChange(post.copy(visible: opt, edited: true));
+                },
+              );
+            },
+          ),
 
-  void repostOptions(ActionsView vm) => CustomBottomSheet<ActionsView>(
-    _context,
+        if (profiled)
+          OptionButton(
+            'Delete post',
+            icon: Icons.delete_outline,
+            color: _context.errorColor,
+            onTap: () {
+              CustomModal<String>(
+                _context,
+                title: 'Delete Post?',
+                children: [
+                  const Text(
+                    "If you delete this post, you won't be able to restore it.",
+                  ),
+                ],
+                onConfirm: () async {
+                  _context.pop();
+                  await pctrl.remove(post);
+                },
+                color: _context.errorColor,
+              );
+            },
+          ),
+
+        SizedBox(height: profiled ? 12 : 6),
+      ],
+    );
+  }
+
+  void repostOptions(ActionsView actions) => _context.sheet(
     children: [
       OptionButton(
+        actions.reposted ? 'Undo Repost' : 'Repost',
         icon: Icons.autorenew_rounded,
-        vm.reposted ? 'Undo Repost' : 'Repost',
         onTap: () {
-          actrl.toggleRepost(vm.target, vm.pid, active: vm.reposted);
-          vm.toggleRepost();
+          actions.toggleRepost();
+          actrl.toggleRepost(actions);
         },
       ),
 
@@ -204,48 +205,81 @@ class OptionModal {
         'Quote',
         icon: Icons.edit_square,
         onTap: () async {
-          await _context.openById(route.repost, vm.pid);
+          await _context.openById(routes.repost, actions.pid);
         },
       ),
       const SizedBox(height: 12),
     ],
   );
 
-  void imageOptions(String path) => CustomBottomSheet<String>(
-    _context,
+  void shareOptions(ActionsView actions) => _context.sheet(
     children: [
-      OptionButton(
-        icon: Icons.file_download_outlined,
-        'Save to photo',
-        color: _context.secondaryColor,
-        onTap: () async {
-          // await _files.saveImageToGallery(
-          //   path,
-          //   onProgress: (received, total) {
-          //     if (total > 0) {
-          //       final percent = (received / total * 100).toStringAsFixed(0);
-          //       debugPrint('Downloading: $percent%');
-          //     }
+      Padding(
+        padding: const EdgeInsets.only(left: 8, bottom: 16),
+        child: Text(
+          'Share post',
+          style: _context.text.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
 
-          //     CustomToast.info('Saved to gallery');
-          //   },
-          // );
+      OptionButton(
+        icon: Icons.email_outlined,
+        'Send via Direct Message',
+        onTap: () async {},
+      ),
+
+      OptionButton(icon: 'share.png', 'Share post via...', onTap: () {}),
+
+      OptionButton(
+        actions.bookmarked ? 'Unsave' : 'Save',
+        icon: actions.bookmarked
+            ? Icons.bookmark_remove_outlined
+            : Icons.bookmark_border,
+        onTap: () {
+          actions.toggleBookmark();
+          actrl.toggleBookmark(actions);
         },
       ),
 
+      OptionButton(icon: Icons.copy_outlined, 'Copy link', onTap: () {}),
+
+      const SizedBox(height: 12),
+    ],
+  );
+
+  void imageOptions(String path, ProgressDialog pd) => _context.sheet(
+    children: [
       OptionButton(
-        icon: 'share.png',
-        'Share external',
-        color: _context.secondaryColor,
-        onTap: () {},
+        'Save to photo',
+        icon: Icons.file_download_outlined,
+        onTap: () async {
+          pd.show(
+            max: 100,
+            msg: 'File Downloading...',
+            completed: Completed(
+              completedMsg: 'Downloading Done !',
+              completionDelay: 2500,
+            ),
+          );
+          await path.toDownload((received, total) {
+            if (total <= 0) return;
+
+            final progress = ((received / total) * 100).clamp(0, 100).toInt();
+            pd.update(value: progress, msg: 'Downloading... $progress%');
+
+            if (progress >= 100) {
+              pd.close();
+              CustomToast.info('Saved to gallery');
+            }
+          });
+        },
       ),
 
-      OptionButton(
-        icon: Icons.report_outlined,
-        'Report photo',
-        color: _context.secondaryColor,
-        onTap: () {},
-      ),
+      OptionButton(icon: 'share.png', 'Share external', onTap: () {}),
+
+      OptionButton(icon: Icons.report_outlined, 'Report photo', onTap: () {}),
 
       const SizedBox(height: 12),
     ],

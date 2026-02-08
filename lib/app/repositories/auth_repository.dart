@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:semesta/app/services/storage_service.dart';
+import 'package:semesta/public/extensions/string_extension.dart';
 import 'package:semesta/public/functions/logger.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/app/models/author.dart';
@@ -10,25 +12,18 @@ import 'package:semesta/public/utils/type_def.dart';
 
 class AuthRepository extends UserRepository {
   // ---------- SIGN UP ----------
-  Wait<User?> signUp(
-    String email,
-    String password,
-    File file,
-    Author model,
-  ) async {
+  Wait<User?> signUp(Author model, String password, [File? file]) async {
     final response = await auth.createUserWithEmailAndPassword(
-      email: email,
+      email: model.email,
       password: password,
     );
 
     final author = response.user;
     if (author == null) return null;
 
-    final avatarUrl = await uploadProfile(author.uid, file);
-    await createUser(
-      model.copy(avatar: avatarUrl?.display, id: author.uid),
-      avatarUrl?.path,
-    );
+    final url = await pushFile(author.uid, file, StoredIn.avatar);
+    final data = model.copy(avatar: url?.display, id: author.uid);
+    await createUser(data, url?.path ?? '');
 
     return author;
   }
@@ -46,12 +41,13 @@ class AuthRepository extends UserRepository {
     // Ensure Firestore user exists (e.g., for old accounts)
     final exist = await exists(author.uid);
     if (!exist) {
+      final name = author.displayName;
       await createUser(
         Author(
           id: author.uid,
-          uname: getUname(author.displayName ?? fakeName),
+          uname: name?.toUsername ?? fakeName.toUsername,
           email: email,
-          name: author.displayName ?? '',
+          name: name ?? '',
           avatar: author.photoURL ?? '',
         ),
       );
@@ -81,12 +77,13 @@ class AuthRepository extends UserRepository {
       // Ensure Firestore user exists (e.g., for old accounts)
       final exist = await exists(author.uid);
       if (!exist) {
+        final name = author.displayName;
         await createUser(
           Author(
             id: author.uid,
-            uname: getUname(author.displayName ?? fakeName),
-            email: author.email,
-            name: author.displayName ?? '',
+            uname: name?.toUsername ?? fakeName.toUsername,
+            email: author.email ?? '',
+            name: name ?? '',
             avatar: author.photoURL ?? '',
           ),
         );
@@ -138,7 +135,7 @@ class AuthRepository extends UserRepository {
   //   }
   // }
 
-  Wait<bool> exists(String child) async => isExists(users, child);
+  Wait<bool> exists(String doc) async => isExists(users, doc);
 
   // ---------- SIGN OUT ----------
   AsWait signOut() async {

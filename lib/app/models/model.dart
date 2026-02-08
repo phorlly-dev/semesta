@@ -5,13 +5,13 @@ import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 /// A generic abstract base model for Firebase.
-abstract class Model<T extends Model<T>> extends Equatable {
+abstract class IModel<T extends IModel<T>> extends Equatable {
   final String id;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? deletedAt;
 
-  const Model({
+  const IModel({
     required this.id,
     this.createdAt,
     this.updatedAt,
@@ -25,10 +25,8 @@ abstract class Model<T extends Model<T>> extends Equatable {
   AsMap to();
 
   //Get data from db
-  static DateTime createOrUpdate(AsMap map, [bool isCreate = true]) {
-    return isCreate
-        ? toDateTime(map['createdAt'])
-        : toDateTime(map['updatedAt']);
+  static DateTime make(AsMap map, [bool edit = false]) {
+    return edit ? toDateTime(map['updatedAt']) : toDateTime(map['createdAt']);
   }
 
   //Set data to db
@@ -81,7 +79,7 @@ abstract class Model<T extends Model<T>> extends Equatable {
     return now.toIso8601String();
   }
 
-  static AsMap convertJsonKeys(AsMap data, [bool toCamelCase = false]) {
+  static AsMap convert(AsMap data, [bool toCamelCase = false]) {
     final AsMap result = {};
 
     data.forEach((key, value) {
@@ -104,10 +102,10 @@ abstract class Model<T extends Model<T>> extends Equatable {
 
       // Recursion for nested maps/lists
       if (value is AsMap) {
-        result[newKey] = convertJsonKeys(value, toCamelCase);
+        result[newKey] = convert(value, toCamelCase);
       } else if (value is List) {
         result[newKey] = value
-            .map((e) => e is AsMap ? convertJsonKeys(e, toCamelCase) : e)
+            .map((e) => e is AsMap ? convert(e, toCamelCase) : e)
             .toList();
       } else {
         result[newKey] = value;
