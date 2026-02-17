@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/src/components/user/user_info.dart';
+import 'package:semesta/src/components/info/data_helper.dart';
 import 'package:semesta/src/widgets/main/animated.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 
@@ -12,32 +11,32 @@ class ReferencedToPost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final data = uctrl.dataMapping[_uid];
-      return data == null
-          ? const SizedBox.shrink()
-          : DisplayParent(
-              name: data.uname,
-              onTap: () async {
-                await context.openProfile(
-                  data.id,
-                  pctrl.currentedUser(data.id),
-                );
-              },
-            );
-    });
+    return FutureBuilder(
+      future: uctrl.loadUser(_uid),
+      builder: (_, snapshot) {
+        if (!snapshot.hasData) return const SizedBox.shrink();
+
+        final data = snapshot.data!;
+        return DisplayParent(
+          data.uname,
+          onTap: () async {
+            await context.openProfile(data.id, pctrl.currentedUser(data.id));
+          },
+        );
+      },
+    );
   }
 }
 
 class DisplayParent extends StatelessWidget {
-  final String message, name;
+  final String _data, message;
   final bool commented;
   final Color? color;
   final VoidCallback? onTap;
-  const DisplayParent({
+  const DisplayParent(
+    this._data, {
     super.key,
     this.message = 'Replying to',
-    required this.name,
     this.commented = true,
     this.onTap,
     this.color,
@@ -53,22 +52,23 @@ class DisplayParent extends StatelessWidget {
           message,
           style: TextStyle(color: context.secondaryColor, fontSize: 16),
         ),
+
         if (commented)
           Username(
-            name,
-            color: color ?? context.primaryColor,
+            _data,
+            color: color ?? Colors.blueAccent,
             onTap: onTap,
-            maxChars: 24,
+            maxChars: 32,
           )
         else
           Animated(
             onTap: onTap,
             child: Text(
-              name,
+              _data,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: context.secondaryColor,
+                color: color ?? context.secondaryColor,
               ),
             ),
           ),

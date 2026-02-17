@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:semesta/app/models/media.dart';
 import 'package:semesta/app/services/storage_service.dart';
 import 'package:semesta/public/extensions/string_extension.dart';
 import 'package:semesta/public/functions/logger.dart';
@@ -21,9 +22,14 @@ class AuthRepository extends UserRepository {
     final author = response.user;
     if (author == null) return null;
 
-    final url = await pushFile(author.uid, file, StoredIn.avatar);
-    final data = model.copy(avatar: url?.display, id: author.uid);
-    await createUser(data, url?.path ?? '');
+    final id = author.uid;
+    final media = await pushFile(id, file, StoredIn.avatar);
+    final data = model.copyWith(
+      id: id,
+      media: media,
+      verified: author.emailVerified,
+    );
+    await createUser(data, media?.url ?? '');
 
     return author;
   }
@@ -39,19 +45,18 @@ class AuthRepository extends UserRepository {
     if (author == null) return null;
 
     // Ensure Firestore user exists (e.g., for old accounts)
-    final exist = await exists(author.uid);
-    if (!exist) {
-      final name = author.displayName;
-      await createUser(
-        Author(
-          id: author.uid,
-          uname: name?.toUsername ?? fakeName.toUsername,
-          email: email,
-          name: name ?? '',
-          avatar: author.photoURL ?? '',
-        ),
-      );
-    }
+    final id = author.uid;
+    final name = author.displayName;
+    final data = Author(
+      id: id,
+      email: email,
+      name: name ?? '',
+      verified: author.emailVerified,
+      media: Media(url: author.photoURL ?? ''),
+      uname: name?.toUsername ?? fakeName.toUsername,
+    );
+
+    if (!await exists(id)) await createUser(data);
 
     return author;
   }
@@ -75,19 +80,18 @@ class AuthRepository extends UserRepository {
       if (author == null) return null;
 
       // Ensure Firestore user exists (e.g., for old accounts)
-      final exist = await exists(author.uid);
-      if (!exist) {
-        final name = author.displayName;
-        await createUser(
-          Author(
-            id: author.uid,
-            uname: name?.toUsername ?? fakeName.toUsername,
-            email: author.email ?? '',
-            name: name ?? '',
-            avatar: author.photoURL ?? '',
-          ),
-        );
-      }
+      final id = author.uid;
+      final name = author.displayName;
+      final data = Author(
+        id: id,
+        name: name ?? '',
+        email: author.email ?? '',
+        verified: author.emailVerified,
+        media: Media(url: author.photoURL ?? ''),
+        uname: name?.toUsername ?? fakeName.toUsername,
+      );
+
+      if (!await exists(id)) await createUser(data);
 
       return author;
       // proceed
@@ -135,7 +139,7 @@ class AuthRepository extends UserRepository {
   //   }
   // }
 
-  Wait<bool> exists(String doc) async => isExists(users, doc);
+  Wait<bool> exists(String doc) => existing(users, doc);
 
   // ---------- SIGN OUT ----------
   AsWait signOut() async {

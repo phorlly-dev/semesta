@@ -11,10 +11,10 @@ import 'package:semesta/public/utils/share_storage.dart';
 import 'package:semesta/app/services/firebase_service.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
-class AppConfigure {
-  AppConfigure._();
+class AppInitialize {
+  const AppInitialize._();
 
-  static void init() {
+  static void load() {
     BindingBase.debugZoneErrorsAreFatal = true;
 
     runZonedGuarded(

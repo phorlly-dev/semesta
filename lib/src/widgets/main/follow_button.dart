@@ -4,14 +4,14 @@ import 'package:semesta/public/helpers/params_helper.dart';
 
 class FollowButton extends StatelessWidget {
   final Follow _state;
-  final VoidCallback onPressed;
-  const FollowButton(this._state, {super.key, required this.onPressed});
+  final VoidCallback? onPressed;
+  const FollowButton(this._state, {super.key, this.onPressed});
 
   @override
   Widget build(BuildContext context) {
-    final follow = context.state(_state);
+    final follow = context.renderedFollow(_state);
     return AnimatedContainer(
-      duration: Durations.short4,
+      duration: Durations.short3,
       child: FilledButton.tonal(
         onPressed: onPressed,
         style: TextButton.styleFrom(

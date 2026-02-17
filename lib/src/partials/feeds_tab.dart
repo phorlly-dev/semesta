@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
-import 'package:semesta/public/extensions/list_extension.dart';
+import 'package:semesta/public/extensions/array_extension.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/mixins/repo_mixin.dart';
+import 'package:semesta/public/mixins/repository_mixin.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/src/components/global/items_builder.dart';
@@ -24,7 +24,6 @@ class _FeedsTabState extends State<FeedsTab> {
 
   @override
   void initState() {
-    pctrl.freeOldPosts();
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
     super.initState();
   }

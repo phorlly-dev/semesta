@@ -15,22 +15,22 @@ enum RenderStyle {
 }
 
 class CommentedContext extends StatelessWidget {
-  final Feed? parent;
+  final Feed _content;
   final String? uid;
   final bool profiled, hasActions;
   final StateView _state;
   final RenderStyle style;
-  final double startedLine, endedLine;
+  final double start, end;
   const CommentedContext(
-    this._state, {
+    this._state,
+    this._content, {
     super.key,
     this.uid,
-    this.parent,
     this.profiled = false,
     this.style = RenderStyle.threaded,
     this.hasActions = true,
-    this.startedLine = 52,
-    this.endedLine = 394,
+    this.start = 50,
+    this.end = 360,
   });
 
   @override
@@ -39,40 +39,48 @@ class CommentedContext extends StatelessWidget {
     final actions = _state.actions;
     final state = StateView(status, actions);
 
-    return switch (style) {
-      RenderStyle.reference => CorePostCard(
-        state,
-        profiled: profiled,
-        above: RepostedBanner(actions.target),
-        reference: ReferencedToPost(parent?.uid ?? status.author.id),
-      ),
+    return FutureBuilder(
+      future: pctrl.loadReference(_content, false),
+      builder: (_, snapshot) {
+        if (!snapshot.hasData) return const SizedBox.shrink();
 
-      RenderStyle.threaded =>
-        parent == null
-            ? const SizedBox.shrink()
-            : StreamBuilder(
-                stream: actrl.state$(parent!),
-                builder: (_, snapshot) {
-                  if (!snapshot.hasData) return const AnimatedCard();
+        final data = snapshot.data!;
+        final parent = data.feed;
+        return switch (style) {
+          RenderStyle.reference => CorePostCard(
+            state,
+            profiled: profiled,
+            above: RepostedBanner(actions.target),
+            reference: ReferencedToPost(parent.uid),
+          ),
 
-                  final sts = snapshot.data!;
-                  return DirectionY(
-                    children: [
-                      CorePostCard(
-                        StateView(sts.status, sts.actions),
-                        primary: true,
-                        profiled: profiled,
-                        endedLine: endedLine,
-                        startedLine: startedLine,
-                        above: RepostedBanner(actions.target, uid: parent?.uid),
-                      ),
+          RenderStyle.threaded => StreamBuilder(
+            stream: actrl.state$(parent),
+            builder: (_, snapshot) {
+              if (!snapshot.hasData) return const AnimatedCard();
 
-                      if (hasActions)
-                        CorePostCard(state, profiled: profiled, uid: uid),
-                    ],
-                  );
-                },
-              ),
-    };
+              final sts = snapshot.data!;
+              return DirectionY(
+                children: [
+                  CorePostCard(
+                    StateView(sts.status, sts.actions),
+                    primary: true,
+                    end: end,
+                    start: start,
+                    uid: parent.uid,
+                    profiled: profiled,
+                    ratio: 1.12,
+                    above: RepostedBanner(actions.target, uid: parent.uid),
+                  ),
+
+                  if (hasActions)
+                    CorePostCard(state, profiled: profiled, uid: uid),
+                ],
+              );
+            },
+          ),
+        };
+      },
+    );
   }
 }

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
 class Animated extends StatefulWidget {
-  final VoidCallback? onTap, onLongPress;
+  final VoidCallback? onTap, onLongPress, onDoubleTap;
   final Widget child;
   const Animated({
     super.key,
     this.onTap,
     required this.child,
     this.onLongPress,
+    this.onDoubleTap,
   });
 
   @override
@@ -38,6 +39,7 @@ class _AnimatedState extends State<Animated> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: widget.onTap != null ? _animateTap : null,
+      onDoubleTap: widget.onDoubleTap,
       onLongPress: widget.onLongPress,
       behavior: HitTestBehavior.translucent,
       child: AnimatedOpacity(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/functions/logger.dart';
-import 'package:semesta/public/functions/custom_snack_bar.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 
 class CopyText extends StatelessWidget {
@@ -12,20 +12,6 @@ class CopyText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async {
-        if (_data.isNotEmpty) {
-          await Clipboard.setData(ClipboardData(text: _data));
-
-          if (!context.mounted) return;
-          CustomSnackBar(
-            context,
-            message: 'Copied $message to clipboard',
-            type: MessageType.success,
-          );
-
-          HandleLogger.info('Copied $message to clipboard', error: _data);
-        }
-      },
       child: DirectionX(
         spacing: 8,
         mainAxisSize: MainAxisSize.min,
@@ -35,6 +21,18 @@ class CopyText extends StatelessWidget {
           Icon(Icons.copy, size: 16, color: Colors.grey),
         ],
       ),
+      onTap: () async {
+        if (_data.isNotEmpty) {
+          await Clipboard.setData(ClipboardData(text: _data));
+
+          if (!context.mounted) return;
+          context.alert(
+            'Copied $message to clipboard',
+            type: MessageType.success,
+          );
+          HandleLogger.info('Copied $message to clipboard', error: _data);
+        }
+      },
     );
   }
 }

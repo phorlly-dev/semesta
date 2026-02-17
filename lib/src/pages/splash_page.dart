@@ -39,13 +39,14 @@ class _SplashPageState extends State<SplashPage> {
         child: DirectionY(
           spacing: 16,
           alignment: Alignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAlignment: MainAxisAlignment.center,
+          crossAlignment: CrossAxisAlignment.center,
           children: [
             CustomImage(
-              MediaSource.asset('logo.png'.toIcon(true)),
+              MediaSource.asset('logo.png'.toAsset(true)),
               height: 120.h,
             ),
+
             Text(
               'Semesta'.toUpperCase(),
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),

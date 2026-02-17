@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/public/extensions/context_extension.dart';
-import 'package:semesta/public/extensions/controller_extension.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/widgets/main/animated.dart';
@@ -13,23 +12,22 @@ class RepostedBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: actrl.repost$(_target, uid),
+    return FutureBuilder(
+      future: pctrl.loadRepost(_target, uid),
       builder: (_, snapshot) {
         if (!snapshot.hasData) return const SizedBox.shrink();
 
         final state = snapshot.data!;
         final displayName = state.authed ? 'You' : state.name;
-
         return Animated(
           child: DirectionX(
             spacing: 6,
-            padding: EdgeInsets.only(left: 32, top: 4, bottom: 2),
+            padding: EdgeInsets.only(left: 34, top: 4, bottom: 2),
             children: [
               Icon(Icons.autorenew_rounded, color: context.hintColor, size: 18),
               Text(
                 '$displayName reposted',
-                style: context.text.labelLarge?.copyWith(
+                style: context.texts.labelLarge?.copyWith(
                   fontWeight: FontWeight.w500,
                   color: context.hintColor,
                 ),

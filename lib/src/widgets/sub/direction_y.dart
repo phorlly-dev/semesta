@@ -5,12 +5,12 @@ class DirectionY extends StatelessWidget {
   final double spacing;
   final List<Widget> children;
   final Decoration? decoration;
-  final MainAxisSize mainAxisSize;
+  final MainAxisSize size;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final AlignmentGeometry? alignment;
-  final MainAxisAlignment mainAxisAlignment;
-  final CrossAxisAlignment crossAxisAlignment;
+  final MainAxisAlignment mainAlignment;
+  final CrossAxisAlignment crossAlignment;
   const DirectionY({
     super.key,
     this.color,
@@ -20,9 +20,9 @@ class DirectionY extends StatelessWidget {
     this.decoration,
     this.spacing = 0.0,
     this.children = const [],
-    this.mainAxisSize = MainAxisSize.max,
-    this.mainAxisAlignment = MainAxisAlignment.start,
-    this.crossAxisAlignment = CrossAxisAlignment.start,
+    this.size = MainAxisSize.max,
+    this.mainAlignment = MainAxisAlignment.start,
+    this.crossAlignment = CrossAxisAlignment.start,
   });
 
   @override
@@ -35,9 +35,9 @@ class DirectionY extends StatelessWidget {
       decoration: decoration,
       child: Column(
         spacing: spacing,
-        mainAxisSize: mainAxisSize,
-        mainAxisAlignment: mainAxisAlignment,
-        crossAxisAlignment: crossAxisAlignment,
+        mainAxisSize: size,
+        mainAxisAlignment: mainAlignment,
+        crossAxisAlignment: crossAlignment,
         children: children,
       ),
     );

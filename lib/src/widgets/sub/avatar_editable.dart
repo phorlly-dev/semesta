@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/widgets/sub/animated_avatar.dart';
 
-class AvatarEditale extends StatelessWidget {
+class AvatarEditable extends StatelessWidget {
   final double radius;
   final VoidCallback? onTap;
   final MediaSource _source;
   final double spacing;
-  const AvatarEditale(
+  const AvatarEditable(
     this._source, {
     super.key,
     this.radius = 46,
@@ -25,7 +25,7 @@ class AvatarEditale extends StatelessWidget {
         clipBehavior: Clip.none,
         alignment: AlignmentGeometry.center,
         children: [
-          AvatarAnimation(
+          AnimatedAvatar(
             _source,
             size: size,
             padding: EdgeInsets.symmetric(vertical: spacing),

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:semesta/public/extensions/string_extension.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 
-class GroupedAction extends StatelessWidget {
+class GroupedActions extends StatelessWidget {
   final VoidCallback? onCamera, onMedia, onGif, onLocation, onAdded;
-  const GroupedAction({
+  const GroupedActions({
     super.key,
     this.onCamera,
     this.onMedia,
@@ -25,12 +25,12 @@ class GroupedAction extends StatelessWidget {
         ),
 
         IconButton(
-          icon: Image.asset('image.png'.toIcon(true), width: 20, color: color),
+          icon: Image.asset('image.png'.toAsset(true), width: 20, color: color),
           onPressed: onMedia,
         ),
 
         IconButton(
-          icon: Image.asset('gif.png'.toIcon(true), width: 26, color: color),
+          icon: Image.asset('gif.png'.toAsset(true), width: 26, color: color),
           onPressed: onGif,
         ),
 

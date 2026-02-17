@@ -7,7 +7,7 @@ import 'package:semesta/public/utils/type_def.dart';
 typedef Fetch<T> = Def<List<T>>;
 typedef Apply<T> = ValueChanged<List<T>>;
 
-mixin PagerMixin<T> on GetxController {
+abstract mixin class ICachedController<T> {
   final loading = false.obs;
   final loadingMore = false.obs;
   final refreshing = false.obs;

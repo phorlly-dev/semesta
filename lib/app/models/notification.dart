@@ -1,4 +1,4 @@
-import 'package:semesta/public/functions/func_helper.dart';
+import 'package:semesta/public/extensions/json_extension.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/app/models/model.dart';
 
@@ -12,7 +12,7 @@ class Notification extends IModel<Notification> {
   final bool readed;
   const Notification({
     this.pid = '',
-    super.id = '',
+    super.id,
     this.sender = '',
     this.reciever = '',
     this.readed = false,
@@ -22,7 +22,7 @@ class Notification extends IModel<Notification> {
   });
 
   @override
-  Notification copy({
+  Notification copyWith({
     String? sender,
     String? id,
     String? reciever,
@@ -51,27 +51,24 @@ class Notification extends IModel<Notification> {
     readed,
   ];
 
-  factory Notification.from(AsMap json) {
-    final map = IModel.convert(json, true);
-    return Notification(
-      id: map['id'],
-      sender: map['sender'],
-      reciever: map['reciever'],
-      pid: map['pid'],
-      type: parseEnum(map['type'], NotifyType.values, NotifyType.favorite),
-      readed: map['readed'] ?? false,
-      createdAt: IModel.make(map),
-      updatedAt: IModel.make(map, true),
-    );
-  }
+  factory Notification.fromState(AsMap json) => Notification(
+    id: json.id,
+    pid: json.pid,
+    readed: json.asBool('readed'),
+    sender: json.asText('sender'),
+    reciever: json.asText('reciever'),
+    type: json.asEnum('type', NotifyType.values),
+    createdAt: json.created,
+    updatedAt: json.updated,
+  );
 
   @override
-  AsMap to() => IModel.convert({
+  AsMap toPayload() => {
     ...general,
     'pid': pid,
     'reciever': reciever,
     'sender': sender,
     'type': type.name,
     'readed': readed,
-  });
+  };
 }

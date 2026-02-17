@@ -70,7 +70,7 @@ class _ActionButtonState extends State<ActionButton>
             color: widget.iconColor ?? context.hintColor,
           )
         : Image.asset(
-            '${widget.icon}'.toIcon(true),
+            '${widget.icon}'.toAsset(true),
             width: widget.sizeIcon,
             height: widget.sizeIcon,
             color: widget.iconColor ?? context.hintColor,

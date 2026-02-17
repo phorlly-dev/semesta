@@ -68,6 +68,7 @@ class CustomButton extends StatelessWidget {
                         color: textColor,
                       ),
               if (icon != null) const SizedBox(width: 10),
+
               Text(
                 label,
                 style: TextStyle(

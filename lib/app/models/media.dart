@@ -1,31 +1,43 @@
-import 'package:semesta/public/functions/func_helper.dart';
+import 'package:semesta/public/extensions/json_extension.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 enum MediaType { image, video, background }
 
 class Media {
-  final String display;
+  final String url;
   final String path;
   final MediaType type;
-  final AsMap thumbnails;
+  final AsList others;
   const Media({
-    required this.display,
+    this.path = '',
+    this.url = '',
+    this.others = const [],
     this.type = MediaType.image,
-    required this.path,
-    this.thumbnails = const {},
   });
 
-  factory Media.from(AsMap map) => Media(
-    display: map['display'],
-    path: map['path'],
-    thumbnails: parseToMap(map['thumbnails']),
-    type: parseEnum(map['type'], MediaType.values, MediaType.image),
+  factory Media.fromState(AsMap map) => Media(
+    path: map.asText('path'),
+    url: map.asText('url'),
+    others: map.asArray('others'),
+    type: map.asEnum('type', MediaType.values),
   );
 
-  AsMap to() => {
-    'display': display,
-    'thumbnails': thumbnails,
-    'type': type.name,
+  AsMap toPayload() => {
     'path': path,
+    'type': type.name,
+    'url': url,
+    'others': others,
   };
+
+  Media copyWith({
+    String? url,
+    String? path,
+    MediaType? type,
+    AsList? others,
+  }) => Media(
+    path: path ?? this.path,
+    type: type ?? this.type,
+    url: url ?? this.url,
+    others: others ?? this.others,
+  );
 }

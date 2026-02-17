@@ -25,7 +25,7 @@ class DataBinder extends StatelessWidget {
       child: loading
           ? SizedBox(
               height: context.height,
-              child: AnimatedLoader(cupertino: true),
+              child: const AnimatedLoader(cupertino: true),
             )
           : isEmpty
           ? EmptyData(message ?? "There's no data yet.")

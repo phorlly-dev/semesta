@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:semesta/public/functions/resolve_action.dart';
+import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/components/composer/generic_composer.dart';
 
@@ -10,11 +9,11 @@ class QuotePostPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      return GenericComposer(
-        ComposerType.quote,
-        parent: pctrl.dataMapping[_pid],
-      );
-    });
+    return FutureBuilder(
+      future: pctrl.loadFeed(_pid),
+      builder: (_, snapshot) {
+        return GenericComposer(Create.quote, parent: snapshot.data);
+      },
+    );
   }
 }

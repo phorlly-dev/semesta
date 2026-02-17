@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/mixins/repo_mixin.dart';
+import 'package:semesta/public/mixins/repository_mixin.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/src/components/global/cached_tab.dart';
 import 'package:semesta/src/components/global/feed_refernece.dart';

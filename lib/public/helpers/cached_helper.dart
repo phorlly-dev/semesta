@@ -8,12 +8,12 @@ import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
-mixin HelperMixin {
+abstract mixin class ICachedHelper {
   /// Deletes thumbnail if it exists
-  AsWait _deleteThumbnail(AsMap thumbnails) async {
+  AsWait _deleteThumbnail(AsList thumbnails) async {
     if (thumbnails.isEmpty) return;
 
-    final path = thumbnails['path'].toString();
+    final path = thumbnails[1];
     if (path.isNotEmpty) await prepo.deleteFile(path);
   }
 
@@ -21,7 +21,7 @@ mixin HelperMixin {
   AsWait _deleteSingleMedia(Media media) async {
     try {
       await prepo.deleteFile(media.path);
-      await _deleteThumbnail(media.thumbnails);
+      await _deleteThumbnail(media.others);
     } catch (e) {
       HandleLogger.error(
         "Failed to delete media file: ${media.path}",
@@ -51,7 +51,7 @@ mixin HelperMixin {
         ctrl.metaFor(kp).dirty = true;
         ctrl.metaFor(kc).dirty = true;
 
-        final rid = post.toId(kind: FeedKind.quoted);
+        final rid = post.toId(kind: FeedKind.quotes);
         ctrl.clearFor(kh, rid);
         ctrl.clearFor(kp, rid);
         ctrl.clearFor(kc, rid);
@@ -61,7 +61,7 @@ mixin HelperMixin {
         ctrl.metaFor(kh).dirty = true;
         ctrl.metaFor(kc).dirty = true;
 
-        final rid = post.toId(puid: uid, kind: FeedKind.replied);
+        final rid = post.toId(puid: uid, kind: FeedKind.replies);
         ctrl.clearFor(kh, rid);
         ctrl.clearFor(kc, rid);
         break;

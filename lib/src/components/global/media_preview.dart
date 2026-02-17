@@ -21,7 +21,7 @@ class MediaPreview extends StatelessWidget {
       child: Stack(
         children: [
           AspectRatio(
-            aspectRatio: .76,
+            aspectRatio: 1,
             child: AssetEntityImage(asset, fit: BoxFit.cover),
           ),
 

@@ -44,7 +44,7 @@ class FooterSection extends StatelessWidget {
 
                     AnimatedCount(
                       _actions.views,
-                      kind: FeedKind.viewed,
+                      kind: FeedKind.views,
                       detailed: true,
                     ),
                   ],
@@ -60,22 +60,22 @@ class FooterSection extends StatelessWidget {
                     if (_actions.reposts > 0)
                       AnimatedCount(
                         _actions.reposts,
-                        kind: FeedKind.reposted,
+                        kind: FeedKind.reposts,
                         onTap: () {},
                       ),
 
                     if (_actions.quotes > 0)
                       AnimatedCount(
                         _actions.quotes,
-                        kind: FeedKind.quoted,
+                        kind: FeedKind.quotes,
                         onTap: () {},
                       ),
 
                     if (_actions.favorites > 0)
-                      AnimatedCount(_actions.favorites, kind: FeedKind.liked),
+                      AnimatedCount(_actions.favorites, kind: FeedKind.likes),
 
                     if (_actions.bookmarks > 0)
-                      AnimatedCount(_actions.bookmarks, kind: FeedKind.saved),
+                      AnimatedCount(_actions.bookmarks, kind: FeedKind.saves),
                   ],
                 ),
 
@@ -99,7 +99,7 @@ class FooterSection extends StatelessWidget {
                     icon: Icons.autorenew_rounded,
                     iconColor: _actions.reposted ? Colors.redAccent : null,
                     active: _actions.reposted,
-                    onPressed: () => context.repost(_actions),
+                    onPressed: () => context.openRepost(_actions),
                   ),
 
                   // Like
@@ -130,7 +130,7 @@ class FooterSection extends StatelessWidget {
                   // Share
                   ActionButton(
                     icon: 'share.png',
-                    onPressed: () => context.share(_actions),
+                    onPressed: () => context.openShare(_actions),
                   ),
                 ],
               ),

@@ -12,10 +12,10 @@ class VisibleOption {
   void showModal([
     Visible option = Visible.everyone,
     ValueChanged<Visible>? onChanged,
-  ]) => _context.sheet(
+  ]) => _context.openSheet(
     children: [
       DirectionY(
-        mainAxisSize: MainAxisSize.min,
+        size: MainAxisSize.min,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         children: [
           const Text(
@@ -34,14 +34,14 @@ class VisibleOption {
 
       ..._selectOptions(onChanged).map((e) {
         final selected = option == e.option;
+        final icon = selected ? Icons.check_circle : Icons.circle_outlined;
+        final color = selected ? Colors.blueAccent : Colors.grey;
         return OptionButton(
           e.label,
           icon: e.icon,
           color: selected ? Colors.blueAccent : null,
           onTap: e.onTap,
-          status: selected
-              ? const Icon(Icons.check_circle, color: Colors.blueAccent)
-              : const Icon(Icons.circle_outlined, color: Colors.grey),
+          status: Icon(icon, color: color),
         );
       }),
 

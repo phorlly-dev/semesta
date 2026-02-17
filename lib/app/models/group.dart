@@ -1,16 +1,16 @@
+import 'package:semesta/public/extensions/json_extension.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/app/models/model.dart';
 
 class Group extends IModel<Group> {
   final String logo;
-  final String name;
   final String creator;
   final String note;
   final bool privacy;
   const Group({
-    super.id = '',
+    super.id,
     this.logo = '',
-    this.name = '',
+    super.name,
     this.note = '',
     this.creator = '',
     this.privacy = true,
@@ -20,7 +20,7 @@ class Group extends IModel<Group> {
   });
 
   @override
-  Group copy({
+  Group copyWith({
     String? id,
     String? logo,
     String? name,
@@ -42,35 +42,25 @@ class Group extends IModel<Group> {
   );
 
   @override
-  List<Object?> get props => [
-    ...super.props,
-    logo,
-    name,
-    privacy,
-    creator,
-    note,
-  ];
+  List<Object?> get props => [...super.props, logo, privacy, creator, note];
 
-  factory Group.from(AsMap json) {
-    final map = IModel.convert(json, true);
-    return Group(
-      id: map['id'],
-      logo: map['logo'],
-      name: map['name'],
-      note: map['note'],
-      creator: map['creator'],
-      privacy: map['privacy'] ?? true,
-      createdAt: IModel.make(map),
-      updatedAt: IModel.make(map, true),
-    );
-  }
+  factory Group.fromState(AsMap map) => Group(
+    id: map.id,
+    name: map.name,
+    logo: map.asText('logo'),
+    note: map.asText('note'),
+    creator: map.asText('creator'),
+    privacy: map.asBool('privacy'),
+    createdAt: map.created,
+    updatedAt: map.updated,
+  );
 
   @override
-  AsMap to() => IModel.convert({
+  AsMap toPayload() => {
     ...general,
     'logo': logo,
     'privacy': privacy,
     'note': note.trim(),
     'creator': creator,
-  });
+  };
 }

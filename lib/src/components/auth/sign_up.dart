@@ -12,7 +12,7 @@ import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/widgets/main/custom_button.dart';
 import 'package:semesta/src/widgets/sub/dated_picker.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
-import 'package:semesta/src/widgets/sub/avatar_editale.dart';
+import 'package:semesta/src/widgets/sub/avatar_editable.dart';
 import 'package:semesta/src/widgets/sub/inputable.dart';
 
 class SignUp extends StatefulWidget {
@@ -24,11 +24,9 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
-  var _ckpassword = '', _name = '';
+  var _ckpassword = '';
   var _visible = false;
   var _confirm = false;
-  final _pinput = TextEditingController();
-  final _cinput = TextEditingController();
   final _uinput = TextEditingController();
   final _focus = FocusNode();
   final _key = 'avatar';
@@ -41,9 +39,10 @@ class _SignUpState extends State<SignUp> {
       final loading = octrl.loading.value;
 
       return DirectionY(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        spacing: 8,
+        crossAlignment: CrossAxisAlignment.center,
         children: [
-          AvatarEditale(
+          AvatarEditable(
             MediaSource.file(file?.path ?? ''),
             onTap: () => context.imagePicker(_key, editable: false),
           ),
@@ -54,7 +53,6 @@ class _SignUpState extends State<SignUp> {
             hint: 'Name cannot be blank',
             icon: Icons.person,
             maxLength: 50,
-            counterText: '${_name.length}/50',
             validator: FormBuilderValidators.compose([
               FormBuilderValidators.required(errorText: 'Name is required'),
               FormBuilderValidators.minLength(
@@ -64,7 +62,6 @@ class _SignUpState extends State<SignUp> {
             ]),
             onChanged: (value) {
               final name = value?.trim() ?? '';
-              setState(() => _name = name);
               if (name.length >= 2) {
                 final suggestion = name.toUsername;
                 if (_uinput.text != suggestion) {
@@ -84,11 +81,11 @@ class _SignUpState extends State<SignUp> {
 
           Inputable(
             'uname',
+            label: 'Username',
             hint: 'Username cannot be blank',
             controller: _uinput,
             icon: Icons.person_outline,
             maxLength: 56,
-            counterText: '${_cinput.text.length}/56',
             validator: FormBuilderValidators.compose([
               FormBuilderValidators.required(errorText: 'Username is required'),
               FormBuilderValidators.minLength(
@@ -99,7 +96,7 @@ class _SignUpState extends State<SignUp> {
             onChanged: (value) async {
               final v = value?.trim() ?? '';
               if (v.length >= 2) {
-                final exists = await grepo.unameExists(v);
+                final exists = await grepo.dataExisting(v);
                 if (exists) {
                   CustomToast.warning(
                     'Oops',
@@ -144,7 +141,6 @@ class _SignUpState extends State<SignUp> {
 
           Inputable(
             'password',
-            controller: _pinput,
             maxLength: 32,
             hint: 'Password cannot be blank',
             keyboardType: TextInputType.visiblePassword,
@@ -175,7 +171,6 @@ class _SignUpState extends State<SignUp> {
 
           Inputable(
             'confirm',
-            controller: _cinput,
             maxLength: 32,
             hint: 'Confirm must be match password',
             keyboardType: TextInputType.visiblePassword,
@@ -215,7 +210,7 @@ class _SignUpState extends State<SignUp> {
                     if (state == null || !state.saveAndValidate()) return;
 
                     final map = state.value;
-                    final uname = await grepo.getUniqueName(map['uname']);
+                    final uname = await grepo.uniqueName(map['uname']);
                     final model = Author(
                       uname: uname,
                       name: map['name'],
@@ -237,8 +232,6 @@ class _SignUpState extends State<SignUp> {
     _visible = false;
     _confirm = false;
     grepo.clearFor(_key);
-    _cinput.dispose();
-    _pinput.dispose();
     _uinput.dispose();
     super.dispose();
   }

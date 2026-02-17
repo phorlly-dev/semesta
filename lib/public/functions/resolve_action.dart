@@ -1,9 +1,8 @@
+import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
-enum ComposerType { post, reply, quote }
-
 class ResolveAction {
-  final ComposerType _type;
+  final Create _type;
   const ResolveAction(this._type);
 
   void onSubmit({
@@ -11,26 +10,26 @@ class ResolveAction {
     required AsDef onQuote,
     required AsDef onReply,
   }) => switch (_type) {
-    ComposerType.post => onPost.call(),
-    ComposerType.reply => onReply.call(),
-    ComposerType.quote => onQuote.call(),
+    Create.post => onPost.call(),
+    Create.reply => onReply.call(),
+    Create.quote => onQuote.call(),
   };
 
   String get getActionLabel => switch (_type) {
-    ComposerType.post => 'Post',
-    ComposerType.reply => 'Reply',
-    ComposerType.quote => 'Repost',
+    Create.post => 'Post',
+    Create.reply => 'Reply',
+    Create.quote => 'Repost',
   };
 
   String get getTitle => switch (_type) {
-    ComposerType.quote => 'Repost',
-    ComposerType.post => 'Create Post',
-    ComposerType.reply => 'Reply to Post',
+    Create.quote => 'Repost',
+    Create.post => 'Create post',
+    Create.reply => 'Reply to post',
   };
 
   String get getLabel => switch (_type) {
-    ComposerType.post => "What's new?",
-    ComposerType.reply => 'Post your reply',
-    ComposerType.quote => 'Add a comment...',
+    Create.post => "What's new?",
+    Create.reply => 'Post your reply',
+    Create.quote => 'Add a comment...',
   };
 }

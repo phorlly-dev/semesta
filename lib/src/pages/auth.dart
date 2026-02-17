@@ -8,7 +8,7 @@ import 'package:semesta/src/components/auth/auth_header.dart';
 import 'package:semesta/src/components/auth/sign_in.dart';
 import 'package:semesta/src/components/auth/sign_up.dart';
 import 'package:semesta/src/components/layout/_page.dart';
-import 'package:semesta/src/widgets/sub/block_overlay.dart';
+import 'package:semesta/src/components/layout/overlapping.dart';
 import 'package:semesta/src/widgets/main/custom_button.dart';
 import 'package:semesta/src/widgets/main/data_form.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
@@ -29,59 +29,56 @@ class _AuthPageState extends State<AuthPage> {
   Widget build(BuildContext context) {
     return Obx(() {
       final loading = octrl.loading.value;
-      return Stack(
-        children: [
-          PageLayout(
-            content: DataForm(
-              _kf,
-              autovalidate: AutovalidateMode.onUserInteraction,
-              children: [
-                // Logo/Title
-                AuthHeader(_primary),
-                if (!_primary) const SizedBox(height: 12),
+      return Overlapping(
+        loading: loading,
+        message: _primary ? 'Signing Up' : 'Signing In',
+        child: PageLayout(
+          content: DataForm(
+            _kf,
+            autovalidate: AutovalidateMode.onUserInteraction,
+            children: [
+              // Logo/Title
+              AuthHeader(_primary),
+              if (!_primary) const SizedBox(height: 12),
 
-                //Input Fields
-                _primary ? SignUp(_kf) : SignIn(_kf, loading: loading),
+              //Input Fields
+              _primary ? SignUp(_kf) : SignIn(_kf, loading: loading),
 
-                // Forgot Password
-                // if (!_primary)
-                //   Align(
-                //     alignment: Alignment.centerRight,
-                //     child: TextButton(
-                //       onPressed: () {},
-                //       child: Text(
-                //         'Forgot Password?',
-                //         style: TextStyle(
-                //           color: const Color(0xFF4A9EFF),
-                //           fontSize: 14,
-                //         ),
-                //       ),
-                //     ),
-                //   ),
-                if (!_primary) _buildButtons(),
+              // Forgot Password
+              // if (!_primary)
+              //   Align(
+              //     alignment: Alignment.centerRight,
+              //     child: TextButton(
+              //       onPressed: () {},
+              //       child: Text(
+              //         'Forgot Password?',
+              //         style: TextStyle(
+              //           color: const Color(0xFF4A9EFF),
+              //           fontSize: 14,
+              //         ),
+              //       ),
+              //     ),
+              //   ),
+              if (!_primary) _buildButtons(),
 
-                // Toggle Sign In/Up
-                AuthFoooter(
-                  _primary,
-                  onPressed: () => setState(() {
-                    _primary = !_primary;
-                    _kf.currentState?.reset();
-                  }),
-                ),
-              ],
-            ),
+              // Toggle Sign In/Up
+              AuthFoooter(
+                _primary,
+                onPressed: () => setState(() {
+                  _primary = !_primary;
+                  _kf.currentState?.reset();
+                }),
+              ),
+            ],
           ),
-
-          // ---- overlay ----
-          if (loading) BlockOverlay(_primary ? 'Signing Up' : 'Signing In'),
-        ],
+        ),
       );
     });
   }
 
   Widget _buildButtons() {
     return DirectionY(
-      mainAxisSize: MainAxisSize.min,
+      size: MainAxisSize.min,
       children: [
         // Divider
         DirectionX(
@@ -97,7 +94,7 @@ class _AuthPageState extends State<AuthPage> {
 
         // Social Sign-In Buttons
         CustomButton(
-          icon: 'google.png'.toIcon(true),
+          icon: 'google.png'.toAsset(true),
           label: 'Continue with Google',
 
           // onPressed: controller.loginWithGoogle,

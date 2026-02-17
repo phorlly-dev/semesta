@@ -48,7 +48,7 @@ class ActionsBar extends StatelessWidget {
                 textColor: color,
                 iconColor: _actions.reposted ? Colors.green : color,
                 active: _actions.reposted,
-                onPressed: () => context.repost(_actions),
+                onPressed: () => context.openRepost(_actions),
               ),
 
               // Like
@@ -99,7 +99,7 @@ class ActionsBar extends StatelessWidget {
                 icon: 'share.png',
                 iconColor: color,
                 textColor: color,
-                onPressed: () => context.share(_actions),
+                onPressed: () => context.openShare(_actions),
               ),
             ],
           ),

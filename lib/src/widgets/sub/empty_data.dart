@@ -12,7 +12,7 @@ class EmptyData extends StatelessWidget {
       child: Text(
         _message,
         textAlign: TextAlign.center,
-        style: context.text.bodyLarge?.copyWith(fontWeight: FontWeight.w400),
+        style: context.texts.bodyLarge?.copyWith(fontWeight: FontWeight.w400),
       ),
     );
   }

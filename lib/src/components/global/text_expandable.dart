@@ -2,27 +2,27 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class ExpandableText extends StatefulWidget {
+class TextExpandable extends StatefulWidget {
   final String _text;
   final Color? textColor;
   final int trimLength; // Customize cutoff
-  final ValueChanged<String>? onTag;
-  const ExpandableText(
+  final ValueChanged<String>? onLink;
+  const TextExpandable(
     this._text, {
     super.key,
     this.textColor,
     this.trimLength = 135,
-    this.onTag,
+    this.onLink,
   });
 
   @override
-  State<ExpandableText> createState() => _ExpandableTextState();
+  State<TextExpandable> createState() => _TextExpandableState();
 }
 
-class _ExpandableTextState extends State<ExpandableText> {
-  bool expanded = false;
-  late String visibleText;
-  late bool hasOverflow;
+class _TextExpandableState extends State<TextExpandable> {
+  bool _expanded = false;
+  late String _visibleText;
+  late bool _hasOverflow;
 
   @override
   void initState() {
@@ -35,16 +35,17 @@ class _ExpandableTextState extends State<ExpandableText> {
 
     // Cut text safely (avoid splitting emojis)
     if (text.characters.length > widget.trimLength) {
-      visibleText = text.characters.take(widget.trimLength).toString();
+      _visibleText = text.characters.take(widget.trimLength).toString();
+
       // stop at newline if early
-      final newlineIndex = visibleText.indexOf('\n');
+      final newlineIndex = _visibleText.indexOf('\n');
       if (newlineIndex != -1) {
-        visibleText = visibleText.substring(0, newlineIndex);
+        _visibleText = _visibleText.substring(0, newlineIndex);
       }
-      hasOverflow = true;
+      _hasOverflow = true;
     } else {
-      visibleText = text;
-      hasOverflow = false;
+      _visibleText = text;
+      _hasOverflow = false;
     }
   }
 
@@ -57,13 +58,14 @@ class _ExpandableTextState extends State<ExpandableText> {
       if (match.start > start) {
         spans.add(TextSpan(text: text.substring(start, match.start)));
       }
+
       final word = match.group(0)!;
       spans.add(
         TextSpan(
           text: word,
           style: const TextStyle(color: Colors.blueAccent),
           recognizer: TapGestureRecognizer()
-            ..onTap = () => widget.onTag?.call(word),
+            ..onTap = () => widget.onLink?.call(word),
         ),
       );
       start = match.end;
@@ -87,29 +89,28 @@ class _ExpandableTextState extends State<ExpandableText> {
     }
 
     final color = widget.textColor ?? textColor();
-    final displayText = expanded ? widget._text : visibleText;
+    final displayText = _expanded ? widget._text : _visibleText;
 
     return GestureDetector(
-      onTap: () => setState(() => expanded = !expanded),
       child: RichText(
-        textAlign: TextAlign.start,
         text: TextSpan(
           style: TextStyle(color: color, fontSize: 16, height: 1.4),
           children: [
             ..._buildSpans(displayText),
-            if (hasOverflow)
+            if (_hasOverflow)
               TextSpan(
-                text: !expanded ? '... Read more' : '',
+                text: !_expanded ? '... Read more' : '',
                 style: const TextStyle(
                   color: Colors.blueGrey,
                   fontWeight: FontWeight.w400,
                 ),
                 recognizer: TapGestureRecognizer()
-                  ..onTap = () => setState(() => expanded = !expanded),
+                  ..onTap = () => setState(() => _expanded = !_expanded),
               ),
           ],
         ),
       ),
+      onTap: () => setState(() => _expanded = !_expanded),
     );
   }
 }

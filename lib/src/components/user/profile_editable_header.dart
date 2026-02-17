@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/public/utils/delegate.dart';
 import 'package:semesta/public/helpers/params_helper.dart';
-import 'package:semesta/src/widgets/sub/avatar_editale.dart';
+import 'package:semesta/src/widgets/sub/avatar_editable.dart';
 import 'package:semesta/src/widgets/sub/cover_editable.dart';
 
 class ProfileEditableHeader extends StatelessWidget {
@@ -33,7 +33,7 @@ class ProfileEditableHeader extends StatelessWidget {
             Positioned(
               left: 16,
               bottom: -36,
-              child: AvatarEditale(_avatar, onTap: onAvatar, radius: 36),
+              child: AvatarEditable(_avatar, onTap: onAvatar, radius: 36),
             ),
           ],
         ),

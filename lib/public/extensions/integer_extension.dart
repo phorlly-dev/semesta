@@ -1,4 +1,6 @@
 extension IntegerX on int {
+  /// A helper method to format large integers into a more readable string with suffixes
+  /// (K for thousands, M for millions, B for billions), used for displaying counts like followers or likes in a compact form.
   String get format {
     String formatted;
     if (this >= 1000000000) {

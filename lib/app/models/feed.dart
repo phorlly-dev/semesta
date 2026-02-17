@@ -1,9 +1,9 @@
-import 'package:semesta/public/functions/func_helper.dart';
+import 'package:semesta/public/extensions/json_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/app/models/media.dart';
 import 'package:semesta/app/models/model.dart';
-import 'package:semesta/app/models/stats_count.dart';
+import 'package:semesta/app/models/stats.dart';
 
 enum Create { post, reply, quote }
 
@@ -11,7 +11,6 @@ enum Visible { everyone, verified, following, mentioned }
 
 class Feed extends IModel<Feed> {
   final String uid;
-
   final String title;
   final String location;
   final List<Media> media;
@@ -28,7 +27,7 @@ class Feed extends IModel<Feed> {
   final AsList mentions;
 
   const Feed({
-    super.id = '',
+    super.id,
     this.uid = '',
     this.title = '',
     this.media = const [],
@@ -47,7 +46,7 @@ class Feed extends IModel<Feed> {
   });
 
   @override
-  Feed copy({
+  Feed copyWith({
     String? id,
     String? uid,
     String? title,
@@ -99,29 +98,26 @@ class Feed extends IModel<Feed> {
     stats,
   ];
 
-  factory Feed.from(AsMap json) {
-    final map = IModel.convert(json, true);
-    return Feed(
-      id: map['id'],
-      uid: map['uid'],
-      title: map['title'],
-      location: map['location'],
-      pid: map['pid'],
-      edited: map['edited'] ?? false,
-      removed: map['removed'] ?? false,
-      stats: castToMap(map['stats'], StatsCount.from),
-      hashtags: parseToList(map['hashtags']),
-      mentions: parseToList(map['mentions']),
-      media: parseJsonList(map['media'], Media.from),
-      type: parseEnum(map['type'], Create.values, Create.post),
-      visible: parseEnum(map['visible'], Visible.values, Visible.everyone),
-      createdAt: IModel.make(map),
-      updatedAt: IModel.make(map, true),
-    );
-  }
+  factory Feed.fromState(AsMap map) => Feed(
+    id: map.id,
+    uid: map.uid,
+    pid: map.pid,
+    title: map.asText('title'),
+    location: map.asText('location'),
+    edited: map.asBool('edited'),
+    removed: map.asBool('removed'),
+    hashtags: map.asArray('hashtags'),
+    mentions: map.asArray('mentions'),
+    media: map.asArrays('media', Media.fromState),
+    stats: map.asJsons('stats', StatsCount.fromState),
+    type: map.asEnum('type', Create.values),
+    visible: map.asEnum('visible', Visible.values),
+    createdAt: map.created,
+    updatedAt: map.updated,
+  );
 
   @override
-  AsMap to() => IModel.convert({
+  AsMap toPayload() => {
     ...general,
     'uid': uid,
     'pid': pid,
@@ -132,8 +128,8 @@ class Feed extends IModel<Feed> {
     'location': location.trim(),
     'hashtags': hashtags,
     'mentions': mentions,
-    'media': media.map((e) => e.to()),
-    'stats': stats.to(),
+    'media': media.map((e) => e.toPayload()),
+    'stats': stats.toPayload(),
     'visible': visible.name,
-  });
+  };
 }

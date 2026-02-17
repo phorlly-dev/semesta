@@ -1,8 +1,7 @@
-import 'dart:async';
 import 'package:get/get.dart';
+import 'package:semesta/public/extensions/array_extension.dart';
 import 'package:semesta/public/extensions/model_extension.dart';
-import 'package:semesta/public/helpers/vendor_helper.dart';
-import 'package:semesta/public/mixins/repo_mixin.dart';
+import 'package:semesta/public/mixins/repository_mixin.dart';
 import 'package:semesta/app/models/reaction.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/app/controllers/controller.dart';
@@ -14,8 +13,7 @@ import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 mixin ControllerMixin on IController<FeedView> {
-  final dataMapping = <String, Feed>{}.obs;
-  final uCtrl = Get.put(UserController());
+  final ctrl = Get.put(UserController());
 
   final Mapper<Cacher<FeedView>> _states = {};
   Cacher<FeedView> stateFor(String key) {
@@ -26,36 +24,24 @@ mixin ControllerMixin on IController<FeedView> {
   TabMeta metaFor(String key) => _meta.putIfAbsent(key, () => TabMeta());
 
   //User cached
-  String get currentUid => uCtrl.currentUid.value;
+  String get currentUid => ctrl.currentUid.value;
   bool currentedUser(String uid) {
     return currentUser.id.isNotEmpty && currentUid == uid;
   }
 
   Author get currentUser {
-    final currentUser = uCtrl.currentUser.value;
+    final currentUser = ctrl.currentUser.value;
     if (currentUser == null) return Author();
 
-    return uCtrl.currentUser.value!;
+    return ctrl.currentUser.value!;
   }
 
-  StreamSubscription? _postSub;
-  void listenToPost(Feed post) {
-    if (dataMapping.containsKey(post.id)) return;
-    _postSub = prepo.sync$(post.toDoc).listen((p) => dataMapping[post.id] = p);
-  }
-
-  void freeOldPosts({int keep = 50}) {
-    if (dataMapping.length <= keep) return;
-
-    final keys = dataMapping.keys.toList();
-    final removeCount = keys.length - keep;
-
-    for (int i = 0; i < removeCount; i++) {
-      final id = keys[i];
-      dataMapping.remove(id);
-      _postSub?.cancel();
-    }
-  }
+  // StreamSubscription? _postSub;
+  // void listenToPost(Feed post) {
+  //   final id = post.id;
+  //   if (dataMapping.containsKey(id) || id.isEmpty) return;
+  //   _postSub = prepo.sync$(post.toDoc).listen((p) => dataMapping[id] = p);
+  // }
 
   final _seen = <String>{};
   void markViewed(ActionTarget target) {
@@ -64,50 +50,41 @@ mixin ControllerMixin on IController<FeedView> {
 
     _seen.add(key);
 
-    Future.delayed(
-      const Duration(seconds: 2),
-      () => prepo.incrementView(target),
-    );
+    Wait.delayed(const Duration(seconds: 2), () => prepo.incrementView(target));
   }
 
   Waits<Feed> getSubcombined(
     List<Reaction> actions, [
     QueryMode mode = QueryMode.normal,
   ]) async {
-    final ids = getKeys(actions, (value) => value.currentId);
-    final merged = [
-      ...await prepo.getInOrder(ids, mode: mode),
-      ...await prepo.getInSuborder(ids, mode: mode),
+    final keys = actions.toKeys((value) => value.sid);
+    return [
+      ...await prepo.getInOrder(keys, mode: mode),
+      ...await prepo.getInSuborder(keys, mode: mode),
     ].toList();
-
-    return merged.isNotEmpty ? merged : const [];
   }
 
   Waits<Feed> getCombined(
     List<Reaction> actions, [
     QueryMode mode = QueryMode.normal,
   ]) async {
-    final ids = getKeys(actions, (value) => value.targetId);
-    final merged = [
-      ...await prepo.getPosts(ids, mode: mode),
-      ...await prepo.getComments(ids, mode: mode),
+    final keys = actions.toKeys((value) => value.did);
+    return [
+      ...await prepo.getPosts(keys, mode: mode),
+      ...await prepo.getComments(keys, mode: mode),
     ].toList();
-
-    return merged.isNotEmpty ? merged : const [];
   }
 
   Waits<Feed> getMerged(String uid, [QueryMode mode = QueryMode.normal]) async {
-    final merged = [
+    return [
       ...await prepo.getPosts(uid, mode: mode),
       ...await prepo.getComments(uid, mode: mode),
     ].toList();
-
-    return merged.isNotEmpty ? merged : const [];
   }
 
-  @override
-  void onClose() {
-    _postSub?.cancel();
-    super.onClose();
-  }
+  // @override
+  // void onClose() {
+  //   _postSub?.cancel();
+  //   super.onClose();
+  // }
 }

@@ -24,7 +24,7 @@ class HandleLogger {
 
     final tag = '[${_style.name.toUpperCase()}]';
     final time = syncDate(); // assuming your custom formatter
-    final formattedMsg = '$tag [$time] $_message';
+    final formattedMsg = '$tag $_message';
 
     switch (_style) {
       case HandleStyle.error:

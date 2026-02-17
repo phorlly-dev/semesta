@@ -3,10 +3,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:semesta/public/functions/logger.dart';
-import 'package:semesta/public/mixins/pager_mixin.dart';
+import 'package:semesta/app/controllers/cached_controller.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
-abstract class IController<T> extends GetxController with PagerMixin<T> {
+abstract class IController<T> extends GetxController with ICachedController<T> {
   final isLoading = false.obs;
   final RxString hasError = ''.obs;
   final RxString message = ''.obs;

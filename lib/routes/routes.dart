@@ -1,20 +1,42 @@
+import 'package:flutter/material.dart';
 import 'package:semesta/public/helpers/params_helper.dart';
-import 'package:semesta/public/mixins/router_mixin.dart';
+import 'package:semesta/routes/cached_routes.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
-class Routes with RouterMixin, UserRoutes, PostRoutes {
+class Routes extends ICachedRoutes
+    with IScreenRoutes, IUserRoutes, IPostRoutes {
   // root (absolute)
-  RouteNode get home => const RouteNode('/home', 'home');
-  RouteNode get explore => const RouteNode('/explore', 'explore');
-  RouteNode get reel => const RouteNode('/reel', 'reel');
-  RouteNode get notify => const RouteNode('/notify', 'notify');
-  RouteNode get messsage => const RouteNode('/messsage', 'messsage');
+  @override
+  RouteNode get home => cached(() => const RouteNode('/home', 'home'));
 
-  //Outside
-  RouteNode get splash => const RouteNode('/splash', 'splash');
-  RouteNode get auth => const RouteNode('/auth', 'auth');
+  @override
+  RouteNode get explore {
+    return cached(() => const RouteNode('/explores', 'explores'));
+  }
+
+  @override
+  RouteNode get messsage {
+    return cached(() => const RouteNode('/messsages', 'messsages'));
+  }
+
+  @override
+  RouteNode get notify {
+    return cached(() => const RouteNode('/notifications', 'notifications'));
+  }
+
+  @override
+  RouteNode get reel => cached(() => const RouteNode('/reels', 'reels'));
+
+  // //Outside
+  @override
+  RouteNode get auth => cached(() => const RouteNode('/auth', 'auth'));
+
+  @override
+  RouteNode get splash => cached(() => const RouteNode('/splash', 'splash'));
 
   //path menu
-  List<String> get paths => [
+  @override
+  AsList get paths => [
     explore.path,
     reel.path,
     home.path,
@@ -22,7 +44,8 @@ class Routes with RouterMixin, UserRoutes, PostRoutes {
     messsage.path,
   ];
 
-  List<String> get titles => [
+  @override
+  AsList get titles => [
     'Semesta',
     reel.name,
     explore.name,
@@ -30,7 +53,58 @@ class Routes with RouterMixin, UserRoutes, PostRoutes {
     messsage.name,
   ];
 
-  int getIndex(String location) {
-    return paths.indexWhere((p) => location.startsWith(p));
+  @override
+  List<BottomNavigationBarItem> get items => [
+    item(Icons.search, 'Explore'),
+    item(Icons.ondemand_video_rounded, 'Reels'),
+    item(Icons.home, 'Home'),
+    item(Icons.notifications_none, 'Notifications'),
+    item(Icons.email_outlined, 'Messages'),
+  ];
+
+  ///User routes
+  @override
+  RouteNode get avatar => user.child('avatar', 'avatar');
+
+  @override
+  RouteNode get bookmark => user.child('saved', 'saved');
+
+  @override
+  RouteNode get edit => user.child('edit', 'edit');
+
+  @override
+  RouteNode get favorite => user.child('liked', 'liked');
+
+  @override
+  RouteNode get friendship => user.child('follow', 'follow');
+
+  @override
+  RouteNode get profile => user.child('profile', 'profile');
+
+  @override
+  RouteNode get user => cached(() => const RouteNode('/user/:id', 'user'));
+
+  ///Post routes
+  @override
+  RouteNode get change => posts.child('edit', 'edit');
+
+  @override
+  RouteNode get comment => posts.child('reply', 'reply');
+
+  @override
+  RouteNode get create {
+    return cached(() => const RouteNode('/post/create', 'post.create'));
   }
+
+  @override
+  RouteNode get media => posts.child('media', 'media');
+
+  @override
+  RouteNode get detail => posts.child('detail', 'detail');
+
+  @override
+  RouteNode get posts => cached(() => const RouteNode('/posts/:id', 'posts'));
+
+  @override
+  RouteNode get repost => posts.child('repost', 'repost');
 }

@@ -1,29 +1,54 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:semesta/app/services/firebase_service.dart';
 import 'package:semesta/public/functions/func_helper.dart';
 import 'package:semesta/public/functions/logger.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/app/models/reaction.dart';
-import 'package:semesta/app/repositories/generic_repository.dart';
 
 enum QueryMode { normal, next, refresh }
 
-mixin RepoMixin<T> on GenericRepository {
-  /// Returns the Firestore collection path
-  String get path;
+typedef Runs<T> = AsWait Function(T run);
+
+mixin RepositoryMixin<T> on FirebaseService {
+  final Mapper<T> _cache = {};
+
+  void clearCached(String id) {
+    _cache.removeWhere((key, _) => key.contains(id));
+  }
+
+  /// Returns the Firestore collection colName
+  String get colName;
 
   /// Convert model -> Firestore map
-  AsMap to(T model);
+  AsMap toPayload(T model);
 
   /// Convert Firestore doc -> model
-  T from(AsMap map);
+  T fromState(AsMap map);
 
   /// Get document by ID
   Wait<T?> show(String id) async {
-    final res = await collection(path).doc(id).get();
-    if (!res.exists) return null;
+    if (_cache.containsKey(id)) return _cache[id];
 
-    return from(res.data()!);
+    final res = getOne(await collection(colName).doc(id).get(), fromState);
+    _cache[id] = res;
+
+    return res;
+  }
+
+  /// Get document by ID or USERNAME
+  Wait<T?> view(String id, {String other = '', String key = 'uname'}) async {
+    if (other.isEmpty) return show(id);
+
+    if (_cache.containsKey(other)) return _cache[other];
+    final res = await collection(colName)
+        .limit(1)
+        .where(key, isEqualTo: other)
+        .get()
+        .then((value) => getOne(value.docs[0], fromState));
+    _cache[other] = res;
+
+    return res;
   }
 
   /// Get all documents (basic)
@@ -32,14 +57,11 @@ mixin RepoMixin<T> on GenericRepository {
     bool descending = true,
     String orderKey = made,
     QueryMode mode = QueryMode.normal,
-  }) async {
-    final res = await collection(path)
-        .orderBy(orderKey, descending: descending)
-        .limit(mode == QueryMode.refresh ? 100 : limit)
-        .get();
-
-    return res.docs.isNotEmpty ? getList(res, from) : const [];
-  }
+  }) => collection(colName)
+      .orderBy(orderKey, descending: descending)
+      .limit(mode == QueryMode.refresh ? 100 : limit)
+      .get()
+      .then((value) => getMore(value, fromState));
 
   /// Get all documents (anvanced)
   Waits<T> subindex({
@@ -48,14 +70,11 @@ mixin RepoMixin<T> on GenericRepository {
     bool descending = true,
     String orderKey = made,
     QueryMode mode = QueryMode.normal,
-  }) async {
-    final res = await subcollection(col)
-        .orderBy(orderKey, descending: descending)
-        .limit(mode == QueryMode.refresh ? 100 : limit)
-        .get();
-
-    return res.docs.isNotEmpty ? getList(res, from) : const [];
-  }
+  }) => subcollection(col)
+      .orderBy(orderKey, descending: descending)
+      .limit(mode == QueryMode.refresh ? 100 : limit)
+      .get()
+      .then((value) => getMore(value, fromState));
 
   /// Advanced query with multiple conditions
   Waits<T> query(
@@ -65,32 +84,28 @@ mixin RepoMixin<T> on GenericRepository {
     bool descending = true,
     QueryMode mode = QueryMode.normal,
   }) async {
-    Query<AsMap> query = collection(path)
+    Query<AsMap> res = collection(colName)
         .orderBy(orderKey, descending: descending)
         .limit(mode == QueryMode.refresh ? 100 : limit);
 
     // Apply multiple where conditions
     conditions.forEach((key, value) {
       if (value is List) {
-        query = query.where(key, whereIn: value);
+        res = res.where(key, whereIn: value);
       } else {
-        query = query.where(key, isEqualTo: value);
+        res = res.where(key, isEqualTo: value);
       }
     });
 
     // Execute query
-    final res = await query.get();
-    return res.docs.isNotEmpty ? getList(res, from) : const [];
+    return getMore(await res.get(), fromState);
   }
 
   Sync<T> sync$(String doc) {
     assert(doc.isNotEmpty, 'Document ID must not be empty');
     return handler(
-      () => collection(path).doc(doc).snapshots().map((e) {
-        final data = e.data();
-        if (data == null) throw StateError('Failed to live data in: $doc');
-
-        return from(data);
+      () => collection(colName).doc(doc).snapshots().map((doc) {
+        return getOne(doc, fromState);
       }),
       message: 'Failed to stream data in: $doc',
     );
@@ -100,8 +115,8 @@ mixin RepoMixin<T> on GenericRepository {
     return document(doc).snapshots();
   }
 
-  Sync<bool> has$(String docPath) {
-    return document(docPath).snapshots().map((d) => d.exists);
+  Sync<bool> has$(String doc) {
+    return document(doc).snapshots().map((d) => d.exists);
   }
 
   CollectionReference<AsMap> collection(String col) => db.collection(col);
@@ -110,13 +125,17 @@ mixin RepoMixin<T> on GenericRepository {
     return db.collectionGroup(col);
   }
 
-  DocumentReference<AsMap> document(String docPath) {
-    assert(!docPath.contains('//'));
-    return db.doc(docPath);
+  DocumentReference<AsMap> document(String doc) {
+    assert(!doc.contains('//'));
+    return db.doc(doc);
   }
 
-  AsWait execute(Defo<Transaction, AsWait> txs) {
-    return db.runTransaction(txs).onError((e, s) {
+  AsWait submit(Runs<WriteBatch> start) => handler(() async {
+    await start(db.batch());
+  }, message: 'Failed to submit batch operation');
+
+  AsWait execute(Runs<Transaction> start) {
+    return db.runTransaction(start).onError((e, s) {
       HandleLogger.error('Transaction $T', error: e, stack: s);
       throw Exception('Transaction failed: ${e.toString()}');
     });
@@ -129,12 +148,11 @@ mixin RepoMixin<T> on GenericRepository {
   }) async {
     if (values.isEmpty) return const [];
 
-    final res = await collection(path)
+    return collection(colName)
         .where(FieldPath.documentId, whereIn: values)
         .limit(mode == QueryMode.refresh ? 100 : limit)
-        .get();
-
-    return res.docs.isNotEmpty ? getSelected(values, res, from) : const [];
+        .get()
+        .then((value) => getSelected(values, value, fromState));
   }
 
   Waits<T> getInSuborder(
@@ -146,12 +164,11 @@ mixin RepoMixin<T> on GenericRepository {
   }) async {
     if (values.isEmpty) return const [];
 
-    final res = await subcollection(col)
+    return subcollection(col)
         .where(key, whereIn: values)
         .limit(mode == QueryMode.refresh ? 100 : limit)
-        .get();
-
-    return res.docs.isNotEmpty ? getSelected(values, res, from) : const [];
+        .get()
+        .then((value) => getSelected(values, value, fromState));
   }
 
   Waits<Reaction> getReactions(
@@ -164,22 +181,21 @@ mixin RepoMixin<T> on GenericRepository {
   }) async {
     assert(col.isNotEmpty, 'Collection and Document ID must not be empty');
 
-    Query<AsMap> query = subcollection(col)
+    Query<AsMap> res = subcollection(col)
         .orderBy(orderKey, descending: descending)
         .limit(mode == QueryMode.refresh ? 100 : limit);
 
     // Apply multiple where conditions
     conditions.forEach((key, value) {
       if (value is List) {
-        query = query.where(key, whereIn: value);
+        res = res.where(key, whereIn: value);
       } else {
-        query = query.where(key, isEqualTo: value);
+        res = res.where(key, isEqualTo: value);
       }
     });
 
     // Execute query
-    final res = await query.get();
-    return res.docs.isNotEmpty ? getList(res, Reaction.from) : const [];
+    return getMore(await res.get(), Reaction.fromState);
   }
 
   Waits<T> getInGrouped(
@@ -192,21 +208,20 @@ mixin RepoMixin<T> on GenericRepository {
   }) async {
     assert(col.isNotEmpty, 'Collection and Document ID must not be empty');
 
-    Query<AsMap> query = subcollection(col)
+    Query<AsMap> res = subcollection(col)
         .orderBy(orderKey, descending: descending)
         .limit(mode == QueryMode.refresh ? 100 : limit);
 
     // Apply multiple where conditions
     conditions.forEach((key, value) {
       if (value is List) {
-        query = query.where(key, whereIn: value);
+        res = res.where(key, whereIn: value);
       } else {
-        query = query.where(key, isEqualTo: value);
+        res = res.where(key, isEqualTo: value);
       }
     });
 
     // Execute query
-    final res = await query.get();
-    return res.docs.isNotEmpty ? getList(res, from) : const [];
+    return getMore(await res.get(), fromState);
   }
 }

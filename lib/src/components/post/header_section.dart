@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:semesta/public/extensions/context_extension.dart';
+import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/utils/custom_modal.dart';
 import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/components/info/reposted_banner.dart';
-import 'package:semesta/src/components/user/user_info.dart';
+import 'package:semesta/src/components/info/data_helper.dart';
 import 'package:semesta/src/widgets/main/follow_button.dart';
 import 'package:semesta/src/widgets/sub/animated_avatar.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
@@ -34,8 +34,8 @@ class HeaderSection extends StatelessWidget {
           builder: (_, child) => DirectionX(
             padding: const EdgeInsets.only(left: 12, bottom: 4),
             children: [
-              AvatarAnimation(
-                MediaSource.network(user.avatar),
+              AnimatedAvatar(
+                MediaSource.network(user.media.url),
                 padding: const EdgeInsets.only(top: 6.0),
                 onTap: () async {
                   await context.openProfile(user.id, authed);
@@ -45,7 +45,7 @@ class HeaderSection extends StatelessWidget {
 
               Expanded(
                 child: DirectionY(
-                  mainAxisSize: MainAxisSize.min,
+                  size: MainAxisSize.min,
                   children: [
                     DirectionX(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -73,11 +73,10 @@ class HeaderSection extends StatelessWidget {
                 children: [
                   if (!authed)
                     FollowButton(
-                      context.follow(iFollow, status.theyFollow),
+                      status.chekedFollow,
                       onPressed: () {
                         if (iFollow) {
-                          CustomModal<String>(
-                            context,
+                          context.dialog(
                             title: 'Unfollow ${user.name}?',
                             children: [Text(unfollow)],
                             onConfirm: () {
@@ -105,9 +104,9 @@ class HeaderSection extends StatelessWidget {
                     ),
                     onTap: () {
                       if (authed) {
-                        context.current(actions, profiled: false);
+                        context.openCurrent(actions, profiled: false);
                       } else {
-                        context.target(status, actions, profiled: false);
+                        context.openTarget(status, actions, profiled: false);
                       }
                     },
                   ),

@@ -11,8 +11,9 @@ class OccurredError extends StatelessWidget {
     return DirectionY(
       spacing: 12,
       alignment: Alignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAlignment: MainAxisAlignment.center,
+      crossAlignment: CrossAxisAlignment.center,
+      padding: EdgeInsets.symmetric(horizontal: 12),
       children: [
         Text(
           message ?? 'Something when wrong!',

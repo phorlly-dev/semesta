@@ -7,7 +7,7 @@ class AppNavBarSliver extends StatelessWidget implements PreferredSizeWidget {
   final bool snap, floating, pinned, centered;
   final Widget? start, middle, end, flexible;
   final PreferredSizeWidget? bottom;
-  final Color? backgroundColor;
+  final Color? background;
   const AppNavBarSliver({
     super.key,
     this.toolbar = kToolbarHeight,
@@ -21,7 +21,7 @@ class AppNavBarSliver extends StatelessWidget implements PreferredSizeWidget {
     this.flexible,
     this.bottom,
     this.expanded,
-    this.backgroundColor,
+    this.background,
   });
 
   @override
@@ -40,8 +40,9 @@ class AppNavBarSliver extends StatelessWidget implements PreferredSizeWidget {
       expandedHeight: expanded,
       scrolledUnderElevation: 0,
       toolbarHeight: toolbar,
-      backgroundColor: backgroundColor ?? context.defaultColor,
       surfaceTintColor: Colors.transparent,
+      actionsPadding: EdgeInsets.only(right: 6),
+      backgroundColor: background ?? context.defaultColor,
     );
   }
 

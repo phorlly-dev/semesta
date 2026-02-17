@@ -5,27 +5,25 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:semesta/config/firebase_options.dart';
+import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 class FirebaseService {
   AsWait init() async {
-    final app = await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    final opt = DefaultFirebaseOptions.currentPlatform;
+    final app = await Firebase.initializeApp(options: opt);
+
     FirebaseAuth.instanceFor(app: app);
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    await FirebaseAppCheck.instance.activate();
-    await gg.initialize(
-      serverClientId:
-          '186960173803-q8c82j37onennb9inhf09tffh8optgq3.apps.googleusercontent.com',
-    );
+    FirebaseAppCheck.instanceFor(app: app);
+
+    await check.activate();
+    await gg.initialize(serverClientId: token);
   }
 
-  FirebaseAuth get auth => FirebaseAuth.instance;
   GoogleSignIn get gg => GoogleSignIn.instance;
+  FirebaseAuth get auth => FirebaseAuth.instance;
   // FacebookAuth get fb => FacebookAuth.instance;
+  FirebaseStorage get cache => FirebaseStorage.instance;
   FirebaseFirestore get db => FirebaseFirestore.instance;
-  FirebaseStorage get ud => FirebaseStorage.instance;
+  FirebaseAppCheck get check => FirebaseAppCheck.instance;
 }

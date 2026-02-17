@@ -3,6 +3,7 @@ import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/date_time_extension.dart';
 import 'package:semesta/public/extensions/string_extension.dart';
 import 'package:semesta/public/utils/type_def.dart';
+import 'package:semesta/src/components/global/text_expandable.dart';
 import 'package:semesta/src/widgets/main/animated.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -16,11 +17,9 @@ class DisplayName extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      _data.limitText(maxChars),
-      style: TextStyle(
-        fontSize: 16,
+      _data.limit(maxChars),
+      style: context.texts.titleMedium?.copyWith(
         overflow: TextOverflow.ellipsis,
-        fontWeight: FontWeight.w600,
         color: color ?? context.colors.onSurface,
       ),
     );
@@ -45,8 +44,8 @@ class Username extends StatelessWidget {
     return Animated(
       onTap: onTap,
       child: Text(
-        '@${_data.limitText(maxChars)}',
-        style: context.text.titleMedium?.copyWith(
+        '@${_data.limit(maxChars)}',
+        style: context.texts.bodyLarge?.copyWith(
           overflow: TextOverflow.ellipsis,
           color: color ?? context.secondaryColor,
         ),
@@ -96,16 +95,33 @@ class Status extends StatelessWidget {
 class Bio extends StatelessWidget {
   final String _data;
   final Color? color;
-  const Bio(this._data, {super.key, this.color});
+  final bool profiled;
+  final int textLength;
+  final ValueChanged<String>? onLink;
+  const Bio(
+    this._data, {
+    super.key,
+    this.color,
+    this.profiled = false,
+    this.onLink,
+    this.textLength = 500,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      _data,
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
-      style: context.text.bodyLarge?.copyWith(color: color),
-    );
+    return profiled
+        ? TextExpandable(
+            _data,
+            trimLength: textLength,
+            textColor: color,
+            onLink: onLink,
+          )
+        : Text(
+            _data,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: context.texts.bodyLarge?.copyWith(color: color),
+          );
   }
 }
 
@@ -125,7 +141,7 @@ class MetaItem extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           _text,
-          style: context.text.bodyLarge?.copyWith(color: context.hintColor),
+          style: context.texts.bodyLarge?.copyWith(color: context.hintColor),
         ),
       ],
     );
@@ -152,17 +168,18 @@ class MetaLink extends StatelessWidget {
         icon is IconData
             ? Icon(icon, size: size, color: context.hintColor)
             : Image.asset(
-                '$icon'.toIcon(true),
+                '$icon'.toAsset(true),
                 width: size,
                 height: size,
                 color: context.hintColor,
               ),
         const SizedBox(width: 6),
+
         InkWell(
           onTap: () => _launchUrl(_data),
           child: Text(
             _data.toUrl,
-            style: context.text.bodyLarge?.copyWith(color: Colors.blue),
+            style: context.texts.bodyLarge?.copyWith(color: Colors.blue),
           ),
         ),
       ],
@@ -173,5 +190,29 @@ class MetaLink extends StatelessWidget {
     if (!await launchUrl(Uri.parse(url))) {
       throw Exception('Could not launch $url');
     }
+  }
+}
+
+class FollowBanner extends StatelessWidget {
+  final String title;
+  final double start;
+  const FollowBanner({super.key, this.title = 'Follows you', this.start = 32});
+
+  @override
+  Widget build(BuildContext context) {
+    return DirectionX(
+      spacing: 12,
+      padding: EdgeInsets.only(left: start),
+      children: [
+        Icon(Icons.person, color: context.hintColor, size: 18),
+        Text(
+          title,
+          style: context.texts.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w400,
+            color: context.hintColor,
+          ),
+        ),
+      ],
+    );
   }
 }

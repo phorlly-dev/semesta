@@ -12,11 +12,11 @@ import 'package:semesta/public/utils/type_def.dart';
 
 class ActionController extends GetxController {
   ///Playload
-  final pCtrl = Get.put(PostController());
-  UserController get uCtrl => pCtrl.uCtrl;
+  final _pctrl = Get.put(PostController());
+  UserController get _uctrl => _pctrl.ctrl;
 
-  String get currentUid => pCtrl.currentUid;
-  bool currentedUser(String uid) => pCtrl.currentedUser(uid);
+  String get currentUid => _pctrl.currentUid;
+  bool currentedUser(String uid) => _pctrl.currentedUser(uid);
   String get _kh => getKey();
   String get _kf => getKey(screen: Screen.following);
   String get _kp => getKey(id: currentUid, screen: Screen.post);
@@ -25,14 +25,14 @@ class ActionController extends GetxController {
   String get _kc => getKey(id: currentUid, screen: Screen.comment);
 
   AsWait toggleFollow(StatusView status) async {
-    await uCtrl.toggleFollow(status.author.id);
-    if (!status.authed) pCtrl.metaFor(_kf).dirty = true;
+    await _uctrl.toggleFollow(status.author.id);
+    if (!status.authed) _pctrl.metaFor(_kf).dirty = true;
   }
 
   AsWait toggleFavorite(ActionsView actions) async {
     await prepo.toggleReaction(actions.target, currentUid);
-    final rid = actions.feed.toId(puid: currentUid, kind: FeedKind.liked);
-    if (!actions.favorited) pCtrl.clearFor(_kl, rid);
+    final rid = actions.feed.toId(puid: currentUid, kind: FeedKind.likes);
+    if (!actions.favorited) _pctrl.clearFor(_kl, rid);
   }
 
   AsWait toggleBookmark(ActionsView actions) async {
@@ -40,26 +40,26 @@ class ActionController extends GetxController {
     if (actions.bookmarked) {
       CustomToast.info('Added to Saved', title: 'Saved');
     } else {
-      final rid = actions.feed.toId(puid: currentUid, kind: FeedKind.saved);
-      pCtrl.clearFor(_kb, rid);
+      final rid = actions.feed.toId(puid: currentUid, kind: FeedKind.saves);
+      _pctrl.clearFor(_kb, rid);
       CustomToast.warning('Removed from Saved', title: 'Saved');
     }
   }
 
   AsWait toggleRepost(ActionsView actions) async {
     await prepo.toggleReaction(actions.target, currentUid, ActionType.repost);
-    pCtrl.metaFor(_kf).dirty = true;
-    pCtrl.metaFor(_kc).dirty = true;
+    _pctrl.metaFor(_kf).dirty = true;
+    _pctrl.metaFor(_kc).dirty = true;
 
     if (actions.reposted) {
-      pCtrl.addRepostToTabs(_kp, actions.feed);
-      pCtrl.addRepostToTabs(_kc, actions.feed);
+      _pctrl.addRepostToTabs(_kp, actions.feed);
+      _pctrl.addRepostToTabs(_kc, actions.feed);
       CustomToast.info('Added to Posts', title: 'Reposts');
     } else {
-      final rid = actions.feed.toId(puid: currentUid, kind: FeedKind.reposted);
-      pCtrl.clearFor(_kh, rid);
-      pCtrl.clearFor(_kp, rid);
-      pCtrl.clearFor(_kc, rid);
+      final rid = actions.feed.toId(puid: currentUid, kind: FeedKind.reposts);
+      _pctrl.clearFor(_kh, rid);
+      _pctrl.clearFor(_kp, rid);
+      _pctrl.clearFor(_kc, rid);
       CustomToast.warning('Removed from Posts', title: 'Reposts');
     }
   }

@@ -8,10 +8,11 @@ class AuthHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DirectionY(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAlignment: CrossAxisAlignment.center,
       children: [
         Icon(Icons.lock_outline, size: 80, color: const Color(0xFF4A9EFF)),
         const SizedBox(height: 8),
+
         Text(
           make ? 'Create account' : 'Welcome back',
           textAlign: TextAlign.center,

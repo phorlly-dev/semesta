@@ -1,3 +1,3 @@
-import 'package:semesta/config/config.dart';
+import 'package:semesta/config/init.dart';
 
-void main() => AppConfigure.init();
+void main() => AppInitialize.load();

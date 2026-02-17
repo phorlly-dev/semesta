@@ -9,16 +9,16 @@ class BlockOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AbsorbPointer(
-      absorbing: true,
       child: DirectionY(
         alignment: Alignment.center,
-        mainAxisSize: MainAxisSize.min,
+        size: MainAxisSize.min,
         color: Colors.black.withValues(alpha: .8),
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAlignment: MainAxisAlignment.center,
+        crossAlignment: CrossAxisAlignment.center,
         children: [
-          AnimatedLoader(color: Colors.white, cupertino: true),
-          SizedBox(height: 16),
+          const AnimatedLoader(color: Colors.white, cupertino: true),
+          const SizedBox(height: 16),
+
           Text(
             '$_title...',
             style: TextStyle(

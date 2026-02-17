@@ -15,7 +15,7 @@ class ThemeManager with ChangeNotifier {
   }
 
   AsWait _loadTheme() async {
-    final stored = _prefs.getStorage(_key);
+    final stored = _prefs.get(_key);
 
     if (stored == 'light') {
       _themeMode = ThemeMode.light;
@@ -40,7 +40,7 @@ class ThemeManager with ChangeNotifier {
     }
 
     // SAVE to prefs
-    await _prefs.setStorage(_key, _themeMode.name); // "light" / "dark"
+    await _prefs.set(_key, _themeMode.name); // "light" / "dark"
 
     notifyListeners();
   }

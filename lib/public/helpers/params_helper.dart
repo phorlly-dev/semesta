@@ -1,57 +1,50 @@
 import 'package:flutter/material.dart';
+
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
+import 'package:semesta/public/utils/type_def.dart';
 
 class VisibleToPost {
   final String label;
   final IconData icon;
-  final VoidCallback? onTap;
   final Visible option;
-  const VisibleToPost._({
-    this.onTap,
-    required this.icon,
-    required this.label,
-    required this.option,
-  });
+  final VoidCallback? onTap;
+  const VisibleToPost._(this.label, this.icon, this.option, this.onTap);
 
   factory VisibleToPost.public([ValueChanged<Visible>? onChanged]) {
-    final v = Visible.everyone;
     return VisibleToPost._(
-      option: v,
-      label: 'Everyone',
-      icon: Icons.public,
-      onTap: () => onChanged?.call(v),
+      'Everyone',
+      Icons.public,
+      Visible.everyone,
+      () => onChanged?.call(Visible.everyone),
     );
   }
 
   factory VisibleToPost.verified([ValueChanged<Visible>? onChanged]) {
-    final v = Visible.verified;
     return VisibleToPost._(
-      option: v,
-      icon: Icons.verified,
-      label: 'Verified accounts',
-      onTap: () => onChanged?.call(v),
+      'Verified accounts',
+      Icons.verified,
+      Visible.verified,
+      () => onChanged?.call(Visible.verified),
     );
   }
 
   factory VisibleToPost.following([ValueChanged<Visible>? onChanged]) {
-    final v = Visible.following;
     return VisibleToPost._(
-      option: v,
-      label: 'Accounts you follow',
-      icon: Icons.people_alt_outlined,
-      onTap: () => onChanged?.call(v),
+      'Accounts you follow',
+      Icons.people_alt_outlined,
+      Visible.following,
+      () => onChanged?.call(Visible.following),
     );
   }
 
   factory VisibleToPost.mentioned([ValueChanged<Visible>? onChanged]) {
-    final v = Visible.mentioned;
     return VisibleToPost._(
-      option: v,
-      label: 'Only accounts you mention',
-      icon: Icons.alternate_email_outlined,
-      onTap: () => onChanged?.call(v),
+      'Only accounts you mention',
+      Icons.alternate_email_outlined,
+      Visible.mentioned,
+      () => onChanged?.call(Visible.mentioned),
     );
   }
 
@@ -71,35 +64,35 @@ class CountState {
 
   factory CountState.render(
     int value, [
-    FeedKind kind = FeedKind.posted,
+    FeedKind kind = FeedKind.posts,
   ]) => switch (kind) {
-    FeedKind.liked => CountState._(value == 1 ? 'Like' : 'Likes', value, kind),
-    FeedKind.viewed => CountState._(value == 1 ? 'View' : 'Views', value, kind),
+    FeedKind.likes => CountState._(value == 1 ? 'Like' : 'Likes', value, kind),
+    FeedKind.views => CountState._(value == 1 ? 'View' : 'Views', value, kind),
     FeedKind.following => CountState._('Following', value, kind),
-    FeedKind.follower => CountState._(
+    FeedKind.followers => CountState._(
       value == 1 ? 'Follower' : 'Followers',
       value,
       kind,
     ),
-    FeedKind.quoted => CountState._(
+    FeedKind.quotes => CountState._(
       value == 1 ? 'Quote' : 'Quotes',
       value,
       kind,
     ),
-    FeedKind.reposted => CountState._(
+    FeedKind.reposts => CountState._(
       value == 1 ? 'Repost' : 'Reposts',
       value,
       kind,
     ),
-    FeedKind.saved => CountState._(value == 1 ? 'Save' : 'Saves', value, kind),
-    FeedKind.shared => CountState._(
+    FeedKind.saves => CountState._(value == 1 ? 'Save' : 'Saves', value, kind),
+    FeedKind.shares => CountState._(
       value == 1 ? 'Share' : 'Shares',
       value,
       kind,
     ),
     FeedKind.media => CountState._('Media', value, FeedKind.media),
-    FeedKind.posted => CountState._(value == 1 ? 'Post' : 'Posts', value, kind),
-    FeedKind.replied => CountState._(
+    FeedKind.posts => CountState._(value == 1 ? 'Post' : 'Posts', value, kind),
+    FeedKind.replies => CountState._(
       value == 1 ? 'Reply' : 'Replies',
       value,
       kind,
@@ -177,4 +170,17 @@ class ProfileMeta {
   final DateTime? birthdate;
   final DateTime? joined;
   const ProfileMeta(this.location, this.website, {this.birthdate, this.joined});
+}
+
+class LocationSuggestion {
+  final String primary; // e.g. "Los Angeles"
+  final String secondary; // e.g. "CA, United States"
+  final String? placeId; // optional (Google / Mapbox)
+  const LocationSuggestion(this.primary, this.secondary, {this.placeId});
+}
+
+class ParsedText {
+  final AsList hashtags;
+  final AsList mentions;
+  const ParsedText(this.hashtags, this.mentions);
 }

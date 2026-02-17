@@ -23,13 +23,13 @@ class HomeScreen extends StatelessWidget {
         final scrollers = dctrl.controllers;
 
         return TabLayout(
-          tabs: ['For You', 'Following'],
+          tabs: ['For you', 'Following'],
           builder: (ctrl, tab) => PageLayout(
             header: value
                 ? AppNavBar(
                     height: 88,
-                    start: AvatarAnimation(
-                      MediaSource.network(user.avatar),
+                    start: AnimatedAvatar(
+                      MediaSource.network(user.media.url),
                       size: 32,
                       padding: const EdgeInsets.all(4.0),
                       onTap: () => Scaffold.of(context).openDrawer(),

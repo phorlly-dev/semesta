@@ -12,10 +12,10 @@ T? safeParse<T extends Object>(dynamic data, Defo<AsMap, T> from) {
   );
 }
 
-T parseEnum<T extends Enum>(dynamic data, List<T> values, T defaultValue) {
-  if (data == null || data is! String || data.isEmpty) return defaultValue;
+T parseEnum<T extends Enum>(dynamic data, List<T> values) {
+  if (data == null || data is! String || data.isEmpty) return values[0];
 
-  return values.firstWhere((e) => e.name == data, orElse: () => defaultValue);
+  return values.firstWhere((e) => e.name == data, orElse: () => values[0]);
 }
 
 /// Parses a map directly, assuming it's valid JSON.
@@ -62,15 +62,22 @@ Mapper<T> getMap<T>(List<T> items, Defo<T, String> selector) => {
 };
 
 List<T> getSelected<T>(AsList values, Ask<AsMap> data, Defo<AsMap, T> from) {
+  if (data.docs.isEmpty || values.isEmpty) return const [];
+
   final map = {for (var doc in data.docs) doc.id: from(doc.data())};
   return values.where(map.containsKey).map((id) => map[id]!).toList();
 }
 
-List<T> getList<T>(Ask<AsMap> data, Defo<AsMap, T> from) {
-  return handler(
-    () => data.docs.map<T>((e) => from(e.data())).toList(),
-    message: 'Something when wrong',
-  );
+List<T> getMore<T>(Ask<AsMap> data, Defo<AsMap, T> from) {
+  return handler(() {
+    return data.docs.isNotEmpty
+        ? data.docs.map<T>((e) => from(e.data())).toList()
+        : const [];
+  }, message: 'Something when wrong');
+}
+
+T getOne<T>(dynamic value, Defo<AsMap, T> from) {
+  return from(value.data() ?? const {});
 }
 
 enum MessageInfo { info, warning, error }

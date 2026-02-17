@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:semesta/app/models/hashtag.dart';
 import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/functions/func_helper.dart';
+import 'package:semesta/public/helpers/audit_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/mixins/repo_mixin.dart';
+import 'package:semesta/public/mixins/repository_mixin.dart';
 import 'package:semesta/app/models/reaction.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/app/repositories/repository.dart';
@@ -63,12 +66,8 @@ mixin PostMixin on IRepository<Feed> {
     QueryMode mode = QueryMode.normal,
   }) => prepo.query({key: value, ...types}, mode: mode, limit: limit);
 
-  Waits<Feed> getForYou({
-    int limit = 20,
-    QueryMode mode = QueryMode.normal,
-  }) async {
-    final posts = await prepo.query({...types, visibility: public}, mode: mode);
-    return posts.isNotEmpty ? posts : const [];
+  Waits<Feed> getForYou({int limit = 20, QueryMode mode = QueryMode.normal}) {
+    return prepo.query({...types, visibility: public}, mode: mode);
   }
 
   Waits<Reaction> getForYouActions({
@@ -76,11 +75,42 @@ mixin PostMixin on IRepository<Feed> {
     bool descending = true,
     String orderKey = made,
     String col = reposts,
-  }) async {
-    final res = await subcollection(
-      col,
-    ).limit(limit).orderBy(orderKey, descending: descending).get();
+  }) => subcollection(col)
+      .limit(limit)
+      .orderBy(orderKey, descending: descending)
+      .get()
+      .then((res) => getMore(res, Reaction.fromState));
 
-    return res.docs.isNotEmpty ? getList(res, Reaction.from) : const [];
+  Waits<Hashtag> fetchHashtags(
+    String value, {
+    int limit = 10,
+    String key = 'last_used_at',
+  }) async {
+    final text = value.toLowerCase();
+    final docId = FieldPath.documentId;
+    Query<AsMap> res = collection(hashtags).limit(limit);
+    res = value.isEmpty
+        ? res.orderBy(key, descending: true)
+        : res.orderBy(docId).startAt([text]).endAt(['$text\uf8ff']);
+
+    return getMore(await res.get(), Hashtag.fromState);
+  }
+
+  Wait<RepostView?> fetchRepost(ActionTarget target, String uid) async {
+    final res = await document(target.toPath(uid, ccol: reposts)).get();
+    final data = await urepo.show(res.data()?['did']);
+    return data != null ? RepostView(data.id, data.name, data.id == uid) : null;
+  }
+
+  Wait<ReferenceView?> fetchReference(Feed post, [bool primary = true]) async {
+    final parent = await view(
+      post.id,
+      other: primary ? '' : post.pid,
+      key: keyId,
+    );
+    if (parent == null) return null;
+
+    final actor = await urepo.show(parent.uid);
+    return actor != null ? ReferenceView(parent, actor) : null;
   }
 }

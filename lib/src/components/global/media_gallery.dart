@@ -5,7 +5,7 @@ import 'package:semesta/src/widgets/main/media_render.dart';
 
 class MediaGallery extends StatelessWidget {
   final String id;
-  final double start, end;
+  final double start, end, ratio;
   final List<Media> _media; // image or video URLs
   final BorderRadius? borderRadius;
   const MediaGallery(
@@ -15,6 +15,7 @@ class MediaGallery extends StatelessWidget {
     this.start = 56,
     this.end = 12,
     this.borderRadius,
+    this.ratio = 1,
   });
 
   @override
@@ -24,7 +25,7 @@ class MediaGallery extends StatelessWidget {
       padding: a ? EdgeInsetsDirectional.only(start: start, end: end) : null,
       child: a
           ? AspectRatio(
-              aspectRatio: 1,
+              aspectRatio: ratio,
               child: MediaRender(_media[0], id: id, borderRadius: borderRadius),
             )
           : SizedBox(

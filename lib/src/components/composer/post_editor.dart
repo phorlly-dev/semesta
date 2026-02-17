@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:semesta/app/controllers/highlight_controller.dart';
 import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/components/global/media_preview.dart';
 import 'package:semesta/src/widgets/sub/animated_avatar.dart';
@@ -11,18 +12,18 @@ class PostEditor extends StatelessWidget {
   final String avatar;
   final String? label;
   final List<AssetEntity> assets;
-  final TextEditingController? content;
-  final ValueChanged<String>? onChanged;
+  final HighlightController? input;
   final ValueChanged<int>? onRemove;
+  final ValueChanged<String>? onChanged;
   const PostEditor({
     super.key,
-    this.avatar = '',
-    this.onChanged,
-    this.content,
+    this.input,
     this.label,
     this.bottom,
-    this.assets = const [],
     this.onRemove,
+    this.onChanged,
+    this.avatar = '',
+    this.assets = const [],
   });
 
   @override
@@ -31,18 +32,15 @@ class PostEditor extends StatelessWidget {
       children: [
         DirectionX(
           children: [
-            AvatarAnimation(
-              MediaSource.network(avatar),
-              padding: EdgeInsets.only(top: 2),
-            ),
-
+            AnimatedAvatar(MediaSource.network(avatar)),
             const SizedBox(width: 8),
 
             Expanded(
               child: DirectionY(
                 children: [
+                  const SizedBox(height: 4),
                   TextField(
-                    controller: content,
+                    controller: input,
                     autofocus: true,
                     maxLines: null, // grow downward
                     keyboardType: TextInputType.multiline,
@@ -51,15 +49,12 @@ class PostEditor extends StatelessWidget {
                       border: InputBorder.none,
                       isCollapsed: true, // 🔥 prevents vertical jump
                     ),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      height: 1.4, // smoother line growth
-                    ),
+                    style: TextStyle(fontSize: 16, height: 1.4),
                     onChanged: onChanged,
                   ),
 
                   if (assets.length == 1) ...[
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     MediaPreview(assets, onRemove: onRemove),
                   ],
                 ],
@@ -72,7 +67,7 @@ class PostEditor extends StatelessWidget {
         if (assets.length > 1) MediaPreview(assets, onRemove: onRemove),
 
         if (bottom != null) ...[
-          if (assets.isNotEmpty) SizedBox(height: 6),
+          if (assets.isNotEmpty) const SizedBox(height: 6),
           Padding(padding: const EdgeInsets.only(left: 44), child: bottom!),
         ],
       ],

@@ -16,7 +16,7 @@ class AnimatedCount extends StatelessWidget {
   const AnimatedCount(
     this._value, {
     super.key,
-    this.kind = FeedKind.posted,
+    this.kind = FeedKind.posts,
     this.onTap,
     this.space = 4.6,
     this.color,

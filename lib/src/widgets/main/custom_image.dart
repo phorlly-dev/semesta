@@ -40,7 +40,7 @@ class CustomImage extends StatelessWidget {
                 color: Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Image.asset(defaultAsset.toIcon(asIcon), fit: fit),
+              child: Image.asset(defaultAsset.toAsset(asIcon), fit: fit),
             ),
           );
     }

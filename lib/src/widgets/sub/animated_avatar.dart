@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/widgets/main/custom_image.dart';
 
-class AvatarAnimation extends StatelessWidget {
+class AnimatedAvatar extends StatelessWidget {
   final MediaSource _source;
   final double size;
   final VoidCallback? onTap;
   final EdgeInsetsGeometry? padding;
   final Decoration? decoration;
-  const AvatarAnimation(
+  const AnimatedAvatar(
     this._source, {
     super.key,
     this.size = 36,

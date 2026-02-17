@@ -30,9 +30,7 @@ class ImagedRender extends StatelessWidget {
             // Background
             Positioned.fill(
               child: CustomImage(
-                MediaSource.network(
-                  _media.img ? _media.display : _media.thumbnails['url'],
-                ),
+                MediaSource.network(_media.img ? _media.url : _media.others[0]),
                 onTap: onTap,
               ),
             ),

@@ -28,6 +28,7 @@ Sync<T> debounce<T>(Sync<T> source, Duration delay) {
   StreamController<T>? controller;
 
   controller = StreamController<T>(
+    sync: true,
     onListen: () => source.listen(
       (event) {
         timer?.cancel();

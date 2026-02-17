@@ -31,7 +31,7 @@ class OptionButton extends StatelessWidget {
     final iconWidget = icon is IconData
         ? Icon(icon, size: sizeIcon, color: color)
         : Image.asset(
-            '$icon'.toIcon(true),
+            '$icon'.toAsset(true),
             width: sizeIcon,
             height: sizeIcon,
             color: color,
@@ -40,7 +40,7 @@ class OptionButton extends StatelessWidget {
     return ListTile(
       contentPadding: padding,
       leading: iconWidget,
-      title: Text(_label, style: style ?? context.text.bodyLarge),
+      title: Text(_label, style: style ?? context.texts.bodyLarge),
       trailing: status,
       onTap: onTap != null
           ? () {

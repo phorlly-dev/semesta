@@ -2,19 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/model_extension.dart';
-import 'package:semesta/public/extensions/string_extension.dart';
-import 'package:semesta/public/functions/custom_toast.dart';
-import 'package:semesta/public/utils/custom_modal.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/helpers/audit_view.dart';
 import 'package:semesta/src/widgets/main/option_button.dart';
-import 'package:sn_progress_dialog/sn_progress_dialog.dart';
 
 class OptionModal {
   final BuildContext _context;
   const OptionModal(this._context);
 
-  void tagetOptions(
+  void targetOptions(
     StatusView status,
     ActionsView actions, {
     bool profiled = true,
@@ -22,10 +18,10 @@ class OptionModal {
     final author = status.author;
     final active = actions.bookmarked;
     final uid = author.id;
-    final name = author.name;
+    final name = author.uname;
     final iFollow = status.iFollow;
 
-    _context.sheet(
+    _context.openSheet(
       children: [
         if (!profiled)
           OptionButton(
@@ -46,13 +42,12 @@ class OptionModal {
         ),
 
         OptionButton(
-          iFollow ? 'Unfollow $name' : 'Follow $name',
+          iFollow ? 'Unfollow @$name' : 'Follow @$name',
           icon: iFollow ? Icons.person_remove_alt_1 : Icons.person_add,
           onTap: () {
             if (iFollow) {
-              CustomModal<String>(
-                _context,
-                title: 'Unfollow $name',
+              _context.dialog(
+                title: 'Unfollow @$name',
                 children: [Text(unfollow)],
                 onConfirm: () {
                   status.toggle();
@@ -97,7 +92,7 @@ class OptionModal {
     final post = actions.feed;
     final active = actions.bookmarked;
 
-    _context.sheet(
+    _context.openSheet(
       children: [
         if (profiled && post.editable)
           StreamBuilder(
@@ -117,7 +112,7 @@ class OptionModal {
                   icon: Icons.edit_square,
                   status: Text(
                     post.formatMMSS(remaining),
-                    style: _context.text.bodyMedium?.copyWith(
+                    style: _context.texts.bodyMedium?.copyWith(
                       color: _context.outlineColor,
                     ),
                   ),
@@ -153,12 +148,11 @@ class OptionModal {
             icon: 'comment.png',
             color: _context.primaryColor,
             onTap: () {
-              _context.show(
-                post.visible,
-                onChanged: (opt) async {
-                  await pctrl.saveChange(post.copy(visible: opt, edited: true));
-                },
-              );
+              _context.openVisible(post.visible, (opt) async {
+                await pctrl.saveChange(
+                  post.copyWith(visible: opt, edited: true),
+                );
+              });
             },
           ),
 
@@ -168,8 +162,7 @@ class OptionModal {
             icon: Icons.delete_outline,
             color: _context.errorColor,
             onTap: () {
-              CustomModal<String>(
-                _context,
+              _context.dialog(
                 title: 'Delete Post?',
                 children: [
                   const Text(
@@ -190,7 +183,7 @@ class OptionModal {
     );
   }
 
-  void repostOptions(ActionsView actions) => _context.sheet(
+  void repostOptions(ActionsView actions) => _context.openSheet(
     children: [
       OptionButton(
         actions.reposted ? 'Undo Repost' : 'Repost',
@@ -212,13 +205,13 @@ class OptionModal {
     ],
   );
 
-  void shareOptions(ActionsView actions) => _context.sheet(
+  void shareOptions(ActionsView actions) => _context.openSheet(
     children: [
       Padding(
         padding: const EdgeInsets.only(left: 8, bottom: 16),
         child: Text(
           'Share post',
-          style: _context.text.headlineSmall?.copyWith(
+          style: _context.texts.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -249,37 +242,25 @@ class OptionModal {
     ],
   );
 
-  void imageOptions(String path, ProgressDialog pd) => _context.sheet(
+  void mediaOptions(
+    VoidCallback? onSave,
+    VoidCallback? onShare,
+    VoidCallback? onReport,
+  ) => _context.openSheet(
     children: [
       OptionButton(
         'Save to photo',
         icon: Icons.file_download_outlined,
-        onTap: () async {
-          pd.show(
-            max: 100,
-            msg: 'File Downloading...',
-            completed: Completed(
-              completedMsg: 'Downloading Done !',
-              completionDelay: 2500,
-            ),
-          );
-          await path.toDownload((received, total) {
-            if (total <= 0) return;
-
-            final progress = ((received / total) * 100).clamp(0, 100).toInt();
-            pd.update(value: progress, msg: 'Downloading... $progress%');
-
-            if (progress >= 100) {
-              pd.close();
-              CustomToast.info('Saved to gallery');
-            }
-          });
-        },
+        onTap: onSave,
       ),
 
-      OptionButton(icon: 'share.png', 'Share external', onTap: () {}),
+      OptionButton('Share external', icon: 'share.png', onTap: onShare),
 
-      OptionButton(icon: Icons.report_outlined, 'Report photo', onTap: () {}),
+      OptionButton(
+        'Report photo',
+        icon: Icons.report_outlined,
+        onTap: onReport,
+      ),
 
       const SizedBox(height: 12),
     ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_utils/src/extensions/context_extensions.dart';
 import 'package:semesta/app/models/author.dart';
 import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/string_extension.dart';
@@ -34,7 +35,7 @@ class ProfileHeader extends StatelessWidget {
         min: collapsed,
         max: expanded,
         builder: (min, max, shrink) {
-          final ptop = context.query.padding.top;
+          final ptop = context.mediaQuery.padding.top;
           final progress = (shrink / (max - min)).clamp(0.0, 1.0);
 
           // Avatar sizes (X-like)
@@ -47,14 +48,17 @@ class ProfileHeader extends StatelessWidget {
           final avatarEndY = ptop + (kToolbarHeight - amin) / 2;
           final avatarY = astartY - (astartY - avatarEndY) * progress;
 
+          final cover = _user.media.others;
           return Stack(
             clipBehavior: Clip.none,
             children: [
               // Cover image
               Positioned.fill(
-                child: _user.cover.isNotEmpty
-                    ? CustomImage(MediaSource.network(_user.cover))
-                    : CustomImage(MediaSource.asset('bg-cover.jpg'.toIcon())),
+                child: CustomImage(
+                  cover.isNotEmpty
+                      ? MediaSource.network(cover[0])
+                      : MediaSource.asset('bg-cover.jpg'.toAsset()),
+                ),
               ),
 
               // Dark overlay (optional, X-like)
@@ -68,8 +72,8 @@ class ProfileHeader extends StatelessWidget {
               Positioned(
                 left: 16,
                 top: avatarY,
-                child: AvatarAnimation(
-                  MediaSource.network(_user.avatar),
+                child: AnimatedAvatar(
+                  MediaSource.network(_user.media.url),
                   size: asize,
                   onTap: () async {
                     await context.openById(routes.avatar, _user.id);

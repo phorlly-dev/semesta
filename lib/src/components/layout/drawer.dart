@@ -6,7 +6,7 @@ import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/helpers/params_helper.dart';
-import 'package:semesta/src/components/user/user_info.dart';
+import 'package:semesta/src/components/info/data_helper.dart';
 import 'package:semesta/src/widgets/main/option_button.dart';
 import 'package:semesta/src/widgets/sub/animated_count.dart';
 import 'package:semesta/src/widgets/main/animated.dart';
@@ -53,8 +53,8 @@ class AppDrawer extends StatelessWidget {
       // Header
       DirectionX(
         children: [
-          AvatarAnimation(
-            MediaSource.network(_user.avatar),
+          AnimatedAvatar(
+            MediaSource.network(_user.media.url),
             padding: EdgeInsets.only(top: 6),
             onTap: () async {
               context.openProfile(_user.id, true);
@@ -73,14 +73,14 @@ class AppDrawer extends StatelessWidget {
       ),
 
       Animated(
+        child: DirectionY(
+          size: MainAxisSize.min,
+          children: [DisplayName(_user.name), Username(_user.uname)],
+        ),
         onTap: () async {
           context.openProfile(_user.id, true);
           context.pop();
         },
-        child: DirectionY(
-          mainAxisSize: MainAxisSize.min,
-          children: [DisplayName(_user.name), Username(_user.uname)],
-        ),
       ),
 
       const SizedBox(height: 8),
@@ -103,7 +103,7 @@ class AppDrawer extends StatelessWidget {
 
           AnimatedCount(
             _user.followers,
-            kind: FeedKind.follower,
+            kind: FeedKind.followers,
             onTap: () {
               context.openFollow(
                 routes.friendship,
@@ -121,7 +121,7 @@ class AppDrawer extends StatelessWidget {
 
   Widget _menu(BuildContext context) {
     final icon = 24.0;
-    final text = context.text.titleMedium?.copyWith(
+    final text = context.texts.titleMedium?.copyWith(
       fontWeight: FontWeight.bold,
     );
 

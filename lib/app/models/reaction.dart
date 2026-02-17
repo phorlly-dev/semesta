@@ -1,53 +1,49 @@
-import 'package:semesta/public/functions/func_helper.dart';
+import 'package:semesta/public/extensions/json_extension.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
-import 'package:semesta/app/models/model.dart';
 
 class Reaction {
-  final bool exist;
+  final bool removed;
   final FeedKind kind;
+  final String sid, did;
   final DateTime createdAt;
-  final String currentId, targetId;
 
   Reaction({
-    this.exist = true,
-    this.targetId = '',
-    this.currentId = '',
-    this.kind = FeedKind.liked,
+    this.did = '',
+    this.sid = '',
+    this.removed = false,
+    this.kind = FeedKind.likes,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? now;
 
-  factory Reaction.from(AsMap json) {
-    final map = IModel.convert(json, true);
-    return Reaction(
-      exist: map['exist'] ?? false,
-      targetId: map['targetId'],
-      currentId: map['currentId'],
-      kind: parseEnum(map['kind'], FeedKind.values, FeedKind.liked),
-      createdAt: IModel.make(map),
-    );
-  }
+  factory Reaction.fromState(AsMap map) => Reaction(
+    removed: map.asBool('removed'),
+    sid: map.asText('sid'),
+    did: map.asText('did'),
+    kind: map.asEnum('type', FeedKind.values),
+    createdAt: map.created,
+  );
 
-  AsMap to() => IModel.convert({
-    'exist': exist,
-    'kind': kind.name,
-    'targetId': targetId,
-    'currentId': currentId,
-    'createdAt': IModel.toEpoch(createdAt),
-  });
+  AsMap toPayload() => {
+    'removed': removed,
+    'type': kind.name,
+    'did': did,
+    'sid': sid,
+    'created_at': createdAt.millisecondsSinceEpoch,
+  };
 
-  Reaction copy({
-    bool? exist,
+  Reaction copyWith({
+    bool? removed,
     FeedKind? kind,
-    String? targetId,
-    String? currentId,
+    String? did,
+    String? sid,
     DateTime? createdAt,
   }) => Reaction(
     kind: kind ?? this.kind,
-    exist: exist ?? this.exist,
-    targetId: targetId ?? this.targetId,
+    removed: removed ?? this.removed,
+    did: did ?? this.did,
     createdAt: createdAt ?? this.createdAt,
-    currentId: currentId ?? this.currentId,
+    sid: sid ?? this.sid,
   );
 }

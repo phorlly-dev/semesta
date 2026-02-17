@@ -23,7 +23,8 @@ class _SignInState extends State<SignIn> {
   @override
   Widget build(BuildContext context) {
     return DirectionY(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      spacing: 8,
+      crossAlignment: CrossAxisAlignment.center,
       children: [
         Inputable(
           'email',
@@ -76,7 +77,7 @@ class _SignInState extends State<SignIn> {
           },
         ),
 
-        SizedBox(height: 24),
+        const SizedBox(height: 24),
       ],
     );
   }

@@ -2,60 +2,55 @@ import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
-import 'package:semesta/public/mixins/repo_mixin.dart';
+import 'package:semesta/public/mixins/repository_mixin.dart';
 import 'package:semesta/app/models/reaction.dart';
 import 'package:semesta/app/repositories/generic_repository.dart';
 import 'package:semesta/public/helpers/utils_helper.dart';
 
-abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
+abstract class IRepository<T> extends GenericRepository
+    with RepositoryMixin<T> {
   /// Add a new document
   Wait<String> store(T model) async {
-    final docRef = collection(path).doc();
-    final newModel = (model as dynamic).copy(id: docRef.id);
-    await docRef.set(to(newModel));
+    final ref = collection(colName).doc();
+    final payload = toPayload((model as dynamic).copyWith(id: ref.id));
+    await ref.set(payload);
 
-    return docRef.id;
+    return ref.id;
   }
 
   /// Update an existing document
-  AsWait modify(String id, AsMap data) async {
-    final ref = collection(path).doc(id);
-    await execute((run) async => run.update(ref, data));
+  AsWait update(String id, AsMap data) async {
+    await collection(colName).doc(id).update(data);
+    clearCached(id);
   }
 
   /// Delete a document
   AsWait destroy(String id) async {
-    await execute((run) async => run.delete(collection(path).doc(id)));
+    await collection(colName).doc(id).delete();
+    clearCached(id);
   }
 
   AsWait incrementView(ActionTarget target, [String col = comments]) async {
-    final ref = collection(path);
-    final view = toggleStats(FeedKind.viewed);
-    await execute((run) async {
-      switch (target) {
-        case ParentTarget(:final pid):
-          run.update(ref.doc(pid), view);
-          break;
+    final ref = collection(colName);
+    final view = toggleStats(FeedKind.views);
 
-        case ChildTarget(:final pid, :final cid):
-          run.update(ref.doc(pid).collection(col).doc(cid), view);
-          break;
-      }
-    });
+    return switch (target) {
+      ParentTarget(:final pid) => await ref.doc(pid).update(view),
+      ChildTarget(:final pid, :final cid) =>
+        await ref.doc(pid).collection(col).doc(cid).update(view),
+    };
   }
 
   /// [sdoc] - Source document ID (e.g., user ID)
   /// [edoc] - Edge/target document ID (e.g., post ID)
-  /// [kind] - The reaction type key (default: FeedKind.liked)
-  /// [subcol] - The subcollection name (default: 'favorites')
+  /// [kind] - The reaction type key (default: FeedKind.likes)
   AsWait toggle(
     String sdoc,
-    String edoc, {
-    String subcol = favorites,
-    FeedKind kind = FeedKind.liked,
-  }) async {
-    final doc = collection(path).doc(sdoc);
-    final edgeRef = doc.collection(subcol).doc(edoc);
+    String edoc, [
+    FeedKind kind = FeedKind.likes,
+  ]) async {
+    final doc = collection(colName).doc(sdoc);
+    final edgeRef = doc.collection(kind.name).doc(edoc);
 
     await execute((run) async {
       // Fetch both documents in parallel for better performance
@@ -73,11 +68,8 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
         run.update(doc, toggleStats(kind, -1));
       } else {
         // Add reaction
-        final payload = Reaction(
-          kind: kind,
-          targetId: edoc,
-          currentId: sdoc,
-        ).to();
+        final payload = Reaction(kind: kind, sid: sdoc, did: edoc).toPayload();
+
         run.set(edgeRef, payload);
         run.update(doc, toggleStats(kind));
       }
@@ -87,19 +79,17 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
   /// [sdoc] - Source document ID (e.g., post ID)
   /// [bdoc] - Between/parent document ID (e.g., comment ID)
   /// [edoc] - Edge/target document ID (e.g., user ID performing the action)
-  /// [ kind] - The reaction type key (default: FeedKind.liked)
-  /// [subcol] - The subcollection name for reactions (default: 'favorites')
-  /// [inSubcol] - The intermediate subcollection name (default: 'comments')
+  /// [ kind] - The reaction type key (default: FeedKind.likes)
+  /// [col] - The subcollection name for reactions (default: 'comments')
   AsWait subtoggle(
     String sdoc,
     String bdoc,
     String edoc, {
-    String subcol = favorites,
-    String inSubcol = comments,
-    FeedKind kind = FeedKind.liked,
+    String col = comments,
+    FeedKind kind = FeedKind.likes,
   }) async {
-    final doc = collection(path).doc(sdoc).collection(inSubcol).doc(bdoc);
-    final nestedRef = doc.collection(subcol).doc(edoc);
+    final doc = collection(colName).doc(sdoc).collection(col).doc(bdoc);
+    final nestedRef = doc.collection(kind.name).doc(edoc);
 
     await execute((run) async {
       // Fetch both documents
@@ -117,11 +107,8 @@ abstract class IRepository<T> extends GenericRepository with RepoMixin<T> {
         run.update(doc, toggleStats(kind, -1));
       } else {
         // Add nested reaction
-        final payload = Reaction(
-          kind: kind,
-          currentId: bdoc,
-          targetId: edoc,
-        ).to();
+        final payload = Reaction(kind: kind, sid: bdoc, did: edoc).toPayload();
+
         run.set(nestedRef, payload);
         run.update(doc, toggleStats(kind));
       }

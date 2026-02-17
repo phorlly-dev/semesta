@@ -12,7 +12,7 @@ extension FileX on File {
   String get getExtension => path.split('.').last.toLowerCase();
 
   /// Validate file size (in MB)
-  bool maxSize({double maxMB = 10}) {
+  bool maxSize([double maxMB = 10]) {
     final sizeInMB = lengthSync() / (1024 * 1024);
 
     return sizeInMB <= maxMB;

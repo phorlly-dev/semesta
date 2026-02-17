@@ -1,56 +1,31 @@
 import 'dart:io';
-import 'dart:math';
 import 'package:flutter/widgets.dart';
-import 'package:get/get_rx/get_rx.dart';
+import 'package:semesta/app/services/cached_service.dart';
 import 'package:semesta/public/extensions/file_extension.dart';
 import 'package:semesta/public/extensions/string_extension.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
 import 'package:semesta/public/functions/func_helper.dart';
 import 'package:semesta/app/models/media.dart';
 import 'package:semesta/app/services/storage_service.dart';
+import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:wechat_camera_picker/wechat_camera_picker.dart';
 
-typedef Filer = Rxn<File>;
-
-enum PickMedia { camera, gallery }
-
 class GenericRepository extends IStorageService {
-  final Mapper<Filer> _cache = {};
-  Filer cacheFor(String key) {
-    return _cache.putIfAbsent(key, () => Filer());
+  Wait<bool> dataExisting(String value) {
+    return existing(mentions, value.toLowerCase());
   }
 
-  void clearFor(String key) {
-    final cache = cacheFor(key);
-
-    cache.value = null;
-    cache.refresh();
-  }
-
-  final assets = <AssetEntity>[].obs;
-  final _rand = Random();
-  final mentions = RegExp(r'@([A-Za-z0-9_]+)');
-
-  String getRandom(AsList items) {
-    if (items.isEmpty) return 'unknown';
-    return items[_rand.nextInt(items.length)];
-  }
-
-  Wait<bool> unameExists(String name) {
-    return isExists('assets', name);
-  }
-
-  Wait<String> getUniqueName(String name) async {
-    var uname = name.toUsername;
-    while (await unameExists(uname)) {
+  Wait<String> uniqueName(String name) async {
+    var uname = name;
+    while (await dataExisting(uname)) {
       uname = name.toUsername;
     }
 
     return uname;
   }
 
-  Wait<bool> isExists(String col, String doc) {
+  Wait<bool> existing(String col, String doc) {
     return db.collection(col).doc(doc).get().then((value) => value.exists);
   }
 
@@ -105,9 +80,9 @@ class GenericRepository extends IStorageService {
     // 5. Final Media
     return Media(
       path: videoUrl.path,
+      url: videoUrl.url,
       type: MediaType.video,
-      display: videoUrl.display,
-      thumbnails: {'path': thumb.path, 'url': thumb.display},
+      others: [thumb.url, thumb.path],
     );
   }
 
@@ -121,23 +96,23 @@ class GenericRepository extends IStorageService {
       if (file == null) continue;
 
       final ext = file.getExtension;
-      final isImage = ['jpg', 'jpeg', 'png', 'webp', 'gif'].contains(ext);
-      final isVideo = ['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext);
+      final img = ['jpg', 'jpeg', 'png', 'webp', 'gif'].contains(ext);
+      final vid = ['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext);
 
-      if (!isImage && !isVideo) continue;
+      if (!img && !vid) continue;
 
-      final url = isImage
+      final url = img
           ? await pushFile(path, file)
           : await uploadVideoWithThumbnail(path, file);
 
-      if (url == null || url.display.isEmpty) continue;
+      if (url == null || url.url.isEmpty) continue;
 
       medialist.add(
         Media(
           path: url.path,
-          display: url.display,
-          thumbnails: url.thumbnails,
-          type: isImage ? MediaType.image : MediaType.video,
+          url: url.url,
+          others: url.others,
+          type: img ? MediaType.image : MediaType.video,
         ),
       );
     }
@@ -147,8 +122,8 @@ class GenericRepository extends IStorageService {
 
   AsWait mediaPicker(
     BuildContext context, {
-    bool tapRecording = true,
-    bool enableRecording = true,
+    bool tapRecording = false,
+    bool enableRecording = false,
     PickMedia from = PickMedia.gallery,
     FlashMode flashMode = FlashMode.off,
     ImageFormatGroup formatGroup = ImageFormatGroup.unknown,
@@ -203,7 +178,7 @@ class GenericRepository extends IStorageService {
     if (image == null) return;
 
     // Validate file size
-    if (!image.maxSize(maxMB: 5)) {
+    if (!image.maxSize(5)) {
       CustomToast.warning('Image must be smaller than 5MB');
       return;
     }

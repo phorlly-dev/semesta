@@ -10,11 +10,11 @@ typedef AsWait = Wait<void>;
 typedef AsList = List<String>;
 typedef Waits<T> = Wait<List<T>>;
 typedef AsDef = AsWait Function();
-typedef AsMap = Map<String, dynamic>;
+typedef AsMap = Mapper<dynamic>;
 typedef AsError = void Function(Object error, StackTrace stack);
 
 typedef Doc<T> = DocumentSnapshot<T>;
-typedef SyncDoc<T> = Sync<DocumentSnapshot<T>>;
+typedef SyncDoc<T> = Sync<Doc<T>>;
 typedef Ask<T> = QuerySnapshot<T>;
 
 typedef Callback<T> = T Function();

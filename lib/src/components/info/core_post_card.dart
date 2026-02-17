@@ -14,7 +14,7 @@ class CorePostCard extends StatelessWidget {
   final String? uid;
   final bool primary, profiled;
   final Widget? above, middle, reference;
-  final double startedLine, endedLine;
+  final double start, end, ratio;
   const CorePostCard(
     this._state, {
     super.key,
@@ -23,9 +23,10 @@ class CorePostCard extends StatelessWidget {
     this.middle,
     this.reference,
     this.profiled = false,
-    this.startedLine = 52,
-    this.endedLine = 396,
+    this.start = 50,
+    this.end = 360,
     this.uid,
+    this.ratio = 1,
   });
 
   @override
@@ -43,9 +44,9 @@ class CorePostCard extends StatelessWidget {
             _state.status,
             actions,
             uid: uid,
-            end: endedLine,
+            end: end,
+            start: start,
             primary: primary,
-            start: startedLine,
             profiled: profiled,
             child: reference,
           ),
@@ -53,7 +54,8 @@ class CorePostCard extends StatelessWidget {
           InkWell(
             child: DirectionY(
               children: [
-                if (media.isNotEmpty) MediaGallery(media, id: model.id),
+                if (media.isNotEmpty)
+                  MediaGallery(media, id: model.id, ratio: ratio),
 
                 ?middle,
               ],

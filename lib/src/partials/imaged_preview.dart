@@ -1,18 +1,19 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
+import 'package:semesta/public/functions/media_saving.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/src/components/layout/_page.dart';
 import 'package:semesta/src/components/post/actions_bar.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
+
+// AIzaSyBM_V7DErwuC6Nk7EsDpG2Eupbmn7wNggc
 
 class ImagedPreview extends StatefulWidget {
   final String id;
@@ -31,19 +32,22 @@ class ImagedPreview extends StatefulWidget {
 }
 
 class _ImagedPreviewState extends State<ImagedPreview> {
-  late final PageController _pageController;
+  late final ProgressDialog _pd;
+  late final MediaSaving _saving;
+  late final PageController _pctrl;
+
   double _dragOffset = 0;
   int _currentIndex = 0;
   bool _toggle = true;
   AsList get _media => widget._images;
-  late ProgressDialog _pd;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initIndex;
     _pd = ProgressDialog(context: context);
-    _pageController = PageController(initialPage: _currentIndex);
+    _saving = MediaSaving(_pd);
+    _pctrl = PageController(initialPage: _currentIndex);
   }
 
   void _onVerticalDragUpdate(DragUpdateDetails details) {
@@ -58,6 +62,12 @@ class _ImagedPreviewState extends State<ImagedPreview> {
     } else {
       setState(() => _dragOffset = 0);
     }
+  }
+
+  void _safeShow() {
+    context.openMedia(
+      onSave: () => _saving.download(widget.media[_currentIndex]),
+    );
   }
 
   @override
@@ -76,9 +86,7 @@ class _ImagedPreviewState extends State<ImagedPreview> {
           onVerticalDragUpdate: _onVerticalDragUpdate,
           onVerticalDragEnd: _onVerticalDragEnd,
           onTap: () => setState(() => _toggle = !_toggle),
-          onLongPress: () {
-            context.image(widget.media[_currentIndex], _pd);
-          },
+          onLongPress: _safeShow,
           child: Stack(
             children: [
               // Fullscreen media (background)
@@ -90,7 +98,7 @@ class _ImagedPreviewState extends State<ImagedPreview> {
                   bottom: 24,
                   left: 0,
                   right: 0,
-                  child: Row(
+                  child: DirectionX(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
                       _media.length,
@@ -123,12 +131,7 @@ class _ImagedPreviewState extends State<ImagedPreview> {
                         Icons.close,
                         onTap: () => Navigator.pop(context),
                       ),
-                      _CircleButton(
-                        Icons.more_horiz,
-                        onTap: () {
-                          context.image(widget.media[_currentIndex], _pd);
-                        },
-                      ),
+                      _CircleButton(Icons.more_horiz, onTap: _safeShow),
                     ],
                   ),
                 ),
@@ -145,7 +148,7 @@ class _ImagedPreviewState extends State<ImagedPreview> {
   Widget get _background => Transform.translate(
     offset: Offset(0, _dragOffset),
     child: PhotoViewGallery.builder(
-      pageController: _pageController,
+      pageController: _pctrl,
       scrollPhysics: const BouncingScrollPhysics(),
       backgroundDecoration: const BoxDecoration(color: Colors.transparent),
       itemCount: _media.length,
@@ -165,45 +168,48 @@ class _ImagedPreviewState extends State<ImagedPreview> {
     bottom: 0,
     child: SafeArea(
       top: false,
-      child: Obx(() {
-        final data = pctrl.dataMapping[widget.id];
-        if (data == null) return const SizedBox.shrink();
+      child: FutureBuilder(
+        future: pctrl.loadFeed(widget.id),
+        builder: (_, snapshot) {
+          if (!snapshot.hasData) return const SizedBox.shrink();
 
-        return StreamBuilder(
-          stream: actrl.actions$(data),
-          builder: (_, snapshot) {
-            if (!snapshot.hasData) return const SizedBox.shrink();
+          final data = snapshot.data!;
+          return StreamBuilder(
+            stream: actrl.actions$(data),
+            builder: (_, snapshot) {
+              if (!snapshot.hasData) return const SizedBox.shrink();
 
-            return ClipRect(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.35),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(12),
+              return ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
+                    ),
+                    child: ActionsBar(
+                      snapshot.data!,
+                      start: 24,
+                      end: 24,
+                      top: 24,
+                      bottom: 32,
+                      color: Colors.white,
                     ),
                   ),
-                  child: ActionsBar(
-                    snapshot.data!,
-                    start: 24,
-                    end: 24,
-                    top: 24,
-                    bottom: 32,
-                    color: Colors.white,
-                  ),
                 ),
-              ),
-            );
-          },
-        );
-      }),
+              );
+            },
+          );
+        },
+      ),
     ),
   );
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _pctrl.dispose();
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
     super.dispose();
   }

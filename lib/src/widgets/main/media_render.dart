@@ -27,9 +27,9 @@ class MediaRender extends StatelessWidget {
     return ClipRRect(
       borderRadius: borderRadius ?? BorderRadius.circular(radius),
       child: _media.mp4
-          ? VideoPlayable(MediaSource.network(_media.display))
+          ? VideoPlayable(MediaSource.network(_media.url))
           : CustomImage(
-              MediaSource.network(_media.display),
+              MediaSource.network(_media.url),
               onTap: () async {
                 await context.openPreview(routes.media, id, initIndex);
               },

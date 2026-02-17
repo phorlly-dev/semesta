@@ -1,135 +1,134 @@
 import 'package:flutter/material.dart';
-import 'package:semesta/app/models/author.dart';
+import 'package:semesta/app/controllers/highlight_controller.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/date_time_extension.dart';
-import 'package:semesta/public/extensions/string_extension.dart';
-import 'package:semesta/public/utils/comment_connector.dart';
+import 'package:semesta/public/helpers/generic_helper.dart';
+import 'package:semesta/public/utils/connector.dart';
 import 'package:semesta/public/helpers/params_helper.dart';
 import 'package:semesta/src/components/composer/post_editor.dart';
-import 'package:semesta/src/components/user/user_info.dart';
+import 'package:semesta/src/components/global/text_expandable.dart';
+import 'package:semesta/src/components/info/data_helper.dart';
+import 'package:semesta/src/components/info/referenced_to_post.dart';
 import 'package:semesta/src/widgets/main/imaged_render.dart';
 import 'package:semesta/src/widgets/sub/animated_avatar.dart';
+import 'package:semesta/src/widgets/sub/animated_loader.dart';
 import 'package:semesta/src/widgets/sub/direction_x.dart';
 import 'package:semesta/src/widgets/sub/direction_y.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 class CommentEditor extends StatelessWidget {
+  final Feed _post;
   final String avatar;
   final String? label;
-  final Feed _post;
-  final Author _actor;
-  final TextEditingController? content;
+  final double start, end;
+  final List<AssetEntity> assets;
+  final HighlightController? input;
   final ValueChanged<int>? onRemove;
   final ValueChanged<String>? onChanged;
-  final List<AssetEntity> assets;
-  final double start, end;
   const CommentEditor(
-    this._post,
-    this._actor, {
+    this._post, {
     super.key,
     this.label,
     this.onChanged,
     this.onRemove,
     this.avatar = '',
-    this.content,
+    this.input,
     this.assets = const [],
-    this.start = 44,
+    this.start = 46,
     this.end = 370,
   });
 
   @override
   Widget build(BuildContext context) {
-    return DirectionY(
-      children: [
-        Stack(
+    return FutureBuilder(
+      future: pctrl.loadReference(_post),
+      builder: (_, snapshot) {
+        if (!snapshot.hasData) return const AnimatedLoader(cupertino: true);
+
+        final center = (start * .5) - 6;
+        final state = snapshot.data!;
+        final actor = state.author;
+        final parent = state.feed;
+        return DirectionY(
           children: [
-            Positioned.fill(
-              child: CustomPaint(
-                painter: CommentConnector(
-                  startPoint: Offset(16, start),
-                  endPoint: Offset(16, _post.media.isEmpty ? 78 : end),
-                  lineColor: context.dividerColor,
-                ),
-              ),
-            ),
-
-            DirectionX(
+            Stack(
               children: [
-                // LEFT GUTTER (avatar + connector)
-                AvatarAnimation(
-                  MediaSource.network(_actor.avatar),
-                  padding: EdgeInsets.only(top: 2),
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: Connector(
+                      Offset(center, start),
+                      Offset(center, _post.media.isEmpty ? 78 : end),
+                      context.dividerColor,
+                    ),
+                  ),
                 ),
 
-                SizedBox(width: 8),
+                DirectionX(
+                  children: [
+                    // LEFT GUTTER (avatar + connector)
+                    AnimatedAvatar(
+                      MediaSource.network(actor.media.url),
+                      padding: EdgeInsets.only(top: 2),
+                    ),
 
-                // FULL POST PREVIEW (not just text!)
-                Expanded(
-                  child: DirectionY(
-                    children: [
-                      DirectionX(
+                    const SizedBox(width: 8),
+
+                    // FULL POST PREVIEW (not just text!)
+                    Expanded(
+                      child: DirectionY(
                         children: [
-                          DisplayName(_actor.name, maxChars: 56),
+                          DirectionX(
+                            children: [
+                              DisplayName(actor.name, maxChars: 56),
 
-                          // const SizedBox(width: 6),
-                          // Username(actor.uname),
-                          const Spacer(),
-                          Text(
-                            _post.createdAt.toAgo,
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontWeight: FontWeight.w500,
+                              // const SizedBox(width: 6),
+                              // Username(actor.uname),
+                              const Spacer(),
+                              Text(
+                                parent.createdAt.toAgo,
+                                style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          TextExpandable(
+                            parent.title,
+                            textColor: context.secondaryColor,
+                          ),
+
+                          if (parent.media.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            ImagedRender(
+                              parent.media[0],
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                          ),
+                          ],
+
+                          const SizedBox(height: 8),
+                          DisplayParent(actor.uname),
                         ],
                       ),
-
-                      Text(
-                        _post.title.limitText(100),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
-                        style: TextStyle(fontSize: 15),
-                      ),
-
-                      if (_post.media.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        ImagedRender(
-                          _post.media[0],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ],
-
-                      const SizedBox(height: 8),
-                      DirectionX(
-                        spacing: 4,
-                        children: [
-                          Text('Reply to', style: TextStyle(fontSize: 16)),
-                          Username(
-                            _actor.uname,
-                            color: Colors.blueAccent,
-                            maxChars: 50,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
 
-        const SizedBox(height: 6),
-        PostEditor(
-          avatar: avatar,
-          content: content,
-          label: label,
-          onChanged: onChanged,
-          assets: assets,
-          onRemove: onRemove,
-        ),
-      ],
+            PostEditor(
+              avatar: avatar,
+              input: input,
+              label: label,
+              onChanged: onChanged,
+              assets: assets,
+              onRemove: onRemove,
+            ),
+          ],
+        );
+      },
     );
   }
 }

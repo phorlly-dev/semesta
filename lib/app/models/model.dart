@@ -1,43 +1,49 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
+import 'package:semesta/public/extensions/json_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
 /// A generic abstract base model for Firebase.
 abstract class IModel<T extends IModel<T>> extends Equatable {
-  final String id;
+  final String id, name;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? deletedAt;
+  final DateTime? lastUsedAt;
 
   const IModel({
-    required this.id,
+    this.id = '',
+    this.name = '',
     this.createdAt,
     this.updatedAt,
     this.deletedAt,
+    this.lastUsedAt,
   });
 
   /// Forces subclasses to implement a copyWith method
-  T copy();
+  T copyWith();
 
   /// Convert the model into a serializable Map (for Firebase)
-  AsMap to();
+  AsMap toPayload();
 
   //Get data from db
   static DateTime make(AsMap map, [bool edit = false]) {
-    return edit ? toDateTime(map['updatedAt']) : toDateTime(map['createdAt']);
+    return edit
+        ? toDateTime(map.from('updated_at'))
+        : toDateTime(map.from('created_at'));
   }
 
   //Set data to db
   AsMap get general => {
     'id': id,
-    'createdAt': toEpoch(createdAt),
-    'updatedAt': toEpoch(updatedAt),
+    'created_at': toEpoch(createdAt),
+    'updated_at': toEpoch(updatedAt),
   };
 
   /// Convert to JSON string
-  String toJson() => jsonEncode(to());
+  String toJson() => jsonEncode(toPayload());
 
   /// Convert Firestore Timestamp or JSON int → DateTime
   static DateTime toDateTime(dynamic value) {
@@ -64,7 +70,7 @@ abstract class IModel<T extends IModel<T>> extends Equatable {
   }
 
   /// Convert DateTime or Timestamp to millisecondsSinceEpoch (JSON-safe)
-  static int toEpoch(dynamic value) {
+  int toEpoch(dynamic value) {
     if (value is Timestamp) return value.millisecondsSinceEpoch;
     if (value is DateTime) return value.millisecondsSinceEpoch;
 
@@ -79,13 +85,14 @@ abstract class IModel<T extends IModel<T>> extends Equatable {
     return now.toIso8601String();
   }
 
-  static AsMap convert(AsMap data, [bool toCamelCase = false]) {
+  /// A helper method to convert between camelCase and snake_case keys in a Map.
+  AsMap convert(AsMap data, [bool reverse = false]) {
     final AsMap result = {};
 
     data.forEach((key, value) {
       String newKey = key;
 
-      if (toCamelCase) {
+      if (reverse) {
         // ✅ Handle special Mongo/Firestore ID fields
         // snake_case → camelCase
         newKey = key.replaceAllMapped(
@@ -102,10 +109,10 @@ abstract class IModel<T extends IModel<T>> extends Equatable {
 
       // Recursion for nested maps/lists
       if (value is AsMap) {
-        result[newKey] = convert(value, toCamelCase);
+        result[newKey] = convert(value, reverse);
       } else if (value is List) {
         result[newKey] = value
-            .map((e) => e is AsMap ? convert(e, toCamelCase) : e)
+            .map((e) => e is AsMap ? convert(e, reverse) : e)
             .toList();
       } else {
         result[newKey] = value;
@@ -116,5 +123,12 @@ abstract class IModel<T extends IModel<T>> extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, createdAt, updatedAt, deletedAt];
+  List<Object?> get props => [
+    id,
+    name,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    lastUsedAt,
+  ];
 }

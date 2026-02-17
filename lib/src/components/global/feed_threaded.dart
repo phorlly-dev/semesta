@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
+import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/src/components/global/card_skeleton.dart';
@@ -22,8 +23,8 @@ class SyncFeedThreaded extends StatelessWidget {
         if (!snapshot.hasData) return const CardSkeleton(); // 👈 smooth loading
 
         final state = snapshot.data!;
-        final content = state.content;
         final status = state.status;
+        final content = state.content;
         final actions = state.actions;
         final view = StateView(status, actions);
 
@@ -32,13 +33,13 @@ class SyncFeedThreaded extends StatelessWidget {
             view,
             uid: content.uid,
             profiled: profiled,
-            middle: QuotedContext(quoted: content.parent, actor: content.actor),
+            middle: QuotedContext(content.feed.repost),
           ),
 
           Create.reply => CommentedContext(
             view,
+            content.feed.reply,
             profiled: profiled,
-            parent: content.parent,
             style: RenderStyle.threaded,
           ),
 

@@ -12,7 +12,7 @@ class CardSkeleton extends StatelessWidget {
     return DirectionY(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       spacing: 12,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAlignment: CrossAxisAlignment.start,
       children: [
         _HeaderSkeleton(color),
         _ContentSkeleton(color),

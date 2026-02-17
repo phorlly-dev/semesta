@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/public/extensions/controller_extension.dart';
+import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/src/components/global/card_skeleton.dart';
@@ -33,13 +34,13 @@ class SyncFeedRefernece extends StatelessWidget {
             profiled: profiled,
             uid: content.uid,
             above: RepostedBanner(actions.target, uid: content.uid),
-            middle: QuotedContext(quoted: content.parent, actor: content.actor),
+            middle: QuotedContext(content.feed.repost),
           ),
 
           Create.reply => CommentedContext(
             view,
+            content.feed.reply,
             profiled: profiled,
-            parent: content.parent,
             style: RenderStyle.reference,
           ),
 

@@ -16,10 +16,7 @@ class AnimatedLoader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: cupertino
-          ? CupertinoActivityIndicator(
-              radius: bold ?? 16.0,
-              color: color ?? CupertinoColors.activeBlue,
-            )
+          ? CupertinoActivityIndicator(radius: bold ?? 12, color: color)
           : CircularProgressIndicator(strokeWidth: bold, color: color),
     );
   }

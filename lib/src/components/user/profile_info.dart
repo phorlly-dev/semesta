@@ -3,12 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:semesta/app/models/author.dart';
 import 'package:semesta/public/extensions/context_extension.dart';
 import 'package:semesta/public/extensions/date_time_extension.dart';
+import 'package:semesta/public/extensions/model_extension.dart';
 import 'package:semesta/public/helpers/audit_view.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/utils/custom_modal.dart';
 import 'package:semesta/public/helpers/params_helper.dart';
-import 'package:semesta/src/components/user/user_info.dart';
+import 'package:semesta/src/components/info/data_helper.dart';
 import 'package:semesta/src/widgets/main/follow_button.dart';
 import 'package:semesta/src/widgets/sub/animated_count.dart';
 import 'package:semesta/src/widgets/sub/animated_button.dart';
@@ -24,7 +24,6 @@ class ProfileInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = _status.author;
     final iFollow = _status.iFollow;
-    final theyFollow = _status.theyFollow;
     final authed = _status.authed;
 
     return Stack(
@@ -44,16 +43,15 @@ class ProfileInfo extends StatelessWidget {
                   },
                 )
               : FollowButton(
-                  context.follow(iFollow, theyFollow),
+                  _status.chekedFollow,
                   onPressed: () {
                     if (iFollow) {
-                      CustomModal(
-                        context,
+                      context.dialog(
                         title: 'Unfollow ${user.name}?',
                         children: [Text(unfollow)],
                         onConfirm: () {
-                          _status.toggle();
                           context.pop();
+                          _status.toggle();
                           actrl.toggleFollow(_status);
                         },
                         label: 'Unfollow',
@@ -94,7 +92,7 @@ class _AuthorInfo extends StatelessWidget {
         const SizedBox(height: 12),
 
         if (_user.bio.isNotEmpty) ...[
-          Bio(_user.bio),
+          Bio(_user.bio, profiled: true),
           const SizedBox(height: 8),
         ],
         Wrap(spacing: 12, runSpacing: 6, children: _metaItems),
@@ -121,7 +119,7 @@ class _AuthorInfo extends StatelessWidget {
 
     AnimatedCount(
       _user.followers,
-      kind: FeedKind.follower,
+      kind: FeedKind.followers,
       onTap: () async {
         await context.openFollow(
           routes.friendship,

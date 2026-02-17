@@ -18,13 +18,13 @@ class Delegate extends SliverPersistentHeaderDelegate {
     BuildContext context,
     double shrinkOffset,
     bool overlapsContent,
-  ) => builder.call(min, max, shrinkOffset);
-
-  @override
-  double get maxExtent => max;
+  ) => builder.call(minExtent, maxExtent, shrinkOffset);
 
   @override
   double get minExtent => min;
+
+  @override
+  double get maxExtent => max;
 
   @override
   bool shouldRebuild(covariant Delegate oldDelegate) => rebuild;

@@ -10,9 +10,9 @@ class ShareStorage {
 
   SharedPreferences get prefs => _instance!;
 
-  AsWait setStorage(String key, String value) async {
+  AsWait set(String key, String value) async {
     await prefs.setString(key, value);
   }
 
-  String? getStorage(String key) => prefs.getString(key);
+  String? get(String key) => prefs.getString(key);
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
-import 'package:semesta/public/mixins/repo_mixin.dart';
+import 'package:semesta/public/mixins/repository_mixin.dart';
 import 'package:semesta/src/components/user/follow_tile.dart';
 import 'package:semesta/src/components/global/cached_tab.dart';
 

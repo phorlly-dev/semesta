@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:semesta/public/extensions/list_extension.dart';
+import 'package:semesta/public/extensions/array_extension.dart';
 import 'package:semesta/public/functions/custom_toast.dart';
-import 'package:semesta/public/mixins/pager_mixin.dart';
+import 'package:semesta/app/controllers/cached_controller.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 import 'package:semesta/src/components/global/items_builder.dart';
@@ -10,7 +10,7 @@ import 'package:semesta/src/components/global/items_builder.dart';
 typedef Load<T> = Def<List<T>>;
 
 class CachedTab<T extends HasAttributes> extends StatefulWidget {
-  final PagerMixin<T> controller;
+  final ICachedController<T> controller;
   final Cacher<T> cache;
   final bool isGrid, autoLoad, isBreak, scrollable;
 

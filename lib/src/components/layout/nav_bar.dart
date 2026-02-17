@@ -35,7 +35,7 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
       flexibleSpace: flexible,
       scrolledUnderElevation: 0,
       animateColor: true,
-      actionsPadding: EdgeInsets.only(right: 6),
+      actionsPadding: EdgeInsets.only(right: 8),
       surfaceTintColor: Colors.transparent,
       backgroundColor: color ?? context.defaultColor,
     );

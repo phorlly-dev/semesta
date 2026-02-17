@@ -29,8 +29,8 @@ class DataForm extends StatelessWidget {
         key: _formKey,
         autovalidateMode: autovalidate,
         child: DirectionY(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAlignment: MainAxisAlignment.center,
+          crossAlignment: CrossAxisAlignment.stretch,
           spacing: spacing,
           children: children,
         ),

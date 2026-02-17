@@ -11,6 +11,8 @@ extension DateTimeX on DateTime {
     return _formated(this).isBetween(_formated(from), _formated(to));
   }
 
+  String get todayKey => toIso8601String().split('T').first;
+
   String format(String style) => _formated(this).format(pattern: style);
   String from(DateTime past) => _formated(past).to(_formated(this));
   String to(DateTime past) => _formated(past).to(_formated(this));
@@ -18,6 +20,8 @@ extension DateTimeX on DateTime {
 }
 
 extension DateTimeX2 on DateTime? {
+  /// A helper method to convert a nullable DateTime into a human-readable "time ago" format,
+  /// used for displaying how long ago an event occurred.
   String get toAgo {
     if (this == null) return '';
 
@@ -35,6 +39,7 @@ extension DateTimeX2 on DateTime? {
     return '${(diff.inDays / 365).floor()}y';
   }
 
+  /// A helper method to calculate age from a DateTime, used for displaying a user's age based on their birthdate.
   int get toAge {
     final val = this;
     if (val == null) return 0;
