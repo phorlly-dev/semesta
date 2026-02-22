@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:semesta/app/services/cached_service.dart';
 import 'package:semesta/public/functions/func_helper.dart';
 import 'package:semesta/app/services/filed_service.dart';
@@ -16,7 +17,7 @@ abstract class IStorageService extends FirebaseService
       final path = '$folderName/$fileName';
 
       // Upload file to Firebase Storage
-      final uploadTask = await cache.ref(path).putFile(file);
+      final uploadTask = await _ref(path).putFile(file);
 
       // Get download URL
       final downloadUrl = await uploadTask.ref.getDownloadURL();
@@ -36,7 +37,7 @@ abstract class IStorageService extends FirebaseService
       if (!await requestPermissions()) throw StateError('Permission denied');
 
       // Resolve Firebase URL
-      final url = await cache.ref(path).getDownloadURL();
+      final url = await _ref(path).getDownloadURL();
       if (url.isEmpty) return;
 
       // Download
@@ -45,7 +46,9 @@ abstract class IStorageService extends FirebaseService
   }
 
   /// Delete a file by its storage path
-  AsWait deleteFile(String path) {
-    return handler(() => cache.ref(path).delete(), message: "Failed to delete");
-  }
+  AsWait deleteFile(String path) => handler(() {
+    return _ref(path).delete();
+  }, message: "Failed to delete");
+
+  Reference _ref(String path) => cache.ref(path);
 }

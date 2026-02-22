@@ -50,8 +50,8 @@ class ProfileInfo extends StatelessWidget {
                         title: 'Unfollow ${user.name}?',
                         children: [Text(unfollow)],
                         onConfirm: () {
-                          context.pop();
                           _status.toggle();
+                          context.pop();
                           actrl.toggleFollow(_status);
                         },
                         label: 'Unfollow',

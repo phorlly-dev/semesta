@@ -63,9 +63,9 @@ class UserController extends IController<AuthedView> {
     QueryMode mode = QueryMode.normal,
   ]) async {
     final actions = await urepo.getFollows(uid);
-    final keys = actions.toKeys((value) => value.did);
+    final keys = actions.toKeys((value) => value.tid);
     final users = await urepo.getInOrder(keys, mode: mode);
-    return users.fromFollow(actions, (value) => value.did);
+    return users.fromFollow(actions, (value) => value.tid);
   }
 
   Waits<AuthedView> loadUserFollowers(
@@ -73,14 +73,14 @@ class UserController extends IController<AuthedView> {
     QueryMode mode = QueryMode.normal,
   ]) async {
     final actions = await urepo.getFollows(uid, i: false);
-    final keys = actions.toKeys((value) => value.sid);
+    final keys = actions.toKeys((value) => value.id);
     final users = await urepo.getInOrder(keys, mode: mode);
-    return users.fromFollow(actions, (value) => value.sid);
+    return users.fromFollow(actions, (value) => value.id);
   }
 
   Waits<Mention> loadMentions(String input) async {
     final actions = await urepo.getFollows(currentUid.value, limit: 10);
-    final keys = actions.toKeys((value) => value.did);
+    final keys = actions.toKeys((value) => value.tid);
     final data = await urepo.getMentions(input, keys);
     return data.where((e) => e.id != currentUid.value).toList();
   }

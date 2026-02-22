@@ -101,7 +101,7 @@ extension FeedListX on List<Feed> {
     FeedKind type = FeedKind.posts,
     List<Reaction> actions = const [],
   }) => map((feed) {
-    final action = actions.followMe((value) => value.sid);
+    final action = actions.followMe((value) => value.id);
     return FeedView.fromState(
       feed,
       uid: uid,

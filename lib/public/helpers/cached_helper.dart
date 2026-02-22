@@ -34,7 +34,7 @@ abstract mixin class ICachedHelper {
   AsWait deleteMediaFiles(List<Media> mediaList) async {
     if (mediaList.isEmpty) return;
 
-    await Wait.wait(
+    await Future.wait(
       mediaList.map((media) => _deleteSingleMedia(media)),
       eagerError: false, // Continue deleting other files even if one fails
     );

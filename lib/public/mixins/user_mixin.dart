@@ -30,7 +30,7 @@ mixin UserMixin on IRepository<Author> {
     if (_followCache.containsKey(key)) return _followCache[key]!;
 
     final data = i
-        ? await getReactions({currentId: uid}, limit: limit, col: following)
+        ? await getReactions({keyId: uid}, limit: limit, col: following)
         : await getReactions({targetId: uid}, limit: limit);
 
     _followCache[key] = data;

@@ -14,10 +14,10 @@ class AuthedView implements HasAttributes {
   DateTime? get created => action.createdAt;
 
   @override
-  String get currentId => action.sid;
+  String get currentId => action.id;
 
   @override
-  String get targetId => action.did;
+  String get targetId => action.tid;
 }
 
 class StatusView with ChangeNotifier {

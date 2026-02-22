@@ -198,8 +198,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   void dispose() {
     uctrl.message.value = '';
-    grepo.clearFor(_ka);
-    grepo.clearFor(_kc);
+    grepo
+      ..clearFor(_ka)
+      ..clearFor(_kc);
     super.dispose();
   }
 }

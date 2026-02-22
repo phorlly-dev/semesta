@@ -36,13 +36,6 @@ mixin ControllerMixin on IController<FeedView> {
     return ctrl.currentUser.value!;
   }
 
-  // StreamSubscription? _postSub;
-  // void listenToPost(Feed post) {
-  //   final id = post.id;
-  //   if (dataMapping.containsKey(id) || id.isEmpty) return;
-  //   _postSub = prepo.sync$(post.toDoc).listen((p) => dataMapping[id] = p);
-  // }
-
   final _seen = <String>{};
   void markViewed(ActionTarget target) {
     final key = target.toKey;
@@ -57,7 +50,7 @@ mixin ControllerMixin on IController<FeedView> {
     List<Reaction> actions, [
     QueryMode mode = QueryMode.normal,
   ]) async {
-    final keys = actions.toKeys((value) => value.sid);
+    final keys = actions.toKeys((value) => value.id);
     return [
       ...await prepo.getInOrder(keys, mode: mode),
       ...await prepo.getInSuborder(keys, mode: mode),
@@ -68,7 +61,7 @@ mixin ControllerMixin on IController<FeedView> {
     List<Reaction> actions, [
     QueryMode mode = QueryMode.normal,
   ]) async {
-    final keys = actions.toKeys((value) => value.did);
+    final keys = actions.toKeys((value) => value.tid);
     return [
       ...await prepo.getPosts(keys, mode: mode),
       ...await prepo.getComments(keys, mode: mode),
@@ -81,10 +74,4 @@ mixin ControllerMixin on IController<FeedView> {
       ...await prepo.getComments(uid, mode: mode),
     ].toList();
   }
-
-  // @override
-  // void onClose() {
-  //   _postSub?.cancel();
-  //   super.onClose();
-  // }
 }

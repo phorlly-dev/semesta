@@ -141,6 +141,11 @@ mixin RepositoryMixin<T> on FirebaseService {
     });
   }
 
+  Wait callable(String name, [AsMap params = const {}]) async {
+    final data = await fn.httpsCallable(name).call(params);
+    print("The Data: ${data.data}");
+  }
+
   Waits<T> getInOrder(
     AsList values, {
     int limit = 20,

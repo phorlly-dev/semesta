@@ -1,3 +1,4 @@
+import 'package:semesta/public/extensions/route_extension.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
 import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
@@ -49,29 +50,33 @@ abstract class IRepository<T> extends GenericRepository
     String edoc, [
     FeedKind kind = FeedKind.likes,
   ]) async {
-    final doc = collection(colName).doc(sdoc);
-    final edgeRef = doc.collection(kind.name).doc(edoc);
+    final ref = collection(colName).doc(sdoc);
+    final sref = ref.collection(kind.name).doc(edoc);
 
     await execute((run) async {
       // Fetch both documents in parallel for better performance
-      final edgeSnap = await run.get(edgeRef);
-      final snap = await run.get(doc);
+      final res = await run.get(ref);
+      final sres = await run.get(sref);
 
       // Validate post document exists
-      if (!snap.exists) {
+      if (!res.exists) {
         throw StateError('Document $sdoc does not exist');
       }
 
-      if (edgeSnap.exists) {
+      if (sres.exists) {
         // Remove reaction
-        run.delete(edgeRef);
-        run.update(doc, toggleStats(kind, -1));
+        run.delete(sref);
+        run.update(ref, toggleStats(kind, -1));
       } else {
         // Add reaction
-        final payload = Reaction(kind: kind, sid: sdoc, did: edoc).toPayload();
+        final payload = Reaction(
+          type: kind.type,
+          id: sdoc,
+          tid: edoc,
+        ).toPayload();
 
-        run.set(edgeRef, payload);
-        run.update(doc, toggleStats(kind));
+        run.set(sref, payload);
+        run.update(ref, toggleStats(kind));
       }
     });
   }
@@ -88,29 +93,33 @@ abstract class IRepository<T> extends GenericRepository
     String col = comments,
     FeedKind kind = FeedKind.likes,
   }) async {
-    final doc = collection(colName).doc(sdoc).collection(col).doc(bdoc);
-    final nestedRef = doc.collection(kind.name).doc(edoc);
+    final ref = collection(colName).doc(sdoc).collection(col).doc(bdoc);
+    final sref = ref.collection(kind.name).doc(edoc);
 
     await execute((run) async {
       // Fetch both documents
-      final docSnap = await run.get(doc);
-      final actionSnap = await run.get(nestedRef);
+      final res = await run.get(ref);
+      final sres = await run.get(sref);
 
       // Validate source document exists
-      if (!docSnap.exists) {
+      if (!res.exists) {
         throw StateError('Document $sdoc does not exist');
       }
 
-      if (actionSnap.exists) {
+      if (sres.exists) {
         // Remove nested reaction
-        run.delete(nestedRef);
-        run.update(doc, toggleStats(kind, -1));
+        run.delete(sref);
+        run.update(ref, toggleStats(kind, -1));
       } else {
         // Add nested reaction
-        final payload = Reaction(kind: kind, sid: bdoc, did: edoc).toPayload();
+        final payload = Reaction(
+          type: kind.type,
+          id: bdoc,
+          tid: edoc,
+        ).toPayload();
 
-        run.set(nestedRef, payload);
-        run.update(doc, toggleStats(kind));
+        run.set(sref, payload);
+        run.update(ref, toggleStats(kind));
       }
     });
   }

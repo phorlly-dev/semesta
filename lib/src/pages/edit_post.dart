@@ -28,9 +28,9 @@ class EditPostPage extends StatefulWidget {
 }
 
 class _EditPostPageState extends State<EditPostPage> {
+  late Feed _content;
   late Visible _option;
   late VisibleToPost _visible;
-  late Feed _content;
   late final HighlightController _input;
 
   @override

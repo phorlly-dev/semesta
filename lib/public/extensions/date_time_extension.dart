@@ -11,7 +11,7 @@ extension DateTimeX on DateTime {
     return _formated(this).isBetween(_formated(from), _formated(to));
   }
 
-  String get todayKey => toIso8601String().split('T').first;
+  String get todayKey => toIso8601String().split('T')[0];
 
   String format(String style) => _formated(this).format(pattern: style);
   String from(DateTime past) => _formated(past).to(_formated(this));

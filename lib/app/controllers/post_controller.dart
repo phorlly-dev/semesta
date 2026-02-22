@@ -53,7 +53,7 @@ class PostController extends IFeedController with ICachedHelper {
 
   AsWait remove(Feed model) => handleAsync(() async {
     await prepo.destroyPost(model);
-    await deleteMediaFiles(model.media);
+    // await deleteMediaFiles(model.media);
 
     clearCached(model, currentUid, this);
     CustomToast.success('Post deleted!');

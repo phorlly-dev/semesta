@@ -29,7 +29,7 @@ class AuthRepository extends UserRepository {
       media: media,
       verified: author.emailVerified,
     );
-    await createUser(data, media?.url ?? '');
+    await createUser(data);
 
     return author;
   }

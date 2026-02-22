@@ -26,7 +26,7 @@ abstract class IFeedController extends IController<FeedView>
 
   Waits<FeedView> loadMoreFollowing([QueryMode mode = QueryMode.normal]) async {
     final actions = await urepo.getFollows(currentUid);
-    final keys = actions.toKeys((value) => value.did);
+    final keys = actions.toKeys((value) => value.tid);
     final ractions = await prepo.getActions(keys, type: ActionType.repost);
     return [
       ...await getCombined(actions, mode),

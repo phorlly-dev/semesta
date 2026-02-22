@@ -1,49 +1,62 @@
 import 'package:semesta/public/extensions/json_extension.dart';
-import 'package:semesta/public/helpers/feed_view.dart';
 import 'package:semesta/public/helpers/generic_helper.dart';
 import 'package:semesta/public/utils/type_def.dart';
 
+enum ReactionType {
+  post,
+  media,
+  like,
+  view,
+  reply,
+  repost,
+  quote,
+  save,
+  share,
+  follower,
+  following,
+}
+
 class Reaction {
   final bool removed;
-  final FeedKind kind;
-  final String sid, did;
+  final ReactionType type;
+  final String id, tid;
   final DateTime createdAt;
 
   Reaction({
-    this.did = '',
-    this.sid = '',
+    this.id = '',
+    this.tid = '',
     this.removed = false,
-    this.kind = FeedKind.likes,
+    this.type = ReactionType.like,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? now;
 
   factory Reaction.fromState(AsMap map) => Reaction(
     removed: map.asBool('removed'),
-    sid: map.asText('sid'),
-    did: map.asText('did'),
-    kind: map.asEnum('type', FeedKind.values),
+    id: map.id,
+    tid: map.asText('tid'),
+    type: map.asEnum('type', ReactionType.values),
     createdAt: map.created,
   );
 
   AsMap toPayload() => {
+    'id': id,
+    'tid': tid,
     'removed': removed,
-    'type': kind.name,
-    'did': did,
-    'sid': sid,
+    'type': type.name,
     'created_at': createdAt.millisecondsSinceEpoch,
   };
 
   Reaction copyWith({
     bool? removed,
-    FeedKind? kind,
-    String? did,
-    String? sid,
+    ReactionType? type,
+    String? tid,
+    String? id,
     DateTime? createdAt,
   }) => Reaction(
-    kind: kind ?? this.kind,
+    type: type ?? this.type,
     removed: removed ?? this.removed,
-    did: did ?? this.did,
+    tid: tid ?? this.tid,
     createdAt: createdAt ?? this.createdAt,
-    sid: sid ?? this.sid,
+    id: id ?? this.id,
   );
 }

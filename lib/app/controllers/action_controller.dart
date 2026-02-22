@@ -30,13 +30,13 @@ class ActionController extends GetxController {
   }
 
   AsWait toggleFavorite(ActionsView actions) async {
-    await prepo.toggleReaction(actions.target, currentUid);
+    await prepo.toggleReaction(actions.target);
     final rid = actions.feed.toId(puid: currentUid, kind: FeedKind.likes);
     if (!actions.favorited) _pctrl.clearFor(_kl, rid);
   }
 
   AsWait toggleBookmark(ActionsView actions) async {
-    await prepo.toggleReaction(actions.target, currentUid, ActionType.save);
+    await prepo.toggleReaction(actions.target, ActionType.save);
     if (actions.bookmarked) {
       CustomToast.info('Added to Saved', title: 'Saved');
     } else {
@@ -47,7 +47,7 @@ class ActionController extends GetxController {
   }
 
   AsWait toggleRepost(ActionsView actions) async {
-    await prepo.toggleReaction(actions.target, currentUid, ActionType.repost);
+    await prepo.toggleReaction(actions.target, ActionType.repost);
     _pctrl.metaFor(_kf).dirty = true;
     _pctrl.metaFor(_kc).dirty = true;
 

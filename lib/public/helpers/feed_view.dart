@@ -1,15 +1,16 @@
 import 'package:semesta/app/models/feed.dart';
 import 'package:semesta/app/models/reaction.dart';
 import 'package:semesta/public/extensions/model_extension.dart';
+import 'package:semesta/public/extensions/route_extension.dart';
 import 'package:semesta/public/helpers/audit_view.dart';
 import 'package:semesta/public/helpers/class_helper.dart';
 
 enum FeedKind {
+  likes,
   posts,
   reposts,
   quotes,
   replies,
-  likes,
   saves,
   media,
   views,
@@ -68,9 +69,12 @@ class FeedView implements HasAttributes {
   }) => FeedView(
     payload,
     action: action,
-    rid: payload.toId(puid: uid ?? payload.uid, kind: action?.kind ?? kind),
-    uid: uid ?? action?.did ?? payload.uid,
-    kind: action?.kind ?? kind,
+    rid: payload.toId(
+      puid: uid ?? payload.uid,
+      kind: action?.type.kind ?? kind,
+    ),
+    uid: uid ?? action?.tid ?? payload.uid,
+    kind: action?.type.kind ?? kind,
     created: action?.createdAt ?? payload.createdAt,
   );
 }
